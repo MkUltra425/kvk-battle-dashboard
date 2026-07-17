@@ -633,6 +633,16 @@ const TARGET_COLORS = {
   "Turret (W)": "#40c080",
 };
 
+// Leader tile appearance keyed by primary target
+const LEADER_STYLES = {
+  "Castle":     { bg: "linear-gradient(135deg,#4a3a08,#6a5210)", border: "#fbbf24", pill: "rgba(255,210,70,0.95)",  text: "#1a1200" },
+  "Turret (N)": { bg: "linear-gradient(135deg,#083838,#0a5050)", border: "#20d0d0", pill: "rgba(32,208,208,0.92)",  text: "#011818" },
+  "Turret (E)": { bg: "linear-gradient(135deg,#2d0a50,#3d106a)", border: "#c084fc", pill: "rgba(192,132,252,0.92)", text: "#180828" },
+  "Turret (S)": { bg: "linear-gradient(135deg,#4a1a08,#6a2a0a)", border: "#ff8040", pill: "rgba(255,128,64,0.92)",  text: "#1a0800" },
+  "Turret (W)": { bg: "linear-gradient(135deg,#083820,#0a5030)", border: "#40c080", pill: "rgba(64,192,128,0.92)",  text: "#011810" },
+  "None":       { bg: "linear-gradient(135deg,#4a3a08,#6a5210)", border: "#fbbf24", pill: "rgba(255,210,70,0.95)",  text: "#1a1200" },
+};
+
 // ── Mobile Member Card ─────────────────────────────────────────────────────
 function MemberCard({ m, alliances, teams, onUpdate, onDelete }) {
   const f = (k, v) => onUpdate(m.id, k, v);
@@ -680,6 +690,99 @@ function MemberCard({ m, alliances, teams, onUpdate, onDelete }) {
   );
 }
 
+// ── Battle Guide ──────────────────────────────────────────────────────────
+function BattleGuide() {
+  const [open, setOpen] = useState(true);
+
+  const sections = [
+    {
+      title: "Join Rally",
+      subtitle: "1st Hero",
+      color: C.blue,
+      heroes: ["Chenko", "Amane", "Yeonwoo"],
+      heroColors: ["#c084fc", "#f87171", "#60a5fa"],
+      ratio: "50 – 20 – 30",
+      troops: "Infantry  /  Cavalry  /  Archers",
+    },
+    {
+      title: "Garrison Support",
+      subtitle: "1st Hero",
+      color: C.green,
+      heroes: ["Gordon", "Saul", "Hilde"],
+      heroColors: ["#fbbf24", "#f97316", "#a78bfa"],
+      ratio: "60 – 20 – 20",
+      troops: "Infantry  /  Cavalry  /  Archers",
+    },
+  ];
+
+  return (
+    <div style={{
+      background: "rgba(255,255,255,0.05)",
+      backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+      border: "1px solid rgba(255,255,255,0.10)",
+      borderRadius: 14, overflow: "hidden",
+      boxShadow: "0 4px 24px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08)",
+    }}>
+      {/* Header / toggle */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "12px 16px", background: "transparent", border: "none", cursor: "pointer",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 14 }}>📖</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: C.accent, letterSpacing: 1.5, fontFamily: "'Roboto Condensed', sans-serif", textTransform: "uppercase" }}>Battle Guide</span>
+        </div>
+        <span style={{ fontSize: 12, color: C.textDim, transition: "transform 0.2s", display: "inline-block", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
+      </button>
+
+      {open && (
+        <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 14 }}>
+          {sections.map(s => (
+            <div key={s.title} style={{
+              background: "rgba(255,255,255,0.04)",
+              border: `1px solid ${s.color}33`,
+              borderRadius: 10, padding: "12px 14px",
+            }}>
+              {/* Section title */}
+              <div style={{ textAlign: "center", marginBottom: 12 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: s.color, fontFamily: "'Roboto Condensed', sans-serif", letterSpacing: 0.5, textTransform: "uppercase" }}>{s.title}</div>
+                <div style={{ fontSize: 10, color: C.textDim, marginTop: 1 }}>{s.subtitle}</div>
+              </div>
+
+              {/* Hero chips */}
+              <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 14 }}>
+                {s.heroes.map((h, i) => (
+                  <div key={h} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
+                    <div style={{
+                      width: 44, height: 44, borderRadius: 10,
+                      background: `linear-gradient(135deg, ${s.heroColors[i]}33, ${s.heroColors[i]}18)`,
+                      border: `1.5px solid ${s.heroColors[i]}66`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 18, boxShadow: `0 0 10px ${s.heroColors[i]}33`,
+                    }}>
+                      {h[0]}
+                    </div>
+                    <span style={{ fontSize: 9, color: s.heroColors[i], fontWeight: 700, fontFamily: "'Roboto Condensed', sans-serif" }}>{h}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Ratio */}
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 16, fontWeight: 800, color: C.text, fontFamily: "'Bebas Neue', sans-serif", letterSpacing: 2, marginBottom: 3 }}>{s.ratio}</div>
+                <div style={{ fontSize: 9, color: C.textDim, letterSpacing: 1 }}>{s.troops}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Castle Map ─────────────────────────────────────────────────────────────
 //
 // Layout matches blueprint exactly:
@@ -717,6 +820,14 @@ const ROWS = 14, COLS = 14;
 // Castle occupies rows 4-9, cols 4-9 (inclusive) — 6×6
 const CR1 = 4, CR2 = 9, CC1 = 4, CC2 = 9;
 
+// Maps the turret corner label to its Primary Target name
+const TURRET_LABEL_TO_TARGET = {
+  "North": "Turret (N)",
+  "East":  "Turret (E)",
+  "South": "Turret (S)",
+  "West":  "Turret (W)",
+};
+
 const TURRETS = [
   { r: CR1, c: CC1, label: "North" },
   { r: CR1, c: CC2, label: "East" },
@@ -725,6 +836,8 @@ const TURRETS = [
 ];
 
 function isCastle(r, c) { return r >= CR1 && r <= CR2 && c >= CC1 && c <= CC2; }
+function isCastleInterior(r, c) { return r > CR1 && r < CR2 && c > CC1 && c < CC2; }
+function isCastleWall(r, c) { return isCastle(r, c) && !isTurret(r, c) && !isCastleInterior(r, c); }
 function isTurret(r, c) { return TURRETS.some(t => t.r === r && t.c === c); }
 function getTurretLabel(r, c) { return TURRETS.find(t => t.r === r && t.c === c)?.label || null; }
 
@@ -765,11 +878,12 @@ function CastleMap({ members, assignments, setAssignments, isMobile }) {
   const gridW = COLS * TILE + (COLS - 1) * GAP;
   const gridH = ROWS * TILE + (ROWS - 1) * GAP;
 
-  // Castle interior overlay — 4×4 inner zone between the turrets (rows CR1+1 to CR2-1, cols CC1+1 to CC2-1)
-  const interiorX = (CC1 + 1) * (TILE + GAP);
-  const interiorY = (CR1 + 1) * (TILE + GAP);
-  const interiorW = 4 * TILE + 3 * GAP;
-  const interiorH = 4 * TILE + 3 * GAP;
+  // Castle overlay — covers the full 6×6 zone (rows CR1–CR2, cols CC1–CC2)
+  // Turrets sit on top at zIndex 25; this fills everything else
+  const interiorX = CC1 * (TILE + GAP);
+  const interiorY = CR1 * (TILE + GAP);
+  const interiorW = 6 * TILE + 5 * GAP;
+  const interiorH = 6 * TILE + 5 * GAP;
 
   // Red border: encompasses rows 1–12, cols 1–12 (3 gap tiles each side around 6×6 castle)
   const bx = 1 * (TILE + GAP) - 1;
@@ -837,11 +951,13 @@ function CastleMap({ members, assignments, setAssignments, isMobile }) {
             Array.from({ length: COLS }, (_, c) => {
               const castle = isCastle(r, c);
               const turret = isTurret(r, c);
+              const wall = !turret && isCastleWall(r, c);
               const assignment = getA(r, c);
               const x = c * (TILE + GAP);
               const y = r * (TILE + GAP);
               const tLabel = getTurretLabel(r, c);
               const isSelected = modal?.r === r && modal?.c === c;
+              // Skip interior AND wall tiles (only turrets render individually)
               if (castle && !turret) return null;
               let dimmed = false;
               if (filter === "friendly" && assignment?.type !== "friendly") dimmed = true;
@@ -849,9 +965,14 @@ function CastleMap({ members, assignments, setAssignments, isMobile }) {
               if (filter === "unassigned" && assignment) dimmed = true;
               let bg, border;
               const isLeader = assignment?.type === "friendly" && assignment.member.role === "Rally Leader";
+              const leaderTarget = isLeader ? (assignment.member.primaryTarget || "Castle") : null;
+              const leaderStyle = leaderTarget ? (LEADER_STYLES[leaderTarget] || LEADER_STYLES["Castle"]) : null;
               if (dimmed) { bg = "rgba(255,255,255,0.03)"; border = "1px solid rgba(255,255,255,0.05)"; }
-              else if (turret) { bg = "linear-gradient(135deg,#f5f0e0,#e8dfc0)"; border = `1.5px solid ${C.accent}`; }
-              else if (assignment?.type === "friendly" && isLeader) { bg = "linear-gradient(135deg,#4a3a08,#6a5210)"; border = `1.5px solid ${C.gold}`; }
+              else if (turret) {
+                const ts = LEADER_STYLES[TURRET_LABEL_TO_TARGET[tLabel]] || LEADER_STYLES["Castle"];
+                bg = ts.bg; border = `1.5px solid ${ts.border}`;
+              }
+              else if (isLeader) { bg = leaderStyle.bg; border = `1.5px solid ${leaderStyle.border}`; }
               else if (assignment?.type === "friendly") { bg = "linear-gradient(135deg,#0d2e52,#0a3d6e)"; border = `1.5px solid ${C.blue}`; }
               else if (assignment?.type === "enemy") { bg = "linear-gradient(135deg,#3a0d0d,#520a0a)"; border = `1.5px solid ${C.red}`; }
               else { bg = "rgba(180,192,205,0.55)"; border = "1px solid rgba(160,175,190,0.5)"; }
@@ -875,9 +996,10 @@ function CastleMap({ members, assignments, setAssignments, isMobile }) {
                     overflow: "hidden", boxSizing: "border-box", zIndex: turret ? 25 : 1,
                     transition: "filter 0.1s, box-shadow 0.1s",
                   }}>
-                  {turret && (
-                    <span style={{ fontSize: 9, fontWeight: 700, color: "#6a4a08", textAlign: "center", lineHeight: 1.2, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif", letterSpacing: 0.5, textTransform: "uppercase" }}>{tLabel}</span>
-                  )}
+                  {turret && (() => {
+                    const ts = LEADER_STYLES[TURRET_LABEL_TO_TARGET[tLabel]] || LEADER_STYLES["Castle"];
+                    return <span style={{ fontSize: 9, fontWeight: 800, color: ts.border, textAlign: "center", lineHeight: 1.2, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif", letterSpacing: 0.5, textTransform: "uppercase", textShadow: `0 0 6px ${ts.border}88` }}>{tLabel}</span>;
+                  })()}
                   {!turret && !dimmed && assignment?.type === "friendly" && (() => {
                     const full = assignment.member.name;
                     const display = full.length > 10 ? full.slice(0, 10) + "…" : full;
@@ -892,12 +1014,15 @@ function CastleMap({ members, assignments, setAssignments, isMobile }) {
                       : target.startsWith("Turret")
                         ? (col) => <TurretIcon color={col} letter={target.slice(8,9)} size={turretSize} />
                         : null;
+                    const ls = isLeader ? (LEADER_STYLES[target] || LEADER_STYLES["Castle"]) : null;
+                    const pillBg = isLeader ? ls.pill : "rgba(160,210,255,0.95)";
+                    const pillText = isLeader ? ls.text : "#071830";
                     return (
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, width: "100%", padding: "2px 2px" }}>
                         <span style={{
                           fontSize: fs, fontWeight: 700, lineHeight: 1,
-                          color: isLeader ? "#1a1200" : "#071830",
-                          background: isLeader ? "rgba(255,210,70,0.95)" : "rgba(160,210,255,0.95)",
+                          color: pillText,
+                          background: pillBg,
                           borderRadius: 3, padding: "2px 3px",
                           fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif",
                           letterSpacing: 0,
@@ -934,36 +1059,47 @@ function CastleMap({ members, assignments, setAssignments, isMobile }) {
             })
           )}
 
-          {/* Castle interior */}
+          {/* Castle interior — fills full 6×6 zone; turrets (zIndex 25) sit on top */}
           <div style={{
             position: "absolute", left: interiorX, top: interiorY, width: interiorW, height: interiorH,
-            background: "linear-gradient(135deg, #f8f4ee 0%, #ede8df 100%)",
+            background: LEADER_STYLES["Castle"].bg,
             display: "flex", alignItems: "center", justifyContent: "center",
-            zIndex: 15, pointerEvents: "none",
-            boxShadow: "inset 0 2px 12px rgba(0,0,0,0.12)",
+            zIndex: 10, pointerEvents: "none",
+            boxShadow: `inset 0 0 24px rgba(0,0,0,0.4), 0 0 12px ${LEADER_STYLES["Castle"].border}44`,
           }}>
-            <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, fontWeight: 900, color: "#6a5a3a", letterSpacing: 4, opacity: 0.85 }}>CASTLE</span>
+            <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 16 : 28, fontWeight: 900, color: LEADER_STYLES["Castle"].border, letterSpacing: 4, textShadow: `0 0 16px ${LEADER_STYLES["Castle"].border}88` }}>CASTLE</span>
           </div>
 
           {/* SVG borders */}
           <svg style={{ position: "absolute", left: 0, top: 0, width: gridW, height: gridH, pointerEvents: "none", zIndex: 30 }}>
-            <rect x={cx} y={cy} width={cw} height={ch} fill="none" stroke={C.accent} strokeWidth={1.5} />
+            <defs>
+              <filter id="castleGlow">
+                <feGaussianBlur stdDeviation="2" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            {/* Castle zone border — thick gold with glow */}
+            <rect x={cx} y={cy} width={cw} height={ch} fill="none"
+              stroke={LEADER_STYLES["Castle"].border} strokeWidth={3}
+              filter="url(#castleGlow)" />
+            {/* Battlefield red border */}
             <rect x={bx} y={by} width={bw} height={bh} fill="none" stroke={C.red} strokeWidth={2} rx={1} />
           </svg>
         </div>
 
         {/* Legend */}
-        <div style={{ display: "flex", gap: 14, marginTop: 10, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
           {[
             { bg: "rgba(180,192,205,0.55)", border: "rgba(160,175,190,0.5)", label: "Empty" },
-            { bg: "linear-gradient(135deg,#4a3a08,#6a5210)", border: C.gold, label: "Leader" },
-            { bg: "linear-gradient(135deg,#0d2e52,#0a3d6e)", border: C.blue, label: "Joiner" },
-            { bg: "linear-gradient(135deg,#3a0d0d,#520a0a)", border: C.red, label: "Enemy" },
-            { bg: "linear-gradient(135deg,#f5f0e0,#e8dfc0)", border: C.accent, label: "Turret" },
-            { bg: "linear-gradient(135deg,#f8f4ee,#ede8df)", border: C.accent, label: "Castle" },
+            ...Object.entries(LEADER_STYLES).filter(([k]) => k !== "None").map(([k, s]) => ({
+              bg: s.bg, border: s.border,
+              label: k === "Castle" ? "Leader·🏰" : `Leader·${k.slice(8,9)}`
+            })),
+            { bg: "linear-gradient(135deg,#0d2e52,#0a3d6e)", border: C.blue,   label: "Joiner" },
+            { bg: "linear-gradient(135deg,#3a0d0d,#520a0a)", border: C.red,    label: "Enemy" },
           ].map(({ bg, border, label }) => (
-            <div key={label} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: C.textDim }}>
-              <div style={{ width: 12, height: 12, background: bg, border: `1.5px solid ${border}`, borderRadius: 3, flexShrink: 0 }} />
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: C.textDim }}>
+              <div style={{ width: 11, height: 11, background: bg, border: `1.5px solid ${border}`, borderRadius: 3, flexShrink: 0 }} />
               {label}
             </div>
           ))}
@@ -988,6 +1124,9 @@ function CastleMap({ members, assignments, setAssignments, isMobile }) {
             <div style={{ fontSize: 11, color: C.textDim, lineHeight: 1.5 }}>Click any tile to assign<br/>a member or mark an enemy</div>
           </div>
         )}
+
+        {/* Battle guide reference */}
+        <BattleGuide />
 
         {/* Map overview stats */}
         <SideSection title="MAP OVERVIEW">
@@ -1175,6 +1314,17 @@ function App() {
   }
   function updateMember(id, field, value) {
     db.ref(`members/${id}`).update({ [field]: value });
+    // Sync the same field change into any map tiles where this member is assigned
+    const affected = Object.keys(assignments).filter(
+      k => assignments[k]?.type === "friendly" && assignments[k]?.member?.id === id
+    );
+    if (affected.length) {
+      const tileUpdates = {};
+      affected.forEach(k => {
+        tileUpdates[`assignments/${toFbKey(k)}/member/${field}`] = value;
+      });
+      db.ref().update(tileUpdates);
+    }
   }
   function deleteMember(id) {
     db.ref(`members/${id}`).remove();
