@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kingshot KvK Alliance Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;700;800&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 0; background: #0a0f1e; }
+    #root { min-height: 100vh; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #080c14; }
+    ::-webkit-scrollbar-thumb { background: #1a2a3a; border-radius: 3px; }
+    select option { background: #0d1520; }
+    .cell-edit { background: transparent; border: 1px solid transparent; border-radius: 6px; color: inherit; padding: 4px 6px; font-size: 12px; width: 100%; box-sizing: border-box; outline: none; transition: background 0.15s, border-color 0.15s; font-family: inherit; }
+    .cell-edit:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); }
+    .cell-edit:focus { background: rgba(255,255,255,0.09); border-color: rgba(167,139,250,0.55); }
+    select.cell-edit { cursor: pointer; }
+    select.cell-edit option { color: #e2e8f3; background: #0d1520; font-weight: 400; }
+    .cell-edit::placeholder { color: rgba(255,255,255,0.3); }
+    @keyframes loadbar { 0% { margin-left: -40%; } 100% { margin-left: 100%; } }
+    .loadbar { height: 100%; width: 40%; background: #e8a020; border-radius: 99px; animation: loadbar 1.4s ease-in-out infinite; }
+  </style>
+  <!-- React 18 -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Firebase Compat -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <!-- Babel JSX transform -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// ── Firebase (compat CDN) ─────────────────────────────────────────────────
+firebase.initializeApp({
+  apiKey: "AIzaSyBBrL7-47k6W-gKli8z604K9pxo8KwDoxk",
+  authDomain: "kvk-dashboard-7b8de.firebaseapp.com",
+  databaseURL: "https://kvk-dashboard-7b8de-default-rtdb.firebaseio.com",
+  projectId: "kvk-dashboard-7b8de",
+  storageBucket: "kvk-dashboard-7b8de.firebasestorage.app",
+  messagingSenderId: "70169324063",
+  appId: "1:70169324063:web:0468e342d504a1b6c8432a"
+});
+const db = firebase.database();
+const toFbKey = k => k.replace(/,/g, "_");
+const fromFbKey = k => k.replace(/_/g, ",");
+
+// ── Liquid Glass Palette ───────────────────────────────────────────────────
+const C = {
+  bg: "#0a0f1e",
+  accent: "#a78bfa",
+  accentDim: "rgba(167,139,250,0.15)",
+  blue: "#60a5fa",
+  blueDim: "rgba(96,165,250,0.15)",
+  red: "#f87171",
+  redDim: "rgba(248,113,113,0.15)",
+  green: "#34d399",
+  greenDim: "rgba(52,211,153,0.15)",
+  text: "rgba(255,255,255,0.92)",
+  textDim: "rgba(255,255,255,0.45)",
+  gold: "#fbbf24",
+  // glass surfaces
+  glass: "rgba(255,255,255,0.07)",
+  glassBorder: "rgba(255,255,255,0.14)",
+  glassHover: "rgba(255,255,255,0.11)",
+  glassDeep: "rgba(255,255,255,0.04)",
+  panel: "rgba(255,255,255,0.06)",
+  panelBorder: "rgba(255,255,255,0.12)",
+};
+
+// Glass surface style helper
+const glass = (extra = {}) => ({
+  background: C.glass,
+  backdropFilter: "blur(24px) saturate(180%)",
+  WebkitBackdropFilter: "blur(24px) saturate(180%)",
+  border: `1px solid ${C.glassBorder}`,
+  borderRadius: 16,
+  ...extra,
+});
+
+const glassDeep = (extra = {}) => ({
+  background: C.glassDeep,
+  backdropFilter: "blur(12px)",
+  WebkitBackdropFilter: "blur(12px)",
+  border: `1px solid rgba(255,255,255,0.08)`,
+  borderRadius: 10,
+  ...extra,
+});
+
+const AVAILABILITY_OPTS = ["Full", "1st Half", "2nd Half", "On/Off"];
+const PRIMARY_TARGETS = ["Castle", "Turret (N)", "Turret (E)", "Turret (S)", "Turret (W)"];
+const TC_LEVELS = ["28","29","30","TG1","TG2","TG3","TG4","TG5","TG6","TG7","TG8"];
+const ROLES = ["Rally Leader", "Rally Joiner"];
+const THREAT_TYPES = ["Scout", "Rally", "Garrison", "Attacker", "Unknown"];
+
+let _uid = 100;
+const uid = () => ++_uid;
+
+// ── CSV Import Helpers ──────────────────────────────────────────────────────
+const CSV_HEADER_ALIASES = {
+  name: "name", membername: "name", member: "name",
+  tc: "tc", tclevel: "tc", townhall: "tc", th: "tc",
+  available: "available", availability: "available",
+  role: "role",
+  alliance: "alliance",
+  primarytarget: "primaryTarget", target: "primaryTarget", primarytargets: "primaryTarget",
+  notes: "notes", note: "notes",
+};
+
+function normalizeHeader(h) { return h.trim().toLowerCase().replace(/[^a-z]/g, ""); }
+
+function parseCSVLine(line) {
+  const result = [];
+  let cur = "", inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else inQuotes = false; }
+      else cur += ch;
+    } else {
+      if (ch === '"') inQuotes = true;
+      else if (ch === ",") { result.push(cur); cur = ""; }
+      else cur += ch;
+    }
+  }
+  result.push(cur);
+  return result;
+}
+
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+  if (!lines.length) return [];
+  const headers = parseCSVLine(lines[0]).map(h => CSV_HEADER_ALIASES[normalizeHeader(h)] || null);
+  return lines.slice(1).map(line => {
+    const values = parseCSVLine(line);
+    const row = {};
+    headers.forEach((key, i) => { if (key) row[key] = (values[i] || "").trim(); });
+    return row;
+  });
+}
+
+function matchOption(value, options, fallback) {
+  if (!value) return fallback;
+  const v = value.trim().toLowerCase();
+  return options.find(o => o.toLowerCase() === v) || fallback;
+}
+
+function rowToMember(row) {
+  if (!row.name) return null;
+  return {
+    id: uid(),
+    name: row.name,
+    tc: matchOption(row.tc, TC_LEVELS, "TG1"),
+    available: matchOption(row.available, AVAILABILITY_OPTS, "Full"),
+    role: matchOption(row.role, ROLES, "Rally Joiner"),
+    alliance: row.alliance || "",
+    primaryTarget: matchOption(row.primaryTarget, PRIMARY_TARGETS, "Castle"),
+    notes: row.notes || "",
+  };
+}
+
+const initMembers = [
+  { id: 1, name: "IronWolf", tc: "TG8", available: "Full", role: "Rally Leader", alliance: "LOR", primaryTarget: "Castle", notes: "Main rally commander" },
+  { id: 2, name: "ShadowBlade", tc: "TG7", available: "Full", role: "Rally Joiner", alliance: "LOR", primaryTarget: "Turret (N)", notes: "" },
+  { id: 3, name: "FrostQueen", tc: "TG8", available: "1st Half", role: "Rally Joiner", alliance: "PAN", primaryTarget: "Castle", notes: "Prefers cavalry" },
+  { id: 4, name: "ThunderKing", tc: "TG6", available: "On/Off", role: "Rally Leader", alliance: "PAN", primaryTarget: "Turret (E)", notes: "Offline until weekend" },
+  { id: 5, name: "StormRider", tc: "TG8", available: "Full", role: "Rally Joiner", alliance: "KOE", primaryTarget: "Castle", notes: "" },
+  { id: 6, name: "NightHawk", tc: "TG5", available: "2nd Half", role: "Rally Joiner", alliance: "KOE", primaryTarget: "Turret (W)", notes: "New member" },
+  { id: 7, name: "CrimsonAce", tc: "TG7", available: "Full", role: "Rally Leader", alliance: "WAR", primaryTarget: "Castle", notes: "" },
+  { id: 8, name: "VoidWalker", tc: "TG5", available: "On/Off", role: "Rally Joiner", alliance: "STR", primaryTarget: "Turret (S)", notes: "Hospital" },
+  { id: 9, name: "GoldRush", tc: "TG6", available: "Full", role: "Rally Joiner", alliance: "STR", primaryTarget: "Castle", notes: "" },
+  { id: 10, name: "BlazeHunter", tc: "TG7", available: "1st Half", role: "Rally Leader", alliance: "WAR", primaryTarget: "Turret (N)", notes: "Secondary commander" },
+];
+
+function roleColor(r) { return r === "Rally Leader" ? C.gold : C.blue; }
+
+// Alliances are user-managed (add/remove/recolor). The color map is kept in
+// sync from App's `alliances` state on every render so any component can
+// call allianceColor(name) without prop drilling.
+const DEFAULT_ALLIANCES = [
+  { name: "LOR", color: "#fbbf24" },
+  { name: "PAN", color: "#60a5fa" },
+  { name: "KOE", color: "#34d399" },
+  { name: "WAR", color: "#c084fc" },
+  { name: "STR", color: "#f87171" },
+];
+let _allianceColorMap = Object.fromEntries(DEFAULT_ALLIANCES.map(a => [a.name, a.color]));
+function allianceColor(a) {
+  if (!a) return C.textDim;
+  return _allianceColorMap[a] || C.textDim;
+}
+function hslToHex(h, s, l) {
+  s /= 100; l /= 100;
+  const k = n => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  const toHex = x => Math.round(255 * x).toString(16).padStart(2, "0");
+  return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
+}
+function randomAllianceColor() { return hslToHex(Math.floor(Math.random() * 360), 70, 65); }
+
+const inputSt = {
+  background: "rgba(255,255,255,0.06)",
+  border: "1px solid rgba(255,255,255,0.14)",
+  borderRadius: 8,
+  color: C.text,
+  padding: "6px 10px",
+  fontSize: 12,
+  outline: "none",
+  width: "100%",
+  boxSizing: "border-box",
+  backdropFilter: "blur(8px)",
+  WebkitBackdropFilter: "blur(8px)",
+};
+const btnSt = {
+  background: "rgba(255,255,255,0.08)",
+  border: "1px solid rgba(255,255,255,0.14)",
+  borderRadius: 8,
+  color: C.textDim,
+  cursor: "pointer",
+  fontSize: 11,
+  fontWeight: 700,
+  padding: "5px 14px",
+  backdropFilter: "blur(8px)",
+  WebkitBackdropFilter: "blur(8px)",
+  transition: "all 0.2s",
+};
+
+function Pill({ color, children }) {
+  return <span style={{
+    background: color + "22",
+    border: `1px solid ${color}55`,
+    color,
+    borderRadius: 20,
+    padding: "2px 9px",
+    fontSize: 11,
+    fontWeight: 700,
+    whiteSpace: "nowrap",
+    backdropFilter: "blur(4px)",
+    WebkitBackdropFilter: "blur(4px)",
+  }}>{children}</span>;
+}
+
+function StatCard({ label, value, sub, color = C.accent }) {
+  return (
+    <div style={{
+      ...glass({ borderRadius: 20, padding: "18px 22px", flex: "1 1 120px", minWidth: 110 }),
+      boxShadow: `0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.18)`,
+      position: "relative", overflow: "hidden",
+    }}>
+      <div style={{ position: "absolute", inset: 0, background: `radial-gradient(circle at top left, ${color}18 0%, transparent 65%)`, borderRadius: 20, pointerEvents: "none" }} />
+      <div style={{ fontSize: 10, color: C.textDim, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6, fontFamily: "'Roboto Condensed', sans-serif" }}>{label}</div>
+      <div style={{ fontSize: 32, fontWeight: 800, color, fontFamily: "'Bebas Neue',sans-serif", lineHeight: 1, textShadow: `0 0 20px ${color}66` }}>{value}</div>
+      {sub && <div style={{ fontSize: 11, color: C.textDim, marginTop: 4 }}>{sub}</div>}
+    </div>
+  );
+}
+
+function MiniBar({ label, value, max, color }) {
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 4 }}>
+        <span style={{ color: C.text }}>{label}</span>
+        <span style={{ color, fontWeight: 700 }}>{value}</span>
+      </div>
+      <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 99, height: 5 }}>
+        <div style={{ width: `${max > 0 ? (value / max) * 100 : 0}%`, height: "100%", background: `linear-gradient(90deg, ${color}cc, ${color})`, borderRadius: 99, boxShadow: `0 0 8px ${color}88`, transition: "width 0.4s ease" }} />
+      </div>
+    </div>
+  );
+}
+
+function DonutSlice({ label, value, total, color }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+      <div style={{ width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0, boxShadow: `0 0 6px ${color}` }} />
+      <span style={{ fontSize: 12, color: C.text, flex: 1 }}>{label}</span>
+      <span style={{ fontSize: 12, color, fontWeight: 700 }}>{value}</span>
+      <span style={{ fontSize: 11, color: C.textDim, minWidth: 32, textAlign: "right" }}>{total > 0 ? Math.round(value / total * 100) : 0}%</span>
+    </div>
+  );
+}
+
+// ── Add Member ─────────────────────────────────────────────────────────────
+function AddMemberForm({ onAdd, alliances }) {
+  const blank = { name: "", tc: "TG8", available: "Full", role: "Rally Joiner", alliance: alliances[0]?.name || "", primaryTarget: "Castle", notes: "" };
+  const [form, setForm] = useState(blank);
+  const [open, setOpen] = useState(false);
+  const f = (k, v) => setForm(p => ({ ...p, [k]: v }));
+  if (!open) return <button onClick={() => setOpen(true)} style={{ ...btnSt, background: C.accentDim, color: C.accent, padding: "7px 20px", fontWeight: 700, fontSize: 13, fontFamily: "'Roboto Condensed', 'Arial Narrow', sans-serif", letterSpacing: 0.5 }}>+ Add Member</button>;
+  return (
+    <div style={{ background: "#0a1820", border: `1px solid ${C.panelBorder}`, borderRadius: 10, padding: 18, marginBottom: 16 }}>
+      <div style={{ fontFamily: "'Bebas Neue'", fontSize: 20, color: C.accent, letterSpacing: 1, marginBottom: 14 }}>NEW MEMBER</div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(155px,1fr))", gap: 10, marginBottom: 14 }}>
+        {[["name","Name *","text","Member name"],["notes","Notes","text","Optional…"]].map(([k,label,type,ph]) => (
+          <div key={k}><div style={{ fontSize: 10, color: C.textDim, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.8 }}>{label}</div>
+          <input style={inputSt} type={type} value={form[k]} placeholder={ph} onChange={e => f(k, e.target.value)} /></div>
+        ))}
+        <div>
+          <div style={{ fontSize: 10, color: C.textDim, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.8 }}>Alliance</div>
+          <select style={{ ...inputSt, color: allianceColor(form.alliance), fontWeight: 700 }} value={form.alliance} onChange={e => f("alliance", e.target.value)}>
+            <option value="">—</option>
+            {alliances.map(a => <option key={a.name} value={a.name} style={{ color: a.color }}>{a.name}</option>)}
+          </select>
+        </div>
+        {[["tc","TC Level",TC_LEVELS],["role","Role",ROLES],["available","Available",AVAILABILITY_OPTS],["primaryTarget","Primary Target",PRIMARY_TARGETS]].map(([k,label,opts]) => (
+          <div key={k}><div style={{ fontSize: 10, color: C.textDim, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.8 }}>{label}</div>
+          <select style={inputSt} value={form[k]} onChange={e => f(k, e.target.value)}>{opts.map(o => <option key={o}>{o}</option>)}</select></div>
+        ))}
+      </div>
+      <div style={{ display: "flex", gap: 8 }}>
+        <button onClick={() => { if (form.name.trim()) { onAdd({ ...form, id: uid() }); setForm(blank); setOpen(false); } }} style={{ ...btnSt, background: C.accentDim, color: C.accent, fontWeight: 800, padding: "7px 22px" }}>Add Member</button>
+        <button onClick={() => setOpen(false)} style={{ ...btnSt, padding: "7px 16px" }}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+// ── CSV Upload ───────────────────────────────────────────────────────────────
+function CsvUploadButton({ onImport }) {
+  const fileRef = useRef(null);
+  const [status, setStatus] = useState(null);
+
+  function handleFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = evt => {
+      try {
+        const rows = parseCSV(evt.target.result);
+        const newMembers = rows.map(rowToMember).filter(Boolean);
+        if (newMembers.length) { onImport(newMembers); setStatus({ count: newMembers.length }); }
+        else setStatus({ count: 0, error: "No valid rows found (need a 'name' column)" });
+      } catch {
+        setStatus({ count: 0, error: "Could not parse that CSV" });
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }
+
+  return (
+    <div style={{ display: "inline-flex", flexDirection: "column", gap: 4, verticalAlign: "top" }}>
+      <input ref={fileRef} type="file" accept=".csv" onChange={handleFile} style={{ display: "none" }} />
+      <button onClick={() => fileRef.current?.click()} style={{ ...btnSt, background: C.blueDim, color: C.blue, padding: "7px 20px", fontWeight: 700, fontSize: 13, fontFamily: "'Roboto Condensed', 'Arial Narrow', sans-serif", letterSpacing: 0.5 }}>
+        ⇪ Upload CSV
+      </button>
+      {status && (
+        <span style={{ fontSize: 10, color: status.error ? C.red : C.green }}>
+          {status.error || `Imported ${status.count} member${status.count === 1 ? "" : "s"}`}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ── Alliance Manager (add / remove / recolor) ───────────────────────────────
+function AllianceManager({ alliances, onAdd, onRemove, onColorChange }) {
+  const [open, setOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newColor, setNewColor] = useState(() => randomAllianceColor());
+
+  if (!open) return (
+    <button onClick={() => setOpen(true)} style={{ ...btnSt, background: C.greenDim, color: C.green, padding: "7px 20px", fontWeight: 700, fontSize: 13, fontFamily: "'Roboto Condensed', 'Arial Narrow', sans-serif", letterSpacing: 0.5 }}>
+      🎨 Manage Alliances
+    </button>
+  );
+
+  return (
+    <div style={{ background: "#0a1820", border: `1px solid ${C.panelBorder}`, borderRadius: 10, padding: 18, marginBottom: 16, minWidth: 280, maxWidth: 380 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+        <div style={{ fontFamily: "'Bebas Neue'", fontSize: 20, color: C.accent, letterSpacing: 1 }}>MANAGE ALLIANCES</div>
+        <button onClick={() => setOpen(false)} style={{ ...btnSt, padding: "2px 9px", fontSize: 13 }}>✕</button>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14 }}>
+        {alliances.map(a => (
+          <div key={a.name} style={{ display: "flex", alignItems: "center", gap: 8, background: "#0d1520", borderRadius: 6, padding: "5px 10px" }}>
+            <input type="color" value={a.color} onChange={e => onColorChange(a.name, e.target.value)}
+              title="Change color"
+              style={{ width: 26, height: 26, border: "none", borderRadius: 6, background: "none", cursor: "pointer", padding: 0, flexShrink: 0 }} />
+            <span style={{ flex: 1, fontSize: 12, fontWeight: 700, color: a.color }}>{a.name}</span>
+            <button onClick={() => onRemove(a.name)} style={{ ...btnSt, background: C.redDim, color: C.red, padding: "2px 8px", fontSize: 10 }}>✕</button>
+          </div>
+        ))}
+        {alliances.length === 0 && <div style={{ fontSize: 11, color: C.textDim, textAlign: "center", padding: "8px 0" }}>No alliances yet — add one below</div>}
+      </div>
+
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <input type="color" value={newColor} onChange={e => setNewColor(e.target.value)}
+          title="Pick color"
+          style={{ width: 32, height: 32, border: "none", borderRadius: 6, background: "none", cursor: "pointer", padding: 0, flexShrink: 0 }} />
+        <input style={{ ...inputSt, flex: 1 }} placeholder="New alliance name" value={newName}
+          onChange={e => setNewName(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter" && newName.trim()) { onAdd(newName.trim(), newColor); setNewName(""); setNewColor(randomAllianceColor()); } }} />
+        <button onClick={() => { if (newName.trim()) { onAdd(newName.trim(), newColor); setNewName(""); setNewColor(randomAllianceColor()); } }}
+          style={{ ...btnSt, background: C.greenDim, color: C.green, padding: "7px 16px", fontWeight: 700 }}>Add</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Member Table Row ───────────────────────────────────────────────────────
+function MemberRow({ m, alliances, onUpdate, onDelete }) {
+  const td = { padding: "6px 8px", fontSize: 12, color: C.text, borderBottom: `1px solid ${C.panelBorder}` };
+  const f = (k, v) => onUpdate(m.id, k, v);
+  const availColor = { Full: C.green, "1st Half": C.blue, "2nd Half": C.gold, "On/Off": C.red }[m.available] || C.textDim;
+  const targetColor = { Castle: C.accent, "Turret (N)": "#20d0d0", "Turret (E)": "#c060ff", "Turret (S)": "#ff8040", "Turret (W)": "#40c080" }[m.primaryTarget] || C.textDim;
+  return (
+    <tr onMouseEnter={e => e.currentTarget.style.background = "#1a2a3a22"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+      <td style={td}><input className="cell-edit" style={{ fontWeight: 700 }} value={m.name} onChange={e => f("name", e.target.value)} /></td>
+      <td style={{ ...td, textAlign: "center" }}>
+        <select className="cell-edit" style={{ color: C.accent, fontWeight: 700, textAlign: "center" }} value={m.tc} onChange={e => f("tc", e.target.value)}>
+          {TC_LEVELS.map(t => <option key={t}>{t}</option>)}
+        </select>
+      </td>
+      <td style={{ ...td, textAlign: "center" }}>
+        <select className="cell-edit" style={{ color: availColor, fontWeight: 700 }} value={m.available} onChange={e => f("available", e.target.value)}>
+          {AVAILABILITY_OPTS.map(o => <option key={o}>{o}</option>)}
+        </select>
+      </td>
+      <td style={td}>
+        <select className="cell-edit" style={{ color: roleColor(m.role), fontWeight: 700 }} value={m.role} onChange={e => f("role", e.target.value)}>
+          {ROLES.map(r => <option key={r}>{r}</option>)}
+        </select>
+      </td>
+      <td style={td}>
+        <select className="cell-edit" style={{ color: allianceColor(m.alliance), fontWeight: 700 }} value={m.alliance || ""} onChange={e => f("alliance", e.target.value)}>
+          <option value="">—</option>
+          {alliances.map(a => <option key={a.name} value={a.name} style={{ color: a.color }}>{a.name}</option>)}
+        </select>
+      </td>
+      <td style={td}>
+        <select className="cell-edit" style={{ color: targetColor, fontWeight: 700 }} value={m.primaryTarget} onChange={e => f("primaryTarget", e.target.value)}>
+          {PRIMARY_TARGETS.map(t => <option key={t}>{t}</option>)}
+        </select>
+      </td>
+      <td style={td}><input className="cell-edit" style={{ color: C.textDim }} value={m.notes} placeholder="—" onChange={e => f("notes", e.target.value)} /></td>
+      <td style={td}>
+        <button onClick={() => onDelete(m.id)} style={{ ...btnSt, background: C.redDim, color: C.red, padding: "3px 10px" }}>✕</button>
+      </td>
+    </tr>
+  );
+}
+
+// ── Tile Assignment Panel ──────────────────────────────────────────────────
+function TilePanel({ modal, members, assignments, onFriendly, onEnemy, onClear, onClose }) {
+  const [tab, setTab] = useState("friendly");
+  const [sel, setSel] = useState("");
+  const [en, setEn] = useState({ name: "", kingdom: "", threat: "Scout", notes: "" });
+  const existing = modal?.existing;
+  const assignedIds = new Set(Object.values(assignments).filter(a => a.type === "friendly").map(a => a.member.id));
+  if (!modal) return null;
+  return (
+    <div style={{ background: C.panel, border: `2px solid ${C.accent}88`, borderRadius: 10, padding: 20, width: 285, flexShrink: 0 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+        <span style={{ fontFamily: "'Bebas Neue'", fontSize: 20, color: C.accent, letterSpacing: 1 }}>TILE [{modal.r},{modal.c}]</span>
+        <button onClick={onClose} style={{ ...btnSt, padding: "2px 9px", fontSize: 13 }}>✕</button>
+      </div>
+      {existing && (
+        <div style={{ background: existing.type === "friendly" ? "#0a2a4a" : C.redDim, border: `1px solid ${existing.type === "friendly" ? C.blue : C.red}55`, borderRadius: 6, padding: "8px 12px", marginBottom: 12 }}>
+          <div style={{ fontWeight: 700, color: existing.type === "friendly" ? C.blue : C.red, fontSize: 13, marginBottom: 4 }}>
+            {existing.type === "friendly" ? `🤝 ${existing.member.name}` : `⚔ ${existing.name || "Enemy"}`}
+          </div>
+          {existing.type === "friendly" && <div style={{ fontSize: 11, color: C.textDim }}>{existing.member.role} · {existing.member.alliance}</div>}
+          {existing.type === "enemy" && existing.kingdom && <div style={{ fontSize: 11, color: C.textDim }}>{existing.kingdom} · {existing.threat}</div>}
+          <button onClick={() => onClear(modal.r, modal.c)} style={{ ...btnSt, background: C.redDim, color: C.red, marginTop: 8, width: "100%", padding: 4, fontSize: 11 }}>Clear Tile</button>
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 4, marginBottom: 14 }}>
+        {["friendly","enemy"].map(t => (
+          <button key={t} onClick={() => setTab(t)} style={{ ...btnSt, flex: 1, textTransform: "capitalize", background: tab === t ? (t === "friendly" ? "#0a2a4a" : C.redDim) : "#1a2a3a", color: tab === t ? (t === "friendly" ? C.blue : C.red) : C.textDim }}>
+            {t === "friendly" ? "🤝 Friendly" : "⚔ Enemy"}
+          </button>
+        ))}
+      </div>
+      {tab === "friendly" && (
+        <>
+          <div style={{ fontSize: 10, color: C.textDim, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.8 }}>Select member</div>
+          <select style={{ ...inputSt, marginBottom: 10 }} value={sel} onChange={e => setSel(e.target.value)}>
+            <option value="">-- Choose member --</option>
+            {members.map(m => <option key={m.id} value={m.id}>{m.name} ({m.alliance}){assignedIds.has(m.id) ? " ★" : ""}</option>)}
+          </select>
+          {sel && (() => { const m = members.find(x => x.id === +sel); return m ? (
+            <div style={{ background: "#0a1820", borderRadius: 6, padding: "10px 12px", marginBottom: 12, fontSize: 11 }}>
+              <div style={{ fontWeight: 800, color: C.text, marginBottom: 6 }}>{m.name}</div>
+              <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                <Pill color={roleColor(m.role)}>{m.role === "Rally Leader" ? "Leader" : "Joiner"}</Pill>
+                <Pill color={allianceColor(m.alliance)}>{m.alliance || "—"}</Pill>
+                <Pill color={m.available ? C.green : C.red}>{m.available ? "Avail." : "Busy"}</Pill>
+              </div>
+            </div>
+          ) : null; })()}
+          <button onClick={() => sel && onFriendly(modal.r, modal.c, +sel)} disabled={!sel}
+            style={{ ...btnSt, width: "100%", background: sel ? "#0a2a4a" : "#1a2a3a", color: sel ? C.blue : C.textDim, padding: 8, fontWeight: 800 }}>
+            Assign to Tile
+          </button>
+        </>
+      )}
+      {tab === "enemy" && (
+        <>
+          {[["name","Enemy Name","e.g. KingSlayer"],["kingdom","Kingdom / Alliance","e.g. K99 · Alliance"]].map(([k,label,ph]) => (
+            <div key={k} style={{ marginBottom: 8 }}>
+              <div style={{ fontSize: 10, color: C.textDim, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.8 }}>{label}</div>
+              <input style={inputSt} placeholder={ph} value={en[k]} onChange={e => setEn(p => ({ ...p, [k]: e.target.value }))} />
+            </div>
+          ))}
+          <div style={{ marginBottom: 8 }}>
+            <div style={{ fontSize: 10, color: C.textDim, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.8 }}>Threat Type</div>
+            <select style={inputSt} value={en.threat} onChange={e => setEn(p => ({ ...p, threat: e.target.value }))}>{THREAT_TYPES.map(t => <option key={t}>{t}</option>)}</select>
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 10, color: C.textDim, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.8 }}>Notes</div>
+            <input style={inputSt} placeholder="Additional intel..." value={en.notes} onChange={e => setEn(p => ({ ...p, notes: e.target.value }))} />
+          </div>
+          <button onClick={() => onEnemy(modal.r, modal.c, en)} style={{ ...btnSt, width: "100%", background: C.redDim, color: C.red, padding: 8, fontWeight: 800 }}>Mark as Enemy</button>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Castle Map ─────────────────────────────────────────────────────────────
+//
+// Layout matches blueprint exactly:
+//   • 13×13 uniform grid of assignable tiles
+//   • All tiles gray / light — fully assignable (no "enemy zone" tiles baked in)
+//   • Red rectangle border drawn around the inner 11×11 area (rows 1–11, cols 1–11)
+//   • Castle = white 6×6 zone in center (rows 3–8, cols 3–8), NOT assignable
+//   • 4 turret tiles at castle corners labeled North/East/West/South
+//     - North: top-left corner of castle (r=3, c=3)
+//     - East:  top-right corner (r=3, c=8)
+//     - West:  bottom-left corner (r=8, c=3)
+//     - South: bottom-right corner (r=8, c=8)
+//   • Castle interior (non-turret cells) rendered as white overlay, no tile grid shown
+
+// 14×14 grid. Layout:
+//   Row/Col 0        → outer ring (assignable, outside red border)
+//   Row/Col 1        → red border line sits on outer edge of this row/col
+//   Rows/Cols 2–3    → 3-tile gap between red border and castle  (wait: border at col1 inner edge, gap cols 2,3,4 = 3 tiles... let's be precise)
+//
+// Precise layout (0-indexed):
+//   Col 0            : outer tile (assignable)
+//   Col 1            : red border left edge passes between col0 and col1 outer edges
+//   Cols 1,2,3       : 3 gap tiles inside red border on left  → castle starts col 4
+//   Cols 4–9         : castle (6 wide)
+//   Cols 10,11,12    : 3 gap tiles inside red border on right
+//   Col 13           : outer tile (assignable)
+//   Red border: left edge at col1 left, right edge at col12 right → spans cols 1–12
+//   Same logic for rows.
+//
+// 14 cols total: 0 | 1,2,3(gap) | 4,5,6,7,8,9(castle) | 10,11,12(gap) | 13
+// Red border rect encompasses rows 1–12, cols 1–12
+
+const ROWS = 14, COLS = 14;
+const TILE = 36, GAP = 2;
+
+// Castle occupies rows 4-9, cols 4-9 (inclusive) — 6×6
+const CR1 = 4, CR2 = 9, CC1 = 4, CC2 = 9;
+
+const TURRETS = [
+  { r: CR1, c: CC1, label: "North" },
+  { r: CR1, c: CC2, label: "East" },
+  { r: CR2, c: CC1, label: "West" },
+  { r: CR2, c: CC2, label: "South" },
+];
+
+function isCastle(r, c) { return r >= CR1 && r <= CR2 && c >= CC1 && c <= CC2; }
+function isTurret(r, c) { return TURRETS.some(t => t.r === r && t.c === c); }
+function getTurretLabel(r, c) { return TURRETS.find(t => t.r === r && t.c === c)?.label || null; }
+
+function CastleMap({ members, assignments, setAssignments }) {
+  const [modal, setModal] = useState(null);
+  const [hover, setHover] = useState(null);
+  const [filter, setFilter] = useState("all");
+
+  const key = (r, c) => `${r},${c}`;
+  const getA = (r, c) => assignments[key(r, c)];
+
+  function handleClick(r, c) {
+    if (isCastle(r, c) && !isTurret(r, c)) return;
+    if (isTurret(r, c)) return; // turrets not assignable
+    setModal({ r, c, existing: getA(r, c) });
+  }
+
+  function assignFriendly(r, c, memberId) {
+    const member = members.find(m => m.id === memberId);
+    if (!member) return;
+    setAssignments(p => ({ ...p, [key(r, c)]: { type: "friendly", member } }));
+    setModal(null);
+  }
+  function assignEnemy(r, c, data) {
+    setAssignments(p => ({ ...p, [key(r, c)]: { type: "enemy", ...data } }));
+    setModal(null);
+  }
+  function clearTile(r, c) {
+    setAssignments(p => { const n = { ...p }; delete n[key(r, c)]; return n; });
+    setModal(null);
+  }
+
+  const friendlyCount = Object.values(assignments).filter(a => a.type === "friendly").length;
+  const enemyCount = Object.values(assignments).filter(a => a.type === "enemy").length;
+
+  const gridW = COLS * TILE + (COLS - 1) * GAP;
+  const gridH = ROWS * TILE + (ROWS - 1) * GAP;
+
+  // Castle interior overlay — 4×4 inner zone between the turrets (rows CR1+1 to CR2-1, cols CC1+1 to CC2-1)
+  const interiorX = (CC1 + 1) * (TILE + GAP);
+  const interiorY = (CR1 + 1) * (TILE + GAP);
+  const interiorW = 4 * TILE + 3 * GAP;
+  const interiorH = 4 * TILE + 3 * GAP;
+
+  // Red border: encompasses rows 1–12, cols 1–12 (3 gap tiles each side around 6×6 castle)
+  const bx = 1 * (TILE + GAP) - 1;
+  const by = 1 * (TILE + GAP) - 1;
+  const bw = 12 * TILE + 11 * GAP + 2;
+  const bh = 12 * TILE + 11 * GAP + 2;
+
+  // Gold castle outline: rows CR1–CR2, cols CC1–CC2
+  const cx = CC1 * (TILE + GAP) - 1;
+  const cy = CR1 * (TILE + GAP) - 1;
+  const cw = 6 * TILE + 5 * GAP + 2;
+  const ch = 6 * TILE + 5 * GAP + 2;
+
+  // ── Sidebar derived data ──────────────────────────────────────────────────
+  const friendlyByAlliance = {};
+  Object.values(assignments).filter(a => a.type === "friendly").forEach(a => {
+    const al = a.member.alliance;
+    friendlyByAlliance[al] = (friendlyByAlliance[al] || 0) + 1;
+  });
+  const targetCounts = {};
+  members.forEach(m => { targetCounts[m.primaryTarget] = (targetCounts[m.primaryTarget] || 0) + 1; });
+  const assignedMemberIds = new Set(Object.values(assignments).filter(a => a.type === "friendly").map(a => a.member.id));
+  const unassignedMembers = members.filter(m => !assignedMemberIds.has(m.id));
+  const availColorMap = { Full: C.green, "1st Half": C.blue, "2nd Half": C.gold, "On/Off": C.red };
+  const targetColorMap = { Castle: C.accent, "Turret (N)": "#20d0d0", "Turret (E)": "#c060ff", "Turret (S)": "#ff8040", "Turret (W)": "#40c080" };
+
+  const SideSection = ({ title, children }) => (
+    <div style={{ background: "#0a1820", border: `1px solid ${C.panelBorder}`, borderRadius: 8, padding: 12 }}>
+      <div style={{ fontFamily: "'Bebas Neue'", fontSize: 12, color: C.accent, letterSpacing: 1, marginBottom: 8 }}>{title}</div>
+      {children}
+    </div>
+  );
+
+  return (
+    <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+
+      {/* ── LEFT: Map ── */}
+      <div style={{ flex: "0 0 auto" }}>
+        {/* Filters */}
+        <div style={{ display: "flex", gap: 5, marginBottom: 8, alignItems: "center", flexWrap: "wrap" }}>
+          {[["all","All"],["friendly","🤝 Friendly"],["enemy","⚔ Enemy"],["unassigned","○ Unassigned"]].map(([v, label]) => (
+            <button key={v} onClick={() => setFilter(v)} style={{ ...btnSt, fontSize: 10, padding: "3px 9px", background: filter === v ? C.accentDim : "#1a2a3a", color: filter === v ? C.accent : C.textDim, border: filter === v ? `1px solid ${C.accent}44` : "1px solid transparent" }}>{label}</button>
+          ))}
+          <div style={{ flex: 1 }} />
+          <button onClick={() => setAssignments({})} style={{ ...btnSt, fontSize: 10, padding: "3px 9px", background: C.redDim, color: C.red, border: `1px solid ${C.red}33` }}>Reset</button>
+        </div>
+
+        {/* Grid */}
+        <div style={{ position: "relative", width: gridW, height: gridH, flexShrink: 0 }}>
+          {Array.from({ length: ROWS }, (_, r) =>
+            Array.from({ length: COLS }, (_, c) => {
+              const castle = isCastle(r, c);
+              const turret = isTurret(r, c);
+              const assignment = getA(r, c);
+              const x = c * (TILE + GAP);
+              const y = r * (TILE + GAP);
+              const tLabel = getTurretLabel(r, c);
+              const isSelected = modal?.r === r && modal?.c === c;
+              if (castle && !turret) return null;
+              let dimmed = false;
+              if (filter === "friendly" && assignment?.type !== "friendly") dimmed = true;
+              if (filter === "enemy" && assignment?.type !== "enemy") dimmed = true;
+              if (filter === "unassigned" && assignment) dimmed = true;
+              let bg, border;
+              const isLeader = assignment?.type === "friendly" && assignment.member.role === "Rally Leader";
+              if (dimmed) { bg = "#10181f"; border = "1px solid #1a2a3a"; }
+              else if (turret) { bg = "#f5f0e0"; border = `1.5px solid ${C.accent}`; }
+              else if (assignment?.type === "friendly" && isLeader) { bg = "#4a3a08"; border = `1.5px solid ${C.gold}`; }
+              else if (assignment?.type === "friendly") { bg = "#0d2e52"; border = `1.5px solid ${C.blue}`; }
+              else if (assignment?.type === "enemy") { bg = "#3a0d0d"; border = `1.5px solid ${C.red}`; }
+              else { bg = "#d0d8df"; border = "1px solid #a8b4be"; }
+              if (isSelected) border = `2px solid ${C.accent}`;
+              return (
+                <div key={`${r},${c}`}
+                  onClick={() => !turret && handleClick(r, c)}
+                  onMouseEnter={e => {
+                    if (assignment && !turret) setHover({ r, c, a: assignment, x: e.clientX, y: e.clientY });
+                    if (!turret && !dimmed && !isSelected) { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.filter = "brightness(1.08)"; }
+                  }}
+                  onMouseLeave={e => {
+                    setHover(null);
+                    e.currentTarget.style.borderColor = ""; e.currentTarget.style.filter = "";
+                  }}
+                  style={{
+                    position: "absolute", left: x, top: y, width: TILE, height: TILE,
+                    background: bg, border, borderRadius: 3,
+                    cursor: turret ? "default" : "pointer",
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                    overflow: "hidden", boxSizing: "border-box", zIndex: turret ? 25 : 1,
+                  }}>
+                  {turret && <span style={{ fontSize: 7, fontWeight: 800, color: "#6a4a08", textAlign: "center", lineHeight: 1.2, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif" }}>{tLabel}</span>}
+                  {!turret && !dimmed && assignment?.type === "friendly" && (
+                    <span style={{ fontSize: 8, fontWeight: 700, color: isLeader ? "#ffd76a" : "#90c8ff", textAlign: "center", wordBreak: "break-all", padding: "0 1px", lineHeight: 1.2, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif" }}>
+                      {assignment.member.name.slice(0, 8)}
+                    </span>
+                  )}
+                  {!turret && !dimmed && assignment?.type === "enemy" && (
+                    <span style={{ fontSize: 8, fontWeight: 700, color: "#ff9090", textAlign: "center", wordBreak: "break-all", padding: "0 1px", lineHeight: 1.2, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif" }}>
+                      {(assignment.name || "ENM").slice(0, 8)}
+                    </span>
+                  )}
+                </div>
+              );
+            })
+          )}
+
+          {/* Castle interior */}
+          <div style={{ position: "absolute", left: interiorX, top: interiorY, width: interiorW, height: interiorH, background: "white", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 15, pointerEvents: "none" }}>
+            <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, fontWeight: 900, color: "#1a1a1a", letterSpacing: 3 }}>CASTLE</span>
+          </div>
+
+          {/* SVG borders */}
+          <svg style={{ position: "absolute", left: 0, top: 0, width: gridW, height: gridH, pointerEvents: "none", zIndex: 30 }}>
+            <rect x={cx} y={cy} width={cw} height={ch} fill="none" stroke={C.accent} strokeWidth={1.5} />
+            <rect x={bx} y={by} width={bw} height={bh} fill="none" stroke={C.red} strokeWidth={2} rx={1} />
+          </svg>
+        </div>
+
+        {/* Legend */}
+        <div style={{ display: "flex", gap: 10, marginTop: 8, flexWrap: "wrap" }}>
+          {[["#d0d8df","#a8b4be","Empty"],["#4a3a08",C.gold,"Leader"],["#0d2e52",C.blue,"Joiner"],["#3a0d0d",C.red,"Enemy"],["#f5f0e0",C.accent,"Turret"],["white",C.accent,"Castle"]].map(([bg, border, label]) => (
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: C.textDim }}>
+              <div style={{ width: 10, height: 10, background: bg, border: `1.5px solid ${border}`, borderRadius: 2, flexShrink: 0 }} />
+              {label}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── RIGHT: Sidebar ── */}
+      <div style={{ flex: 1, minWidth: 200, display: "flex", flexDirection: "column", gap: 8, maxHeight: gridH + 50, overflowY: "auto" }}>
+
+        {/* Tile assignment panel — shown when a tile is selected */}
+        {modal ? (
+          <TilePanel modal={modal} members={members} assignments={assignments}
+            onFriendly={assignFriendly} onEnemy={assignEnemy} onClear={clearTile} onClose={() => setModal(null)} />
+        ) : (
+          <div style={{ background: "#0a1820", border: `1px solid ${C.panelBorder}`, borderRadius: 8, padding: 14, textAlign: "center" }}>
+            <div style={{ fontSize: 22, marginBottom: 4 }}>🗺</div>
+            <div style={{ fontSize: 11, color: C.textDim }}>Click any tile on the map to assign a member or mark an enemy position.</div>
+          </div>
+        )}
+
+        {/* Map overview stats */}
+        <SideSection title="MAP OVERVIEW">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 10 }}>
+            {[
+              { label: "Friendly", value: friendlyCount, color: C.blue },
+              { label: "Enemy", value: enemyCount, color: C.red },
+              { label: "Open Tiles", value: (ROWS * COLS) - 32 - friendlyCount - enemyCount, color: C.textDim },
+              { label: "Unpositioned", value: unassignedMembers.length, color: C.gold },
+            ].map(({ label, value, color }) => (
+              <div key={label} style={{ background: "#0d1520", borderRadius: 5, padding: "7px 8px", border: `1px solid ${C.panelBorder}` }}>
+                <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 1 }}>{label}</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color, fontFamily: "'Bebas Neue'", lineHeight: 1 }}>{value}</div>
+              </div>
+            ))}
+          </div>
+          {friendlyCount > 0 && (
+            <>
+              <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 5 }}>Friendly by Alliance</div>
+              {Object.entries(friendlyByAlliance).map(([al, cnt]) => (
+                <div key={al} style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 4 }}>
+                  <div style={{ width: 7, height: 7, borderRadius: 2, background: allianceColor(al), flexShrink: 0 }} />
+                  <span style={{ fontSize: 10, color: C.text, flex: 1 }}>{al}</span>
+                  <span style={{ fontSize: 10, color: allianceColor(al), fontWeight: 700 }}>{cnt}</span>
+                  <div style={{ width: 40, height: 3, background: "#1a2a3a", borderRadius: 2 }}>
+                    <div style={{ width: `${(cnt / friendlyCount) * 100}%`, height: "100%", background: allianceColor(al), borderRadius: 2 }} />
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+        </SideSection>
+
+        {/* Target assignment breakdown */}
+        <SideSection title="TARGET ASSIGNMENTS">
+          {PRIMARY_TARGETS.map(t => {
+            const cnt = targetCounts[t] || 0;
+            const col = targetColorMap[t] || C.textDim;
+            return (
+              <div key={t} style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
+                <div style={{ width: 7, height: 7, borderRadius: 2, background: col, flexShrink: 0 }} />
+                <span style={{ fontSize: 10, color: C.text, flex: 1 }}>{t}</span>
+                <span style={{ fontSize: 10, color: col, fontWeight: 700 }}>{cnt}</span>
+                <div style={{ width: 40, height: 3, background: "#1a2a3a", borderRadius: 2 }}>
+                  <div style={{ width: `${members.length > 0 ? (cnt / members.length) * 100 : 0}%`, height: "100%", background: col, borderRadius: 2 }} />
+                </div>
+              </div>
+            );
+          })}
+        </SideSection>
+
+        {/* Unpositioned members */}
+        <SideSection title={`UNPOSITIONED (${unassignedMembers.length})`}>
+          {unassignedMembers.length === 0 ? (
+            <div style={{ fontSize: 10, color: C.green, textAlign: "center", padding: "6px 0" }}>✓ All members positioned</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              {unassignedMembers.map(m => (
+                <div key={m.id} style={{ background: "#0d1520", borderRadius: 4, padding: "5px 8px", border: `1px solid ${C.panelBorder}`, display: "flex", alignItems: "center", gap: 5 }}>
+                  <div style={{ width: 5, height: 5, borderRadius: "50%", background: availColorMap[m.available] || C.textDim, flexShrink: 0 }} />
+                  <span style={{ fontSize: 10, fontWeight: 700, color: C.text, flex: 1 }}>{m.name}</span>
+                  <span style={{ fontSize: 9, color: C.textDim }}>TC{m.tc}</span>
+                  <span style={{ fontSize: 9, color: allianceColor(m.alliance), fontWeight: 700 }}>{m.alliance}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </SideSection>
+
+        {/* Full member roster with availability */}
+        <SideSection title="MEMBER ROSTER">
+          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            {members.map(m => {
+              const isOnMap = assignedMemberIds.has(m.id);
+              return (
+                <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 6px", borderRadius: 4, background: isOnMap ? "#0a2040" : "#0d1520", border: `1px solid ${isOnMap ? C.blue + "44" : C.panelBorder}` }}>
+                  <div style={{ width: 5, height: 5, borderRadius: "50%", background: availColorMap[m.available] || C.textDim, flexShrink: 0 }} />
+                  <span style={{ fontSize: 10, fontWeight: 700, color: isOnMap ? "#90c8ff" : C.text, flex: 1 }}>{m.name}</span>
+                  <span style={{ fontSize: 9, color: C.textDim }}>{m.tc}</span>
+                  <span style={{ fontSize: 9, color: allianceColor(m.alliance), fontWeight: 700 }}>{m.alliance}</span>
+                  {isOnMap && <span style={{ fontSize: 8, color: C.blue }}>●</span>}
+                </div>
+              );
+            })}
+          </div>
+        </SideSection>
+      </div>
+
+      {/* Hover tooltip */}
+      {hover && (
+        <div style={{
+          position: "fixed", top: hover.y - 8, left: hover.x + 14,
+          background: "#0d1520f2", border: `1px solid ${C.panelBorder}`,
+          borderRadius: 7, padding: "10px 14px", zIndex: 9999, fontSize: 12, color: C.text,
+          maxWidth: 220, pointerEvents: "none", boxShadow: "0 4px 20px #000a",
+        }}>
+          {hover.a.type === "friendly" ? (
+            <>
+              <div style={{ fontWeight: 800, color: hover.a.member.role === "Rally Leader" ? C.gold : C.blue, marginBottom: 5 }}>{hover.a.member.name}</div>
+              <div style={{ color: C.textDim, marginBottom: 2 }}>Role: <span style={{ color: C.text }}>{hover.a.member.role}</span></div>
+              <div style={{ color: C.textDim }}>Alliance: <span style={{ color: allianceColor(hover.a.member.alliance) }}>{hover.a.member.alliance || "—"}</span></div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontWeight: 800, color: C.red, marginBottom: 5 }}>{hover.a.name || "Enemy"}</div>
+              {hover.a.kingdom && <div style={{ color: C.textDim, marginBottom: 2 }}>Kingdom: <span style={{ color: C.text }}>{hover.a.kingdom}</span></div>}
+              <div style={{ color: C.textDim, marginBottom: 2 }}>Threat: <span style={{ color: C.red }}>{hover.a.threat}</span></div>
+              {hover.a.notes && <div style={{ color: C.textDim, marginTop: 4, fontStyle: "italic" }}>{hover.a.notes}</div>}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Main App ───────────────────────────────────────────────────────────────
+function App() {
+  const [loading, setLoading]       = useState(true);
+  const [members, setMembers]       = useState([]);
+  const [assignments, setAssignments] = useState({});
+  const [alliances, setAlliances]   = useState(DEFAULT_ALLIANCES);
+  const [tab, setTab]               = useState("dashboard");
+  const [filterRole, setFilterRole] = useState("all");
+  const [filterAlliance, setFilterAlliance] = useState("");
+  const [filterAvail, setFilterAvail] = useState("all");
+  const [sortKey, setSortKey]       = useState("name");
+  const [sortDir, setSortDir]       = useState(1);
+  const [search, setSearch]         = useState("");
+
+  // Keep module-level color map in sync for allianceColor()
+  _allianceColorMap = Object.fromEntries(alliances.map(a => [a.name, a.color]));
+
+  // ── Firebase listeners ─────────────────────────────────────────────────
+  useEffect(() => {
+    const membersHandler = snap => {
+      const data = snap.val();
+      if (data) { setMembers(Object.values(data)); }
+      else { const seed = {}; initMembers.forEach(m => { seed[m.id] = m; }); db.ref("members").set(seed); }
+      setLoading(false);
+    };
+    db.ref("members").on("value", membersHandler, err => {
+      console.error("Firebase error:", err);
+      setLoading(false);
+    });
+
+    const assignmentsHandler = snap => {
+      const data = snap.val() || {};
+      const converted = {};
+      Object.entries(data).forEach(([k, v]) => { converted[fromFbKey(k)] = v; });
+      setAssignments(converted);
+    };
+    db.ref("assignments").on("value", assignmentsHandler);
+
+    const alliancesHandler = snap => {
+      const data = snap.val();
+      if (data) setAlliances(Array.isArray(data) ? data : Object.values(data));
+    };
+    db.ref("alliances").on("value", alliancesHandler);
+
+    return () => {
+      db.ref("members").off("value", membersHandler);
+      db.ref("assignments").off("value", assignmentsHandler);
+      db.ref("alliances").off("value", alliancesHandler);
+    };
+  }, []);
+
+  // ── Member writes ──────────────────────────────────────────────────────
+  function addMember(m) {
+    db.ref(`members/${m.id}`).set(m);
+  }
+  function updateMember(id, field, value) {
+    db.ref(`members/${id}`).update({ [field]: value });
+  }
+  function deleteMember(id) {
+    db.ref(`members/${id}`).remove();
+    const updates = {};
+    Object.keys(assignments).forEach(k => {
+      if (assignments[k].type === "friendly" && assignments[k].member.id === id)
+        updates[`assignments/${toFbKey(k)}`] = null;
+    });
+    if (Object.keys(updates).length) db.ref().update(updates);
+  }
+  function importMembers(newOnes) {
+    const updates = {};
+    newOnes.forEach(m => { updates[`members/${m.id}`] = m; });
+    db.ref().update(updates);
+    // Auto-create any new alliances found in the CSV
+    const known = new Set(alliances.map(a => a.name));
+    const additions = [];
+    newOnes.forEach(m => {
+      if (m.alliance && !known.has(m.alliance)) {
+        additions.push({ name: m.alliance, color: randomAllianceColor() });
+        known.add(m.alliance);
+      }
+    });
+    if (additions.length) db.ref("alliances").set([...alliances, ...additions]);
+  }
+
+  // ── Assignment writes ──────────────────────────────────────────────────
+  // CastleMap calls setAssignments with an updater fn or plain object.
+  // We intercept both and mirror to Firebase.
+  function fbSetAssignments(updaterOrValue) {
+    setAssignments(prev => {
+      const next = typeof updaterOrValue === "function" ? updaterOrValue(prev) : updaterOrValue;
+      // Build Firebase update — null values delete keys
+      const fbObj = {};
+      // Mark all old keys for removal
+      Object.keys(prev).forEach(k => { fbObj[toFbKey(k)] = null; });
+      // Set new values
+      Object.entries(next).forEach(([k, v]) => { fbObj[toFbKey(k)] = v; });
+      if (Object.keys(fbObj).length) db.ref("assignments").update(fbObj);
+      return next;
+    });
+  }
+
+  // ── Alliance writes ────────────────────────────────────────────────────
+  function addAlliance(name, color) {
+    if (alliances.some(a => a.name.toLowerCase() === name.toLowerCase())) return;
+    db.ref("alliances").set([...alliances, { name, color }]);
+  }
+  function removeAlliance(name) {
+    db.ref("alliances").set(alliances.filter(a => a.name !== name));
+    members.forEach(m => {
+      if (m.alliance === name) db.ref(`members/${m.id}`).update({ alliance: "" });
+    });
+  }
+  function updateAllianceColor(name, color) {
+    db.ref("alliances").set(alliances.map(a => a.name === name ? { ...a, color } : a));
+  }
+
+  // ── Derived stats ──────────────────────────────────────────────────────
+  const avail        = members.filter(m => m.available === "Full").length;
+  const leaders      = members.filter(m => m.role === "Rally Leader").length;
+  const joiners      = members.filter(m => m.role === "Rally Joiner").length;
+  const friendlyAsgn = Object.values(assignments).filter(a => a.type === "friendly").length;
+  const enemyAsgn    = Object.values(assignments).filter(a => a.type === "enemy").length;
+  const allianceDist = [...new Set(members.map(m => m.alliance).filter(Boolean))].map(a => ({ label: a, value: members.filter(m => m.alliance === a).length })).sort((a, b) => b.value - a.value);
+  const availDist    = AVAILABILITY_OPTS.map(o => ({ label: o, value: members.filter(m => m.available === o).length }));
+  const targetDist   = PRIMARY_TARGETS.map(t => ({ label: t, value: members.filter(m => m.primaryTarget === t).length }));
+
+  let filtered = members.filter(m => {
+    if (filterRole !== "all" && m.role !== filterRole) return false;
+    if (filterAlliance && !(m.alliance || "").toLowerCase().includes(filterAlliance.toLowerCase())) return false;
+    if (filterAvail !== "all" && m.available !== filterAvail) return false;
+    if (search && !m.name.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  }).sort((a, b) => {
+    let av = a[sortKey], bv = b[sortKey];
+    if (typeof av === "string") av = av.toLowerCase();
+    if (typeof bv === "string") bv = bv.toLowerCase();
+    return av < bv ? -sortDir : av > bv ? sortDir : 0;
+  });
+
+  function toggleSort(k) { if (sortKey === k) setSortDir(d => -d); else { setSortKey(k); setSortDir(1); } }
+  const thSt = { padding: "10px 10px", fontSize: 10, color: C.textDim, textAlign: "left", borderBottom: `1px solid ${C.panelBorder}`, cursor: "pointer", textTransform: "uppercase", letterSpacing: 0.8, userSelect: "none", whiteSpace: "nowrap" };
+
+  // ── Loading screen ─────────────────────────────────────────────────────
+  if (loading) return (
+    <div style={{ minHeight: "100vh", background: C.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
+      <div style={{ fontFamily: "Bebas Neue, sans-serif", fontSize: 36, color: C.accent, letterSpacing: 4 }}>⚔ KINGSHOT KvK</div>
+      <div style={{ fontSize: 14, color: C.textDim, letterSpacing: 2 }}>CONNECTING TO DATABASE…</div>
+      <div style={{ width: 180, height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 99, overflow: "hidden" }}>
+        <div className="loadbar" />
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: "'Syne','Segoe UI',sans-serif" }}>
+{/* styles moved to <head> */}
+
+      {/* Header */}
+      <div style={{ background: "linear-gradient(90deg,#0d1520,#101c2c 50%,#0d1520)", borderBottom: `1px solid ${C.panelBorder}`, padding: "0 24px", display: "flex", alignItems: "center", gap: 20, height: 56 }}>
+        <div style={{ fontFamily: "'Bebas Neue'", fontSize: 26, color: C.accent, letterSpacing: 3 }}>⚔ KINGSHOT KvK</div>
+        <div style={{ fontSize: 11, color: C.textDim, borderLeft: `1px solid ${C.panelBorder}`, paddingLeft: 16 }}>ALLIANCE COMMAND CENTER</div>
+        <div style={{ flex: 1 }} />
+        {/* Live indicator */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: C.green }}>
+          <div style={{ width: 7, height: 7, borderRadius: "50%", background: C.green, boxShadow: `0 0 6px ${C.green}` }} />
+          LIVE
+        </div>
+        {[["dashboard","📊 Dashboard"],["members","👥 Members"],["map","🗺 Battle Map"]].map(([k, label]) => (
+          <button key={k} onClick={() => setTab(k)} style={{ ...btnSt, padding: "6px 18px", fontSize: 13, fontWeight: 700, fontFamily: "'Roboto Condensed', 'Arial Narrow', sans-serif", letterSpacing: 0.5, background: tab === k ? C.accentDim : "transparent", color: tab === k ? C.accent : C.textDim, border: tab === k ? `1px solid ${C.accent}44` : "1px solid transparent" }}>{label}</button>
+        ))}
+      </div>
+
+      <div style={{ padding: 20, maxWidth: 1600, margin: "0 auto" }}>
+
+        {/* ── Dashboard ── */}
+        {tab === "dashboard" && (
+          <div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
+              <StatCard label="Total Members" value={members.length} sub={`${avail} full availability`} />
+              <StatCard label="Full Avail." value={avail} sub={`${Math.round(avail / (members.length || 1) * 100)}% ready`} color={C.green} />
+              <StatCard label="Rally Leaders" value={leaders} color={C.gold} />
+              <StatCard label="Rally Joiners" value={joiners} color={C.blue} />
+              <StatCard label="Friendly Tiles" value={friendlyAsgn} sub="on map" color={C.blue} />
+              <StatCard label="Enemy Tiles" value={enemyAsgn} sub="tracked" color={C.red} />
+              <StatCard label="Off-Map" value={members.length - friendlyAsgn} sub="unpositioned" color={C.textDim} />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(265px,1fr))", gap: 16, marginBottom: 20 }}>
+              {[
+                { title: "AVAILABILITY", content: <>
+                  {availDist.map(({ label, value }) => {
+                    const col = { Full: C.green, "1st Half": C.blue, "2nd Half": C.gold, "On/Off": C.red }[label] || C.textDim;
+                    return <MiniBar key={label} label={label} value={value} max={members.length} color={col} />;
+                  })}
+                </> },
+                { title: "ROLES", content: <><DonutSlice label="Rally Leaders" value={leaders} total={members.length} color={C.gold} /><DonutSlice label="Rally Joiners" value={joiners} total={members.length} color={C.blue} /></> },
+                { title: "ALLIANCES", content: allianceDist.length ? allianceDist.map(({ label, value }) => <MiniBar key={label} label={label} value={value} max={members.length} color={allianceColor(label)} />) : <div style={{ fontSize: 11, color: C.textDim }}>No alliances set yet</div> },
+                { title: "PRIMARY TARGETS", content: targetDist.map(({ label, value }) => {
+                  const col = { Castle: C.accent, "Turret (N)": "#20d0d0", "Turret (E)": "#c060ff", "Turret (S)": "#ff8040", "Turret (W)": "#40c080" }[label] || C.textDim;
+                  return <MiniBar key={label} label={label} value={value} max={members.length} color={col} />;
+                }) },
+                { title: "MAP OCCUPANCY", content: <><DonutSlice label="Friendly" value={friendlyAsgn} total={friendlyAsgn + enemyAsgn + 1} color={C.blue} /><DonutSlice label="Enemy" value={enemyAsgn} total={friendlyAsgn + enemyAsgn + 1} color={C.red} /></> },
+                { title: "TC LEVELS", content: TC_LEVELS.slice().reverse().map(tg => { const cnt = members.filter(m => m.tc === tg).length; return cnt > 0 ? <MiniBar key={tg} label={tg} value={cnt} max={members.length} color={C.accent} /> : null; }) },
+              ].map(({ title, content }) => (
+                <div key={title} style={{ background: C.panel, border: `1px solid ${C.panelBorder}`, borderRadius: 10, padding: 18 }}>
+                  <div style={{ fontFamily: "'Bebas Neue'", fontSize: 15, color: C.accent, letterSpacing: 1, marginBottom: 12 }}>{title}</div>
+                  {content}
+                </div>
+              ))}
+            </div>
+            <div style={{ background: C.panel, border: `1px solid ${C.panelBorder}`, borderRadius: 10, padding: 18 }}>
+              <div style={{ fontFamily: "'Bebas Neue'", fontSize: 15, color: C.accent, letterSpacing: 1, marginBottom: 12 }}>QUICK ROSTER</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {members.map(m => (
+                  <div key={m.id} style={{ background: m.available === "Full" ? "#0a2a1a" : "#2a0a0a", border: `1px solid ${m.available === "Full" ? C.green : C.red}33`, borderRadius: 6, padding: "6px 12px", fontSize: 12 }}>
+                    <span style={{ fontWeight: 700 }}>{m.name}</span>
+                    <span style={{ color: C.textDim, marginLeft: 6, fontSize: 11 }}>{m.tc}</span>
+                    <span style={{ marginLeft: 6 }}><Pill color={allianceColor(m.alliance)}>{m.alliance || "—"}</Pill></span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Members ── */}
+        {tab === "members" && (
+          <div>
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap" }}>
+              <AddMemberForm onAdd={addMember} alliances={alliances} />
+              <CsvUploadButton onImport={importMembers} />
+              <AllianceManager alliances={alliances} onAdd={addAlliance} onRemove={removeAlliance} onColorChange={updateAllianceColor} />
+            </div>
+            <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
+              <input style={{ ...inputSt, width: 200 }} placeholder="🔍 Search name…" value={search} onChange={e => setSearch(e.target.value)} />
+              <select style={{ ...inputSt, width: 150 }} value={filterRole} onChange={e => setFilterRole(e.target.value)}>
+                <option value="all">All Roles</option>{ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+              <input style={{ ...inputSt, width: 150 }} placeholder="Filter alliance…" value={filterAlliance} onChange={e => setFilterAlliance(e.target.value)} />
+              <select style={{ ...inputSt, width: 160 }} value={filterAvail} onChange={e => setFilterAvail(e.target.value)}>
+                <option value="all">All Availability</option>
+                {AVAILABILITY_OPTS.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+              <span style={{ fontSize: 12, color: C.textDim }}>{filtered.length} / {members.length}</span>
+            </div>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", background: C.panel, borderRadius: 10, overflow: "hidden" }}>
+                <thead>
+                  <tr style={{ background: "#0a1820" }}>
+                    {[["name","Name"],["tc","TC"],["available","Avail."],["role","Role"],["alliance","Alliance"],["primaryTarget","Primary Target"],["notes","Notes"],[null,"Actions"]].map(([k, label]) => (
+                      <th key={label} style={thSt} onClick={() => k && toggleSort(k)}>{label}{k && sortKey === k ? (sortDir === 1 ? " ↑" : " ↓") : ""}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map(m => (
+                    <MemberRow key={m.id} m={m} alliances={alliances} onUpdate={updateMember} onDelete={deleteMember} />
+                  ))}
+                  {!filtered.length && <tr><td colSpan={8} style={{ padding: 40, textAlign: "center", color: C.textDim }}>No members match filters</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ── Map ── */}
+        {tab === "map" && (
+          <div>
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontFamily: "'Bebas Neue'", fontSize: 24, color: C.accent, letterSpacing: 2, marginBottom: 4 }}>⚔ KVK BATTLE MAP</div>
+              <div style={{ fontSize: 12, color: C.textDim }}>Click any gray tile to assign a member or mark an enemy position. Changes sync live to all users.</div>
+            </div>
+            <div style={{ background: C.panel, border: `1px solid ${C.panelBorder}`, borderRadius: 10, padding: 20 }}>
+              <CastleMap members={members} assignments={assignments} setAssignments={fbSetAssignments} />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
+  </script>
+</body>
+</html>
