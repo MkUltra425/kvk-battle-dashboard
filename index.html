@@ -9,12 +9,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;700;800&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; }
-    body { margin: 0; padding: 0; background: #0a0f1e; }
+    body { margin: 0; padding: 0; background: #0a0f1e; -webkit-tap-highlight-color: transparent; }
     #root { min-height: 100vh; }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: #080c14; }
     ::-webkit-scrollbar-thumb { background: #1a2a3a; border-radius: 3px; }
     select option { background: #0d1520; }
+    button, select, input { touch-action: manipulation; }
     .cell-edit { background: transparent; border: 1px solid transparent; border-radius: 6px; color: inherit; padding: 4px 6px; font-size: 12px; width: 100%; box-sizing: border-box; outline: none; transition: background 0.15s, border-color 0.15s; font-family: inherit; }
     .cell-edit:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); }
     .cell-edit:focus { background: rgba(255,255,255,0.09); border-color: rgba(167,139,250,0.55); }
@@ -23,6 +24,7 @@
     .cell-edit::placeholder { color: rgba(255,255,255,0.3); }
     @keyframes loadbar { 0% { margin-left: -40%; } 100% { margin-left: 100%; } }
     .loadbar { height: 100%; width: 40%; background: #e8a020; border-radius: 99px; animation: loadbar 1.4s ease-in-out infinite; }
+    @media (max-width: 767px) { .cell-edit { font-size: 14px; padding: 6px 8px; } }
   </style>
   <!-- React 18 -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -1131,45 +1133,40 @@ function App() {
 
   // ── Firebase listeners ─────────────────────────────────────────────────
   useEffect(() => {
-    // Members
-    const membersRef = ref(db, "members");
-    const unsubMembers = onValue(membersRef, snap => {
+    const membersHandler = snap => {
       const data = snap.val();
-      if (data) {
-        setMembers(Object.values(data));
-      } else {
-        // First ever load — seed with sample data
-        const seed = {};
-        initMembers.forEach(m => { seed[m.id] = m; });
-        set(membersRef, seed);
-      }
+      if (data) { setMembers(Object.values(data)); }
+      else { const seed = {}; initMembers.forEach(m => { seed[m.id] = m; }); db.ref("members").set(seed); }
       setLoading(false);
-    });
+    };
+    db.ref("members").on("value", membersHandler, err => { console.error("Firebase error:", err); setLoading(false); });
 
-    // Assignments
-    const assignmentsRef = ref(db, "assignments");
-    const unsubAssignments = onValue(assignmentsRef, snap => {
+    const assignmentsHandler = snap => {
       const data = snap.val() || {};
       const converted = {};
       Object.entries(data).forEach(([k, v]) => { converted[fromFbKey(k)] = v; });
       setAssignments(converted);
-    });
+    };
+    db.ref("assignments").on("value", assignmentsHandler);
 
-    // Alliances
-    const alliancesRef = ref(db, "alliances");
-    const unsubAlliances = onValue(alliancesRef, snap => {
+    const alliancesHandler = snap => {
       const data = snap.val();
       if (data) setAlliances(Array.isArray(data) ? data : Object.values(data));
-    });
+    };
+    db.ref("alliances").on("value", alliancesHandler);
 
-    // Teams
-    const teamsRef = ref(db, "teams");
-    const unsubTeams = onValue(teamsRef, snap => {
+    const teamsHandler = snap => {
       const data = snap.val();
       if (data) setTeams(Array.isArray(data) ? data : Object.values(data));
-    });
+    };
+    db.ref("teams").on("value", teamsHandler);
 
-    return () => { unsubMembers(); unsubAssignments(); unsubAlliances(); unsubTeams(); };
+    return () => {
+      db.ref("members").off("value", membersHandler);
+      db.ref("assignments").off("value", assignmentsHandler);
+      db.ref("alliances").off("value", alliancesHandler);
+      db.ref("teams").off("value", teamsHandler);
+    };
   }, []);
 
   // ── Member writes ──────────────────────────────────────────────────────
@@ -1181,6 +1178,7 @@ function App() {
   }
   function deleteMember(id) {
     db.ref(`members/${id}`).remove();
+    // Remove this member from any map tiles
     const updates = {};
     Object.keys(assignments).forEach(k => {
       if (assignments[k].type === "friendly" && assignments[k].member.id === id)
@@ -1238,16 +1236,16 @@ function App() {
 
   function addTeam(name, color) {
     if (teams.some(t => t.name.toLowerCase() === name.toLowerCase())) return;
-    set(ref(db, "teams"), [...teams, { name, color }]);
+    db.ref("teams").set([...teams, { name, color }]);
   }
   function removeTeam(name) {
-    set(ref(db, "teams"), teams.filter(t => t.name !== name));
+    db.ref("teams").set(teams.filter(t => t.name !== name));
     members.forEach(m => {
-      if (m.team === name) update(ref(db, `members/${m.id}`), { team: "" });
+      if (m.team === name) db.ref(`members/${m.id}`).update({ team: "" });
     });
   }
   function updateTeamColor(name, color) {
-    set(ref(db, "teams"), teams.map(t => t.name === name ? { ...t, color } : t));
+    db.ref("teams").set(teams.map(t => t.name === name ? { ...t, color } : t));
   }
 
   // ── Derived stats ──────────────────────────────────────────────────────
@@ -1278,18 +1276,32 @@ function App() {
 
   // ── Loading screen ─────────────────────────────────────────────────────
   if (loading) return (
-    <div style={{ minHeight: "100vh", background: C.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
-      <div style={{ fontFamily: "Bebas Neue, sans-serif", fontSize: 36, color: C.accent, letterSpacing: 4 }}>⚔ KINGSHOT KvK</div>
+    <div style={{ minHeight: "100vh", background: C.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, fontFamily: "'Bebas Neue', sans-serif" }}>
+      <div style={{ fontSize: 36, color: C.accent, letterSpacing: 4 }}>⚔ KINGSHOT KvK</div>
       <div style={{ fontSize: 14, color: C.textDim, letterSpacing: 2 }}>CONNECTING TO DATABASE…</div>
       <div style={{ width: 180, height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 99, overflow: "hidden" }}>
-        <div className="loadbar" />
+        <div style={{ height: "100%", background: C.accent, borderRadius: 99, animation: "loading 1.4s ease-in-out infinite", width: "40%" }} />
       </div>
+      <style>{`@keyframes loading { 0%{margin-left:-40%} 100%{margin-left:100%} } @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');`}</style>
     </div>
   );
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: "'Syne','Segoe UI',sans-serif" }}>
-{/* styles moved to <head> */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;700;800&family=Roboto+Condensed:wght@400;700&display=swap');
+        * { box-sizing: border-box; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #080c14; }
+        ::-webkit-scrollbar-thumb { background: #1a2a3a; border-radius: 3px; }
+        select option { background: #0d1520; }
+        .cell-edit { background: transparent; border: 1px solid transparent; border-radius: 6px; color: inherit; padding: 4px 6px; font-size: 12px; width: 100%; box-sizing: border-box; outline: none; transition: background 0.15s, border-color 0.15s; font-family: inherit; }
+        .cell-edit:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); }
+        .cell-edit:focus { background: rgba(255,255,255,0.09); border-color: rgba(167,139,250,0.55); }
+        select.cell-edit { cursor: pointer; }
+        select.cell-edit option { color: #e2e8f3; background: #0d1520; font-weight: 400; }
+        .cell-edit::placeholder { color: rgba(255,255,255,0.3); }
+      `}</style>
 
       {/* Header */}
       <div style={{ background: "linear-gradient(90deg,#0d1520,#101c2c 50%,#0d1520)", borderBottom: `1px solid ${C.panelBorder}`, padding: isMobile ? "0 12px" : "0 24px", display: "flex", alignItems: "center", gap: isMobile ? 8 : 20, height: isMobile ? 50 : 56 }}>
