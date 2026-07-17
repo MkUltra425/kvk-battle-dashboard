@@ -9,13 +9,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;700;800&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; }
-    body { margin: 0; padding: 0; background: #0a0f1e; -webkit-tap-highlight-color: transparent; }
+    body { margin: 0; padding: 0; background: #0a0f1e; }
     #root { min-height: 100vh; }
-    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #080c14; }
     ::-webkit-scrollbar-thumb { background: #1a2a3a; border-radius: 3px; }
     select option { background: #0d1520; }
-    button, select, input { touch-action: manipulation; }
     .cell-edit { background: transparent; border: 1px solid transparent; border-radius: 6px; color: inherit; padding: 4px 6px; font-size: 12px; width: 100%; box-sizing: border-box; outline: none; transition: background 0.15s, border-color 0.15s; font-family: inherit; }
     .cell-edit:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); }
     .cell-edit:focus { background: rgba(255,255,255,0.09); border-color: rgba(167,139,250,0.55); }
@@ -24,9 +23,6 @@
     .cell-edit::placeholder { color: rgba(255,255,255,0.3); }
     @keyframes loadbar { 0% { margin-left: -40%; } 100% { margin-left: 100%; } }
     .loadbar { height: 100%; width: 40%; background: #e8a020; border-radius: 99px; animation: loadbar 1.4s ease-in-out infinite; }
-    @media (max-width: 767px) {
-      .cell-edit { font-size: 14px; padding: 6px 8px; }
-    }
   </style>
   <!-- React 18 -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -98,8 +94,8 @@ const glassDeep = (extra = {}) => ({
   ...extra,
 });
 
-const AVAILABILITY_OPTS = ["Full", "1st Half", "2nd Half", "On/Off"];
-const PRIMARY_TARGETS = ["Castle", "Turret (N)", "Turret (E)", "Turret (S)", "Turret (W)"];
+const AVAILABILITY_OPTS = ["Full", "1st Half", "2nd Half", "On/Off", "None"];
+const PRIMARY_TARGETS = ["Castle", "Turret (N)", "Turret (E)", "Turret (S)", "Turret (W)", "None"];
 const TC_LEVELS = ["28","29","30","TG1","TG2","TG3","TG4","TG5","TG6","TG7","TG8"];
 const ROLES = ["Rally Leader", "Rally Joiner"];
 const THREAT_TYPES = ["Scout", "Rally", "Garrison", "Attacker", "Unknown"];
@@ -114,6 +110,7 @@ const CSV_HEADER_ALIASES = {
   available: "available", availability: "available",
   role: "role",
   alliance: "alliance",
+  team: "team",
   primarytarget: "primaryTarget", target: "primaryTarget", primarytargets: "primaryTarget",
   notes: "notes", note: "notes",
 };
@@ -165,22 +162,23 @@ function rowToMember(row) {
     available: matchOption(row.available, AVAILABILITY_OPTS, "Full"),
     role: matchOption(row.role, ROLES, "Rally Joiner"),
     alliance: row.alliance || "",
+    team: row.team || "",
     primaryTarget: matchOption(row.primaryTarget, PRIMARY_TARGETS, "Castle"),
     notes: row.notes || "",
   };
 }
 
 const initMembers = [
-  { id: 1, name: "IronWolf", tc: "TG8", available: "Full", role: "Rally Leader", alliance: "LOR", primaryTarget: "Castle", notes: "Main rally commander" },
-  { id: 2, name: "ShadowBlade", tc: "TG7", available: "Full", role: "Rally Joiner", alliance: "LOR", primaryTarget: "Turret (N)", notes: "" },
-  { id: 3, name: "FrostQueen", tc: "TG8", available: "1st Half", role: "Rally Joiner", alliance: "PAN", primaryTarget: "Castle", notes: "Prefers cavalry" },
-  { id: 4, name: "ThunderKing", tc: "TG6", available: "On/Off", role: "Rally Leader", alliance: "PAN", primaryTarget: "Turret (E)", notes: "Offline until weekend" },
-  { id: 5, name: "StormRider", tc: "TG8", available: "Full", role: "Rally Joiner", alliance: "KOE", primaryTarget: "Castle", notes: "" },
-  { id: 6, name: "NightHawk", tc: "TG5", available: "2nd Half", role: "Rally Joiner", alliance: "KOE", primaryTarget: "Turret (W)", notes: "New member" },
-  { id: 7, name: "CrimsonAce", tc: "TG7", available: "Full", role: "Rally Leader", alliance: "WAR", primaryTarget: "Castle", notes: "" },
-  { id: 8, name: "VoidWalker", tc: "TG5", available: "On/Off", role: "Rally Joiner", alliance: "STR", primaryTarget: "Turret (S)", notes: "Hospital" },
-  { id: 9, name: "GoldRush", tc: "TG6", available: "Full", role: "Rally Joiner", alliance: "STR", primaryTarget: "Castle", notes: "" },
-  { id: 10, name: "BlazeHunter", tc: "TG7", available: "1st Half", role: "Rally Leader", alliance: "WAR", primaryTarget: "Turret (N)", notes: "Secondary commander" },
+  { id: 1, name: "IronWolf", tc: "TG8", available: "Full", role: "Rally Leader", alliance: "LOR", team: "", primaryTarget: "Castle", notes: "Main rally commander" },
+  { id: 2, name: "ShadowBlade", tc: "TG7", available: "Full", role: "Rally Joiner", alliance: "LOR", team: "", primaryTarget: "Turret (N)", notes: "" },
+  { id: 3, name: "FrostQueen", tc: "TG8", available: "1st Half", role: "Rally Joiner", alliance: "PAN", team: "", primaryTarget: "Castle", notes: "Prefers cavalry" },
+  { id: 4, name: "ThunderKing", tc: "TG6", available: "On/Off", role: "Rally Leader", alliance: "PAN", team: "", primaryTarget: "Turret (E)", notes: "Offline until weekend" },
+  { id: 5, name: "StormRider", tc: "TG8", available: "Full", role: "Rally Joiner", alliance: "KOE", team: "", primaryTarget: "Castle", notes: "" },
+  { id: 6, name: "NightHawk", tc: "TG5", available: "2nd Half", role: "Rally Joiner", alliance: "KOE", team: "", primaryTarget: "Turret (W)", notes: "New member" },
+  { id: 7, name: "CrimsonAce", tc: "TG7", available: "Full", role: "Rally Leader", alliance: "WAR", team: "", primaryTarget: "Castle", notes: "" },
+  { id: 8, name: "VoidWalker", tc: "TG5", available: "On/Off", role: "Rally Joiner", alliance: "STR", team: "", primaryTarget: "Turret (S)", notes: "Hospital" },
+  { id: 9, name: "GoldRush", tc: "TG6", available: "Full", role: "Rally Joiner", alliance: "STR", team: "", primaryTarget: "Castle", notes: "" },
+  { id: 10, name: "BlazeHunter", tc: "TG7", available: "1st Half", role: "Rally Leader", alliance: "WAR", team: "", primaryTarget: "Turret (N)", notes: "Secondary commander" },
 ];
 
 function roleColor(r) { return r === "Rally Leader" ? C.gold : C.blue; }
@@ -199,6 +197,13 @@ let _allianceColorMap = Object.fromEntries(DEFAULT_ALLIANCES.map(a => [a.name, a
 function allianceColor(a) {
   if (!a) return C.textDim;
   return _allianceColorMap[a] || C.textDim;
+}
+
+const DEFAULT_TEAMS = [];
+let _teamColorMap = {};
+function teamColor(t) {
+  if (!t) return C.textDim;
+  return _teamColorMap[t] || C.textDim;
 }
 function hslToHex(h, s, l) {
   s /= 100; l /= 100;
@@ -302,6 +307,7 @@ function AddMemberButton({ onAdd, alliances }) {
       available: "Full",
       role: "Rally Joiner",
       alliance: alliances[0]?.name || "",
+      team: "",
       primaryTarget: "Castle",
       notes: "",
     });
@@ -397,8 +403,49 @@ function AllianceManager({ alliances, onAdd, onRemove, onColorChange }) {
   );
 }
 
+function TeamManager({ teams, onAdd, onRemove, onColorChange }) {
+  const [open, setOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newColor, setNewColor] = useState(() => randomAllianceColor());
+
+  if (!open) return (
+    <button onClick={() => setOpen(true)} style={{ ...btnSt, background: "rgba(96,165,250,0.15)", color: C.blue, padding: "7px 20px", fontWeight: 700, fontSize: 13, fontFamily: "'Roboto Condensed', 'Arial Narrow', sans-serif", letterSpacing: 0.5 }}>
+      🏷 Manage Teams
+    </button>
+  );
+
+  return (
+    <div style={{ background: "#0a1820", border: `1px solid ${C.panelBorder}`, borderRadius: 10, padding: 18, marginBottom: 16, minWidth: 280, maxWidth: 380 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+        <div style={{ fontFamily: "'Bebas Neue'", fontSize: 20, color: C.blue, letterSpacing: 1 }}>MANAGE TEAMS</div>
+        <button onClick={() => setOpen(false)} style={{ ...btnSt, padding: "2px 9px", fontSize: 13 }}>✕</button>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14 }}>
+        {teams.map(t => (
+          <div key={t.name} style={{ display: "flex", alignItems: "center", gap: 8, background: "#0d1520", borderRadius: 6, padding: "5px 10px" }}>
+            <input type="color" value={t.color} onChange={e => onColorChange(t.name, e.target.value)}
+              style={{ width: 26, height: 26, border: "none", borderRadius: 6, background: "none", cursor: "pointer", padding: 0, flexShrink: 0 }} />
+            <span style={{ flex: 1, fontSize: 12, fontWeight: 700, color: t.color }}>{t.name}</span>
+            <button onClick={() => onRemove(t.name)} style={{ ...btnSt, background: C.redDim, color: C.red, padding: "2px 8px", fontSize: 10 }}>✕</button>
+          </div>
+        ))}
+        {teams.length === 0 && <div style={{ fontSize: 11, color: C.textDim, textAlign: "center", padding: "8px 0" }}>No teams yet — add one below</div>}
+      </div>
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <input type="color" value={newColor} onChange={e => setNewColor(e.target.value)}
+          style={{ width: 32, height: 32, border: "none", borderRadius: 6, background: "none", cursor: "pointer", padding: 0, flexShrink: 0 }} />
+        <input style={{ ...inputSt, flex: 1 }} placeholder="New team name" value={newName}
+          onChange={e => setNewName(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter" && newName.trim()) { onAdd(newName.trim(), newColor); setNewName(""); setNewColor(randomAllianceColor()); } }} />
+        <button onClick={() => { if (newName.trim()) { onAdd(newName.trim(), newColor); setNewName(""); setNewColor(randomAllianceColor()); } }}
+          style={{ ...btnSt, background: C.greenDim, color: C.green, padding: "7px 16px", fontWeight: 700 }}>Add</button>
+      </div>
+    </div>
+  );
+}
+
 // ── Member Table Row ───────────────────────────────────────────────────────
-function MemberRow({ m, alliances, onUpdate, onDelete }) {
+function MemberRow({ m, alliances, teams, onUpdate, onDelete }) {
   const td = { padding: "6px 8px", fontSize: 12, color: C.text, borderBottom: `1px solid ${C.panelBorder}` };
   const f = (k, v) => onUpdate(m.id, k, v);
   const availColor = { Full: C.green, "1st Half": C.blue, "2nd Half": C.gold, "On/Off": C.red }[m.available] || C.textDim;
@@ -425,6 +472,12 @@ function MemberRow({ m, alliances, onUpdate, onDelete }) {
         <select className="cell-edit" style={{ color: allianceColor(m.alliance), fontWeight: 700 }} value={m.alliance || ""} onChange={e => f("alliance", e.target.value)}>
           <option value="">—</option>
           {alliances.map(a => <option key={a.name} value={a.name} style={{ color: a.color }}>{a.name}</option>)}
+        </select>
+      </td>
+      <td style={td}>
+        <select className="cell-edit" style={{ color: teamColor(m.team), fontWeight: 700 }} value={m.team || ""} onChange={e => f("team", e.target.value)}>
+          <option value="">—</option>
+          {teams.map(t => <option key={t.name} value={t.name} style={{ color: t.color }}>{t.name}</option>)}
         </select>
       </td>
       <td style={td}>
@@ -579,7 +632,7 @@ const TARGET_COLORS = {
 };
 
 // ── Mobile Member Card ─────────────────────────────────────────────────────
-function MemberCard({ m, alliances, onUpdate, onDelete }) {
+function MemberCard({ m, alliances, teams, onUpdate, onDelete }) {
   const f = (k, v) => onUpdate(m.id, k, v);
   const availColor = { Full: C.green, "1st Half": C.blue, "2nd Half": C.gold, "On/Off": C.red }[m.available] || C.textDim;
   const targetColor = { Castle: C.accent, "Turret (N)": "#20d0d0", "Turret (E)": "#c084fc", "Turret (S)": "#ff8040", "Turret (W)": "#40c080" }[m.primaryTarget] || C.textDim;
@@ -594,26 +647,31 @@ function MemberCard({ m, alliances, onUpdate, onDelete }) {
           { label: "TC", key: "tc", opts: TC_LEVELS, color: C.accent },
           { label: "Available", key: "available", opts: AVAILABILITY_OPTS, color: availColor },
           { label: "Role", key: "role", opts: ROLES, color: roleColor(m.role) },
-          { label: "Alliance", key: "alliance", isAlliance: true },
           { label: "Target", key: "primaryTarget", opts: PRIMARY_TARGETS, color: targetColor },
-        ].map(({ label, key, opts, color, isAlliance }) => (
+        ].map(({ label, key, opts, color }) => (
           <div key={key}>
             <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 3 }}>{label}</div>
-            {isAlliance ? (
-              <select className="cell-edit" style={{ color: allianceColor(m.alliance), fontWeight: 700 }} value={m.alliance || ""} onChange={e => f("alliance", e.target.value)}>
-                <option value="">—</option>
-                {alliances.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
-              </select>
-            ) : (
-              <select className="cell-edit" style={{ color, fontWeight: 700 }} value={m[key]} onChange={e => f(key, e.target.value)}>
-                {opts.map(o => <option key={o}>{o}</option>)}
-              </select>
-            )}
+            <select className="cell-edit" style={{ color, fontWeight: 700 }} value={m[key]} onChange={e => f(key, e.target.value)}>
+              {opts.map(o => <option key={o}>{o}</option>)}
+            </select>
           </div>
         ))}
         <div>
-          <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 3 }}>Notes</div>
-          <input className="cell-edit" style={{ color: C.textDim }} value={m.notes} placeholder="—" onChange={e => f("notes", e.target.value)} />
+          <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 3 }}>Alliance</div>
+          <select className="cell-edit" style={{ color: allianceColor(m.alliance), fontWeight: 700 }} value={m.alliance || ""} onChange={e => f("alliance", e.target.value)}>
+            <option value="">—</option>
+            {alliances.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
+          </select>
+        </div>
+        <div>
+          <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 3 }}>Team</div>
+          <select className="cell-edit" style={{ color: teamColor(m.team), fontWeight: 700 }} value={m.team || ""} onChange={e => f("team", e.target.value)}>
+            <option value="">—</option>
+            {teams.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
+          </select>
+        </div>
+        <div style={{ gridColumn: "span 2" }}>
+          <input className="cell-edit" style={{ color: C.textDim }} value={m.notes} placeholder="Notes…" onChange={e => f("notes", e.target.value)} />
         </div>
       </div>
     </div>
@@ -846,7 +904,7 @@ function CastleMap({ members, assignments, setAssignments, isMobile }) {
                           display: "block", textAlign: "center",
                           boxShadow: "0 1px 3px rgba(0,0,0,0.25)",
                         }}>{display}</span>
-                        {targetIconFn && (
+                        {isLeader && targetIconFn && (
                           <div style={{ filter: `drop-shadow(0 0 2px ${targetCol}99)`, lineHeight: 0 }}>
                             {targetIconFn(targetCol)}
                           </div>
@@ -1050,6 +1108,7 @@ function App() {
   const [members, setMembers]       = useState([]);
   const [assignments, setAssignments] = useState({});
   const [alliances, setAlliances]   = useState(DEFAULT_ALLIANCES);
+  const [teams, setTeams]           = useState(DEFAULT_TEAMS);
   const [tab, setTab]               = useState("dashboard");
   const [filterRole, setFilterRole] = useState("all");
   const [filterAlliance, setFilterAlliance] = useState("");
@@ -1066,41 +1125,51 @@ function App() {
     return () => window.removeEventListener("resize", handler);
   }, []);
 
-  // Keep module-level color map in sync for allianceColor()
+  // Keep module-level color maps in sync
   _allianceColorMap = Object.fromEntries(alliances.map(a => [a.name, a.color]));
+  _teamColorMap = Object.fromEntries(teams.map(t => [t.name, t.color]));
 
   // ── Firebase listeners ─────────────────────────────────────────────────
   useEffect(() => {
-    const membersHandler = snap => {
+    // Members
+    const membersRef = ref(db, "members");
+    const unsubMembers = onValue(membersRef, snap => {
       const data = snap.val();
-      if (data) { setMembers(Object.values(data)); }
-      else { const seed = {}; initMembers.forEach(m => { seed[m.id] = m; }); db.ref("members").set(seed); }
-      setLoading(false);
-    };
-    db.ref("members").on("value", membersHandler, err => {
-      console.error("Firebase error:", err);
+      if (data) {
+        setMembers(Object.values(data));
+      } else {
+        // First ever load — seed with sample data
+        const seed = {};
+        initMembers.forEach(m => { seed[m.id] = m; });
+        set(membersRef, seed);
+      }
       setLoading(false);
     });
 
-    const assignmentsHandler = snap => {
+    // Assignments
+    const assignmentsRef = ref(db, "assignments");
+    const unsubAssignments = onValue(assignmentsRef, snap => {
       const data = snap.val() || {};
       const converted = {};
       Object.entries(data).forEach(([k, v]) => { converted[fromFbKey(k)] = v; });
       setAssignments(converted);
-    };
-    db.ref("assignments").on("value", assignmentsHandler);
+    });
 
-    const alliancesHandler = snap => {
+    // Alliances
+    const alliancesRef = ref(db, "alliances");
+    const unsubAlliances = onValue(alliancesRef, snap => {
       const data = snap.val();
       if (data) setAlliances(Array.isArray(data) ? data : Object.values(data));
-    };
-    db.ref("alliances").on("value", alliancesHandler);
+    });
 
-    return () => {
-      db.ref("members").off("value", membersHandler);
-      db.ref("assignments").off("value", assignmentsHandler);
-      db.ref("alliances").off("value", alliancesHandler);
-    };
+    // Teams
+    const teamsRef = ref(db, "teams");
+    const unsubTeams = onValue(teamsRef, snap => {
+      const data = snap.val();
+      if (data) setTeams(Array.isArray(data) ? data : Object.values(data));
+    });
+
+    return () => { unsubMembers(); unsubAssignments(); unsubAlliances(); unsubTeams(); };
   }, []);
 
   // ── Member writes ──────────────────────────────────────────────────────
@@ -1165,6 +1234,20 @@ function App() {
   }
   function updateAllianceColor(name, color) {
     db.ref("alliances").set(alliances.map(a => a.name === name ? { ...a, color } : a));
+  }
+
+  function addTeam(name, color) {
+    if (teams.some(t => t.name.toLowerCase() === name.toLowerCase())) return;
+    set(ref(db, "teams"), [...teams, { name, color }]);
+  }
+  function removeTeam(name) {
+    set(ref(db, "teams"), teams.filter(t => t.name !== name));
+    members.forEach(m => {
+      if (m.team === name) update(ref(db, `members/${m.id}`), { team: "" });
+    });
+  }
+  function updateTeamColor(name, color) {
+    set(ref(db, "teams"), teams.map(t => t.name === name ? { ...t, color } : t));
   }
 
   // ── Derived stats ──────────────────────────────────────────────────────
@@ -1281,6 +1364,7 @@ function App() {
               <AddMemberButton onAdd={addMember} alliances={alliances} />
               <CsvUploadButton onImport={importMembers} />
               <AllianceManager alliances={alliances} onAdd={addAlliance} onRemove={removeAlliance} onColorChange={updateAllianceColor} />
+              <TeamManager teams={teams} onAdd={addTeam} onRemove={removeTeam} onColorChange={updateTeamColor} />
             </div>
             <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
               <input style={{ ...inputSt, flex: "1 1 140px", minWidth: 0 }} placeholder="🔍 Search name…" value={search} onChange={e => setSearch(e.target.value)} />
@@ -1306,7 +1390,7 @@ function App() {
               <div>
                 {filtered.length === 0 && <div style={{ textAlign: "center", color: C.textDim, padding: 40 }}>No members match filters</div>}
                 {filtered.map(m => (
-                  <MemberCard key={m.id} m={m} alliances={alliances} onUpdate={updateMember} onDelete={deleteMember} />
+                  <MemberCard key={m.id} m={m} alliances={alliances} teams={teams} onUpdate={updateMember} onDelete={deleteMember} />
                 ))}
               </div>
             ) : (
@@ -1314,16 +1398,16 @@ function App() {
               <table style={{ width: "100%", borderCollapse: "collapse", background: C.panel, borderRadius: 10, overflow: "hidden" }}>
                 <thead>
                   <tr style={{ background: "#0a1820" }}>
-                    {[["name","Name"],["tc","TC"],["available","Avail."],["role","Role"],["alliance","Alliance"],["primaryTarget","Primary Target"],["notes","Notes"],[null,"Actions"]].map(([k, label]) => (
+                    {[["name","Name"],["tc","TC"],["available","Avail."],["role","Role"],["alliance","Alliance"],["team","Team"],["primaryTarget","Primary Target"],["notes","Notes"],[null,"Actions"]].map(([k, label]) => (
                       <th key={label} style={thSt} onClick={() => k && toggleSort(k)}>{label}{k && sortKey === k ? (sortDir === 1 ? " ↑" : " ↓") : ""}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map(m => (
-                    <MemberRow key={m.id} m={m} alliances={alliances} onUpdate={updateMember} onDelete={deleteMember} />
+                    <MemberRow key={m.id} m={m} alliances={alliances} teams={teams} onUpdate={updateMember} onDelete={deleteMember} />
                   ))}
-                  {!filtered.length && <tr><td colSpan={8} style={{ padding: 40, textAlign: "center", color: C.textDim }}>No members match filters</td></tr>}
+                  {!filtered.length && <tr><td colSpan={9} style={{ padding: 40, textAlign: "center", color: C.textDim }}>No members match filters</td></tr>}
                 </tbody>
               </table>
             </div>
