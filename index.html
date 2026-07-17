@@ -9,12 +9,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;700;800&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; }
-    body { margin: 0; padding: 0; background: #0a0f1e; }
+    body { margin: 0; padding: 0; background: #0a0f1e; -webkit-tap-highlight-color: transparent; }
     #root { min-height: 100vh; }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: #080c14; }
     ::-webkit-scrollbar-thumb { background: #1a2a3a; border-radius: 3px; }
     select option { background: #0d1520; }
+    button, select, input { touch-action: manipulation; }
     .cell-edit { background: transparent; border: 1px solid transparent; border-radius: 6px; color: inherit; padding: 4px 6px; font-size: 12px; width: 100%; box-sizing: border-box; outline: none; transition: background 0.15s, border-color 0.15s; font-family: inherit; }
     .cell-edit:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); }
     .cell-edit:focus { background: rgba(255,255,255,0.09); border-color: rgba(167,139,250,0.55); }
@@ -23,6 +24,9 @@
     .cell-edit::placeholder { color: rgba(255,255,255,0.3); }
     @keyframes loadbar { 0% { margin-left: -40%; } 100% { margin-left: 100%; } }
     .loadbar { height: 100%; width: 40%; background: #e8a020; border-radius: 99px; animation: loadbar 1.4s ease-in-out infinite; }
+    @media (max-width: 767px) {
+      .cell-edit { font-size: 14px; padding: 6px 8px; }
+    }
   </style>
   <!-- React 18 -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -437,15 +441,27 @@ function MemberRow({ m, alliances, onUpdate, onDelete }) {
 }
 
 // ── Tile Assignment Panel ──────────────────────────────────────────────────
-function TilePanel({ modal, members, assignments, onFriendly, onEnemy, onClear, onClose }) {
+function TilePanel({ modal, members, assignments, onFriendly, onEnemy, onClear, onClose, isMobile }) {
   const [tab, setTab] = useState("friendly");
   const [sel, setSel] = useState("");
   const [en, setEn] = useState({ name: "", kingdom: "", threat: "Scout", notes: "" });
   const existing = modal?.existing;
   const assignedIds = new Set(Object.values(assignments).filter(a => a.type === "friendly").map(a => a.member.id));
   if (!modal) return null;
+  const panelStyle = isMobile ? {
+    position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 200,
+    background: "#0d1520f8", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+    border: `1px solid ${C.accent}66`, borderRadius: "18px 18px 0 0",
+    padding: 20, maxHeight: "70vh", overflowY: "auto",
+    boxShadow: "0 -8px 40px rgba(0,0,0,0.5)",
+  } : {
+    background: C.panel, border: `2px solid ${C.accent}88`,
+    borderRadius: 10, padding: 20, width: 285, flexShrink: 0,
+  };
   return (
-    <div style={{ background: C.panel, border: `2px solid ${C.accent}88`, borderRadius: 10, padding: 20, width: 285, flexShrink: 0 }}>
+    <>
+      {isMobile && <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 199 }} />}
+      <div style={panelStyle}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
         <span style={{ fontFamily: "'Bebas Neue'", fontSize: 20, color: C.accent, letterSpacing: 1 }}>TILE [{modal.r},{modal.c}]</span>
         <button onClick={onClose} style={{ ...btnSt, padding: "2px 9px", fontSize: 13 }}>✕</button>
@@ -510,6 +526,7 @@ function TilePanel({ modal, members, assignments, onFriendly, onEnemy, onClear, 
         </>
       )}
     </div>
+    </>
   );
 }
 
@@ -561,6 +578,48 @@ const TARGET_COLORS = {
   "Turret (W)": "#40c080",
 };
 
+// ── Mobile Member Card ─────────────────────────────────────────────────────
+function MemberCard({ m, alliances, onUpdate, onDelete }) {
+  const f = (k, v) => onUpdate(m.id, k, v);
+  const availColor = { Full: C.green, "1st Half": C.blue, "2nd Half": C.gold, "On/Off": C.red }[m.available] || C.textDim;
+  const targetColor = { Castle: C.accent, "Turret (N)": "#20d0d0", "Turret (E)": "#c084fc", "Turret (S)": "#ff8040", "Turret (W)": "#40c080" }[m.primaryTarget] || C.textDim;
+  return (
+    <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 14, padding: "14px 14px 10px", marginBottom: 10, boxShadow: "0 2px 12px rgba(0,0,0,0.2)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+        <input className="cell-edit" style={{ fontWeight: 800, fontSize: 15, flex: 1, color: C.text }} value={m.name} onChange={e => f("name", e.target.value)} />
+        <button onClick={() => onDelete(m.id)} style={{ ...btnSt, background: "rgba(248,113,113,0.18)", color: C.red, padding: "5px 11px", borderRadius: 8, flexShrink: 0 }}>✕</button>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        {[
+          { label: "TC", key: "tc", opts: TC_LEVELS, color: C.accent },
+          { label: "Available", key: "available", opts: AVAILABILITY_OPTS, color: availColor },
+          { label: "Role", key: "role", opts: ROLES, color: roleColor(m.role) },
+          { label: "Alliance", key: "alliance", isAlliance: true },
+          { label: "Target", key: "primaryTarget", opts: PRIMARY_TARGETS, color: targetColor },
+        ].map(({ label, key, opts, color, isAlliance }) => (
+          <div key={key}>
+            <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 3 }}>{label}</div>
+            {isAlliance ? (
+              <select className="cell-edit" style={{ color: allianceColor(m.alliance), fontWeight: 700 }} value={m.alliance || ""} onChange={e => f("alliance", e.target.value)}>
+                <option value="">—</option>
+                {alliances.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
+              </select>
+            ) : (
+              <select className="cell-edit" style={{ color, fontWeight: 700 }} value={m[key]} onChange={e => f(key, e.target.value)}>
+                {opts.map(o => <option key={o}>{o}</option>)}
+              </select>
+            )}
+          </div>
+        ))}
+        <div>
+          <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 3 }}>Notes</div>
+          <input className="cell-edit" style={{ color: C.textDim }} value={m.notes} placeholder="—" onChange={e => f("notes", e.target.value)} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Castle Map ─────────────────────────────────────────────────────────────
 //
 // Layout matches blueprint exactly:
@@ -594,7 +653,6 @@ const TARGET_COLORS = {
 // Red border rect encompasses rows 1–12, cols 1–12
 
 const ROWS = 14, COLS = 14;
-const TILE = 50, GAP = 3;
 
 // Castle occupies rows 4-9, cols 4-9 (inclusive) — 6×6
 const CR1 = 4, CR2 = 9, CC1 = 4, CC2 = 9;
@@ -610,7 +668,9 @@ function isCastle(r, c) { return r >= CR1 && r <= CR2 && c >= CC1 && c <= CC2; }
 function isTurret(r, c) { return TURRETS.some(t => t.r === r && t.c === c); }
 function getTurretLabel(r, c) { return TURRETS.find(t => t.r === r && t.c === c)?.label || null; }
 
-function CastleMap({ members, assignments, setAssignments }) {
+function CastleMap({ members, assignments, setAssignments, isMobile }) {
+  const TILE = isMobile ? 28 : 50;
+  const GAP  = isMobile ? 2  : 3;
   const [modal, setModal] = useState(null);
   const [hover, setHover] = useState(null);
   const [filter, setFilter] = useState("all");
@@ -692,10 +752,10 @@ function CastleMap({ members, assignments, setAssignments }) {
   );
 
   return (
-    <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+    <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 16, alignItems: "flex-start" }}>
 
       {/* ── LEFT: Map ── */}
-      <div style={{ flex: "0 0 auto" }}>
+      <div style={{ flex: "0 0 auto", width: isMobile ? "100%" : "auto", overflowX: isMobile ? "auto" : "visible" }}>
         {/* Filters */}
         <div style={{ display: "flex", gap: 5, marginBottom: 10, alignItems: "center", flexWrap: "wrap" }}>
           {[["all","All"],["friendly","🤝 Friendly"],["enemy","⚔ Enemy"],["unassigned","○ Unassigned"]].map(([v, label]) => (
@@ -762,10 +822,16 @@ function CastleMap({ members, assignments, setAssignments }) {
                     const full = assignment.member.name;
                     const display = full.length > 10 ? full.slice(0, 10) + "…" : full;
                     const len = display.length;
-                    const fs = len <= 4 ? 12 : len <= 6 ? 11 : len <= 8 ? 10 : 9;
+                    const fs = isMobile ? (len <= 5 ? 8 : 7) : (len <= 4 ? 12 : len <= 6 ? 11 : len <= 8 ? 10 : 9);
                     const target = assignment.member.primaryTarget || "";
                     const targetCol = TARGET_COLORS[target] || C.textDim;
-                    const targetIconFn = TARGET_ICONS[target];
+                    const iconSize = isMobile ? 8 : 14;
+                    const turretSize = isMobile ? 9 : 16;
+                    const targetIconFn = target === "Castle"
+                      ? (col) => <CrownIcon color={col} size={iconSize} />
+                      : target.startsWith("Turret")
+                        ? (col) => <TurretIcon color={col} letter={target.slice(8,9)} size={turretSize} />
+                        : null;
                     return (
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, width: "100%", padding: "2px 2px" }}>
                         <span style={{
@@ -845,12 +911,12 @@ function CastleMap({ members, assignments, setAssignments }) {
       </div>
 
       {/* ── RIGHT: Sidebar ── */}
-      <div style={{ flex: 1, minWidth: 200, display: "flex", flexDirection: "column", gap: 8, maxHeight: gridH + 50, overflowY: "auto" }}>
+      <div style={{ flex: 1, minWidth: isMobile ? "100%" : 200, display: "flex", flexDirection: "column", gap: 8, maxHeight: isMobile ? "none" : gridH + 50, overflowY: isMobile ? "visible" : "auto" }}>
 
         {/* Tile assignment panel — shown when a tile is selected */}
         {modal ? (
           <TilePanel modal={modal} members={members} assignments={assignments}
-            onFriendly={assignFriendly} onEnemy={assignEnemy} onClear={clearTile} onClose={() => setModal(null)} />
+            onFriendly={assignFriendly} onEnemy={assignEnemy} onClear={clearTile} onClose={() => setModal(null)} isMobile={isMobile} />
         ) : (
           <div style={{
             background: "rgba(255,255,255,0.04)",
@@ -991,6 +1057,14 @@ function App() {
   const [sortKey, setSortKey]       = useState("name");
   const [sortDir, setSortDir]       = useState(1);
   const [search, setSearch]         = useState("");
+  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1024);
+  const isMobile = windowWidth < 768;
+
+  useEffect(() => {
+    const handler = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
 
   // Keep module-level color map in sync for allianceColor()
   _allianceColorMap = Object.fromEntries(alliances.map(a => [a.name, a.color]));
@@ -1135,26 +1209,25 @@ function App() {
 {/* styles moved to <head> */}
 
       {/* Header */}
-      <div style={{ background: "linear-gradient(90deg,#0d1520,#101c2c 50%,#0d1520)", borderBottom: `1px solid ${C.panelBorder}`, padding: "0 24px", display: "flex", alignItems: "center", gap: 20, height: 56 }}>
-        <div style={{ fontFamily: "'Bebas Neue'", fontSize: 26, color: C.accent, letterSpacing: 3 }}>⚔ KINGSHOT KvK</div>
-        <div style={{ fontSize: 11, color: C.textDim, borderLeft: `1px solid ${C.panelBorder}`, paddingLeft: 16 }}>ALLIANCE COMMAND CENTER</div>
+      <div style={{ background: "linear-gradient(90deg,#0d1520,#101c2c 50%,#0d1520)", borderBottom: `1px solid ${C.panelBorder}`, padding: isMobile ? "0 12px" : "0 24px", display: "flex", alignItems: "center", gap: isMobile ? 8 : 20, height: isMobile ? 50 : 56 }}>
+        <div style={{ fontFamily: "'Bebas Neue'", fontSize: isMobile ? 18 : 26, color: C.accent, letterSpacing: 2 }}>⚔ KINGSHOT KvK</div>
+        {!isMobile && <div style={{ fontSize: 11, color: C.textDim, borderLeft: `1px solid ${C.panelBorder}`, paddingLeft: 16 }}>ALLIANCE COMMAND CENTER</div>}
         <div style={{ flex: 1 }} />
-        {/* Live indicator */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: C.green }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: C.green }}>
           <div style={{ width: 7, height: 7, borderRadius: "50%", background: C.green, boxShadow: `0 0 6px ${C.green}` }} />
-          LIVE
+          {!isMobile && "LIVE"}
         </div>
-        {[["dashboard","📊 Dashboard"],["members","👥 Members"],["map","🗺 Battle Map"]].map(([k, label]) => (
-          <button key={k} onClick={() => setTab(k)} style={{ ...btnSt, padding: "6px 18px", fontSize: 13, fontWeight: 700, fontFamily: "'Roboto Condensed', 'Arial Narrow', sans-serif", letterSpacing: 0.5, background: tab === k ? C.accentDim : "transparent", color: tab === k ? C.accent : C.textDim, border: tab === k ? `1px solid ${C.accent}44` : "1px solid transparent" }}>{label}</button>
+        {[["dashboard", isMobile ? "📊" : "📊 Dashboard"], ["members", isMobile ? "👥" : "👥 Members"], ["map", isMobile ? "🗺" : "🗺 Battle Map"]].map(([k, label]) => (
+          <button key={k} onClick={() => setTab(k)} style={{ ...btnSt, padding: isMobile ? "6px 10px" : "6px 18px", fontSize: isMobile ? 18 : 13, fontWeight: 700, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif", letterSpacing: 0.5, background: tab === k ? C.accentDim : "transparent", color: tab === k ? C.accent : C.textDim, border: tab === k ? `1px solid ${C.accent}44` : "1px solid transparent" }}>{label}</button>
         ))}
       </div>
 
-      <div style={{ padding: 20, maxWidth: 1600, margin: "0 auto" }}>
+      <div style={{ padding: isMobile ? 12 : 20, maxWidth: 1600, margin: "0 auto" }}>
 
         {/* ── Dashboard ── */}
         {tab === "dashboard" && (
           <div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(auto-fill, minmax(140px, 1fr))", gap: 12, marginBottom: 20 }}>
               <StatCard label="Total Members" value={members.length} sub={`${avail} full availability`} />
               <StatCard label="Full Avail." value={avail} sub={`${Math.round(avail / (members.length || 1) * 100)}% ready`} color={C.green} />
               <StatCard label="Rally Leaders" value={leaders} color={C.gold} />
@@ -1209,18 +1282,34 @@ function App() {
               <CsvUploadButton onImport={importMembers} />
               <AllianceManager alliances={alliances} onAdd={addAlliance} onRemove={removeAlliance} onColorChange={updateAllianceColor} />
             </div>
-            <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
-              <input style={{ ...inputSt, width: 200 }} placeholder="🔍 Search name…" value={search} onChange={e => setSearch(e.target.value)} />
-              <select style={{ ...inputSt, width: 150 }} value={filterRole} onChange={e => setFilterRole(e.target.value)}>
-                <option value="all">All Roles</option>{ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
-              <input style={{ ...inputSt, width: 150 }} placeholder="Filter alliance…" value={filterAlliance} onChange={e => setFilterAlliance(e.target.value)} />
-              <select style={{ ...inputSt, width: 160 }} value={filterAvail} onChange={e => setFilterAvail(e.target.value)}>
-                <option value="all">All Availability</option>
-                {AVAILABILITY_OPTS.map(o => <option key={o} value={o}>{o}</option>)}
-              </select>
-              <span style={{ fontSize: 12, color: C.textDim }}>{filtered.length} / {members.length}</span>
+            <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
+              <input style={{ ...inputSt, flex: "1 1 140px", minWidth: 0 }} placeholder="🔍 Search name…" value={search} onChange={e => setSearch(e.target.value)} />
+              {!isMobile && <>
+                <select style={{ ...inputSt, width: 150 }} value={filterRole} onChange={e => setFilterRole(e.target.value)}>
+                  <option value="all">All Roles</option>{ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+                <input style={{ ...inputSt, width: 150 }} placeholder="Filter alliance…" value={filterAlliance} onChange={e => setFilterAlliance(e.target.value)} />
+                <select style={{ ...inputSt, width: 160 }} value={filterAvail} onChange={e => setFilterAvail(e.target.value)}>
+                  <option value="all">All Availability</option>
+                  {AVAILABILITY_OPTS.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </>}
+              {isMobile && <>
+                <select style={{ ...inputSt, flex: "1 1 100px" }} value={filterAvail} onChange={e => setFilterAvail(e.target.value)}>
+                  <option value="all">All Avail.</option>
+                  {AVAILABILITY_OPTS.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </>}
+              <span style={{ fontSize: 12, color: C.textDim }}>{filtered.length}/{members.length}</span>
             </div>
+            {isMobile ? (
+              <div>
+                {filtered.length === 0 && <div style={{ textAlign: "center", color: C.textDim, padding: 40 }}>No members match filters</div>}
+                {filtered.map(m => (
+                  <MemberCard key={m.id} m={m} alliances={alliances} onUpdate={updateMember} onDelete={deleteMember} />
+                ))}
+              </div>
+            ) : (
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", background: C.panel, borderRadius: 10, overflow: "hidden" }}>
                 <thead>
@@ -1238,25 +1327,26 @@ function App() {
                 </tbody>
               </table>
             </div>
+            )}
           </div>
         )}
 
         {/* ── Map ── */}
         {tab === "map" && (
           <div>
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontFamily: "'Bebas Neue'", fontSize: 24, color: C.accent, letterSpacing: 3, marginBottom: 4 }}>KVK BATTLE MAP</div>
-              <div style={{ fontSize: 12, color: C.textDim }}>Click any gray tile to assign a member or mark an enemy position. Changes sync live to all users.</div>
+            <div style={{ marginBottom: isMobile ? 10 : 16 }}>
+              <div style={{ fontFamily: "'Bebas Neue'", fontSize: isMobile ? 20 : 24, color: C.accent, letterSpacing: 3, marginBottom: 4 }}>KVK BATTLE MAP</div>
+              {!isMobile && <div style={{ fontSize: 12, color: C.textDim }}>Click any gray tile to assign a member or mark an enemy. Changes sync live to all users.</div>}
             </div>
             <div style={{
               background: "rgba(255,255,255,0.04)",
               backdropFilter: "blur(20px)",
               WebkitBackdropFilter: "blur(20px)",
               border: "1px solid rgba(255,255,255,0.09)",
-              borderRadius: 18, padding: 20,
+              borderRadius: 18, padding: isMobile ? 10 : 20,
               boxShadow: "0 8px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07)",
             }}>
-              <CastleMap members={members} assignments={assignments} setAssignments={fbSetAssignments} />
+              <CastleMap members={members} assignments={assignments} setAssignments={fbSetAssignments} isMobile={isMobile} />
             </div>
           </div>
         )}
