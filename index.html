@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -287,38 +288,24 @@ function DonutSlice({ label, value, total, color }) {
   );
 }
 
-// ── Add Member ─────────────────────────────────────────────────────────────
-function AddMemberForm({ onAdd, alliances }) {
-  const blank = { name: "", tc: "TG8", available: "Full", role: "Rally Joiner", alliance: alliances[0]?.name || "", primaryTarget: "Castle", notes: "" };
-  const [form, setForm] = useState(blank);
-  const [open, setOpen] = useState(false);
-  const f = (k, v) => setForm(p => ({ ...p, [k]: v }));
-  if (!open) return <button onClick={() => setOpen(true)} style={{ ...btnSt, background: C.accentDim, color: C.accent, padding: "7px 20px", fontWeight: 700, fontSize: 13, fontFamily: "'Roboto Condensed', 'Arial Narrow', sans-serif", letterSpacing: 0.5 }}>+ Add Member</button>;
+// ── Add Member (inline row) ────────────────────────────────────────────────
+function AddMemberButton({ onAdd, alliances }) {
+  function handleAdd() {
+    onAdd({
+      id: uid(),
+      name: "New Member",
+      tc: "TG8",
+      available: "Full",
+      role: "Rally Joiner",
+      alliance: alliances[0]?.name || "",
+      primaryTarget: "Castle",
+      notes: "",
+    });
+  }
   return (
-    <div style={{ background: "#0a1820", border: `1px solid ${C.panelBorder}`, borderRadius: 10, padding: 18, marginBottom: 16 }}>
-      <div style={{ fontFamily: "'Bebas Neue'", fontSize: 20, color: C.accent, letterSpacing: 1, marginBottom: 14 }}>NEW MEMBER</div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(155px,1fr))", gap: 10, marginBottom: 14 }}>
-        {[["name","Name *","text","Member name"],["notes","Notes","text","Optional…"]].map(([k,label,type,ph]) => (
-          <div key={k}><div style={{ fontSize: 10, color: C.textDim, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.8 }}>{label}</div>
-          <input style={inputSt} type={type} value={form[k]} placeholder={ph} onChange={e => f(k, e.target.value)} /></div>
-        ))}
-        <div>
-          <div style={{ fontSize: 10, color: C.textDim, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.8 }}>Alliance</div>
-          <select style={{ ...inputSt, color: allianceColor(form.alliance), fontWeight: 700 }} value={form.alliance} onChange={e => f("alliance", e.target.value)}>
-            <option value="">—</option>
-            {alliances.map(a => <option key={a.name} value={a.name} style={{ color: a.color }}>{a.name}</option>)}
-          </select>
-        </div>
-        {[["tc","TC Level",TC_LEVELS],["role","Role",ROLES],["available","Available",AVAILABILITY_OPTS],["primaryTarget","Primary Target",PRIMARY_TARGETS]].map(([k,label,opts]) => (
-          <div key={k}><div style={{ fontSize: 10, color: C.textDim, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.8 }}>{label}</div>
-          <select style={inputSt} value={form[k]} onChange={e => f(k, e.target.value)}>{opts.map(o => <option key={o}>{o}</option>)}</select></div>
-        ))}
-      </div>
-      <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={() => { if (form.name.trim()) { onAdd({ ...form, id: uid() }); setForm(blank); setOpen(false); } }} style={{ ...btnSt, background: C.accentDim, color: C.accent, fontWeight: 800, padding: "7px 22px" }}>Add Member</button>
-        <button onClick={() => setOpen(false)} style={{ ...btnSt, padding: "7px 16px" }}>Cancel</button>
-      </div>
-    </div>
+    <button onClick={handleAdd} style={{ ...btnSt, background: C.accentDim, color: C.accent, padding: "7px 20px", fontWeight: 700, fontSize: 13, fontFamily: "'Roboto Condensed', 'Arial Narrow', sans-serif", letterSpacing: 0.5 }}>
+      + Add Member
+    </button>
   );
 }
 
@@ -1100,7 +1087,7 @@ function App() {
         {tab === "members" && (
           <div>
             <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap" }}>
-              <AddMemberForm onAdd={addMember} alliances={alliances} />
+              <AddMemberButton onAdd={addMember} alliances={alliances} />
               <CsvUploadButton onImport={importMembers} />
               <AllianceManager alliances={alliances} onAdd={addAlliance} onRemove={removeAlliance} onColorChange={updateAllianceColor} />
             </div>
