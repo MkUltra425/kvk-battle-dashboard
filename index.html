@@ -513,6 +513,54 @@ function TilePanel({ modal, members, assignments, onFriendly, onEnemy, onClear, 
   );
 }
 
+// ── Target SVG Icons ──────────────────────────────────────────────────────
+const CrownIcon = ({ color, size = 13 }) => (
+  <svg viewBox="0 0 24 18" width={size} height={size * 18/24} fill={color}>
+    {/* 3 circle tips */}
+    <circle cx="12" cy="2.5" r="2.5"/>
+    <circle cx="3"  cy="7"   r="2.5"/>
+    <circle cx="21" cy="7"   r="2.5"/>
+    {/* Crown body */}
+    <path d="M1,16 L3,7 L8.5,12.5 L12,2.5 L15.5,12.5 L21,7 L23,16 Z"/>
+    {/* Base band */}
+    <rect x="1" y="15.5" width="22" height="2.5" rx="1.25"/>
+  </svg>
+);
+
+const TurretIcon = ({ color, letter, size = 13 }) => (
+  <svg viewBox="0 0 24 28" width={size} height={size * 28/24}>
+    {/* Merlons */}
+    <rect x="0"  y="0" width="6"  height="7" rx="0.5" fill={color}/>
+    <rect x="9"  y="0" width="6"  height="7" rx="0.5" fill={color}/>
+    <rect x="18" y="0" width="6"  height="7" rx="0.5" fill={color}/>
+    {/* Shoulder bar */}
+    <rect x="0" y="7" width="24" height="3" fill={color}/>
+    {/* Tapered body */}
+    <path d="M2,10 L22,10 L24,22 L0,22 Z" fill={color}/>
+    {/* Base plate */}
+    <rect x="1" y="22" width="22" height="5" rx="2" fill={color}/>
+    {/* Direction letter */}
+    <text x="12" y="19" textAnchor="middle" fontSize="10" fontWeight="900"
+      fill="white" fontFamily="Arial,sans-serif" dominantBaseline="auto">{letter}</text>
+  </svg>
+);
+
+const TARGET_ICONS = {
+  "Castle":     (col) => <CrownIcon  color={col} size={14} />,
+  "Turret (N)": (col) => <TurretIcon color={col} letter="N" size={16} />,
+  "Turret (E)": (col) => <TurretIcon color={col} letter="E" size={16} />,
+  "Turret (S)": (col) => <TurretIcon color={col} letter="S" size={16} />,
+  "Turret (W)": (col) => <TurretIcon color={col} letter="W" size={16} />,
+};
+
+const TARGET_COLORS = {
+  "Castle":     "#fbbf24",
+  "Turret (N)": "#20d0d0",
+  "Turret (E)": "#c084fc",
+  "Turret (S)": "#ff8040",
+  "Turret (W)": "#40c080",
+};
+
 // ── Castle Map ─────────────────────────────────────────────────────────────
 //
 // Layout matches blueprint exactly:
@@ -546,7 +594,7 @@ function TilePanel({ modal, members, assignments, onFriendly, onEnemy, onClear, 
 // Red border rect encompasses rows 1–12, cols 1–12
 
 const ROWS = 14, COLS = 14;
-const TILE = 36, GAP = 2;
+const TILE = 50, GAP = 3;
 
 // Castle occupies rows 4-9, cols 4-9 (inclusive) — 6×6
 const CR1 = 4, CR2 = 9, CC1 = 4, CC2 = 9;
@@ -628,9 +676,17 @@ function CastleMap({ members, assignments, setAssignments }) {
   const availColorMap = { Full: C.green, "1st Half": C.blue, "2nd Half": C.gold, "On/Off": C.red };
   const targetColorMap = { Castle: C.accent, "Turret (N)": "#20d0d0", "Turret (E)": "#c060ff", "Turret (S)": "#ff8040", "Turret (W)": "#40c080" };
 
-  const SideSection = ({ title, children }) => (
-    <div style={{ background: "#0a1820", border: `1px solid ${C.panelBorder}`, borderRadius: 8, padding: 12 }}>
-      <div style={{ fontFamily: "'Bebas Neue'", fontSize: 12, color: C.accent, letterSpacing: 1, marginBottom: 8 }}>{title}</div>
+  const SideSection = ({ title, children, accent }) => (
+    <div style={{
+      background: "rgba(255,255,255,0.05)",
+      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)",
+      border: "1px solid rgba(255,255,255,0.10)",
+      borderRadius: 14,
+      padding: "14px 16px",
+      boxShadow: "0 4px 24px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08)",
+    }}>
+      <div style={{ fontSize: 10, color: accent || C.accent, letterSpacing: 2, marginBottom: 10, fontFamily: "'Roboto Condensed', sans-serif", fontWeight: 700, textTransform: "uppercase" }}>{title}</div>
       {children}
     </div>
   );
@@ -641,12 +697,18 @@ function CastleMap({ members, assignments, setAssignments }) {
       {/* ── LEFT: Map ── */}
       <div style={{ flex: "0 0 auto" }}>
         {/* Filters */}
-        <div style={{ display: "flex", gap: 5, marginBottom: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 5, marginBottom: 10, alignItems: "center", flexWrap: "wrap" }}>
           {[["all","All"],["friendly","🤝 Friendly"],["enemy","⚔ Enemy"],["unassigned","○ Unassigned"]].map(([v, label]) => (
-            <button key={v} onClick={() => setFilter(v)} style={{ ...btnSt, fontSize: 10, padding: "3px 9px", background: filter === v ? C.accentDim : "#1a2a3a", color: filter === v ? C.accent : C.textDim, border: filter === v ? `1px solid ${C.accent}44` : "1px solid transparent" }}>{label}</button>
+            <button key={v} onClick={() => setFilter(v)} style={{
+              ...btnSt, fontSize: 11, padding: "5px 12px",
+              background: filter === v ? "rgba(167,139,250,0.2)" : "rgba(255,255,255,0.05)",
+              color: filter === v ? C.accent : C.textDim,
+              border: filter === v ? `1px solid ${C.accent}66` : "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 20,
+            }}>{label}</button>
           ))}
           <div style={{ flex: 1 }} />
-          <button onClick={() => setAssignments({})} style={{ ...btnSt, fontSize: 10, padding: "3px 9px", background: C.redDim, color: C.red, border: `1px solid ${C.red}33` }}>Reset</button>
+          <button onClick={() => setAssignments({})} style={{ ...btnSt, fontSize: 11, padding: "5px 12px", background: "rgba(248,113,113,0.15)", color: C.red, border: `1px solid ${C.red}44`, borderRadius: 20 }}>↺ Reset</button>
         </div>
 
         {/* Grid */}
@@ -667,40 +729,78 @@ function CastleMap({ members, assignments, setAssignments }) {
               if (filter === "unassigned" && assignment) dimmed = true;
               let bg, border;
               const isLeader = assignment?.type === "friendly" && assignment.member.role === "Rally Leader";
-              if (dimmed) { bg = "#10181f"; border = "1px solid #1a2a3a"; }
-              else if (turret) { bg = "#f5f0e0"; border = `1.5px solid ${C.accent}`; }
-              else if (assignment?.type === "friendly" && isLeader) { bg = "#4a3a08"; border = `1.5px solid ${C.gold}`; }
-              else if (assignment?.type === "friendly") { bg = "#0d2e52"; border = `1.5px solid ${C.blue}`; }
-              else if (assignment?.type === "enemy") { bg = "#3a0d0d"; border = `1.5px solid ${C.red}`; }
-              else { bg = "#d0d8df"; border = "1px solid #a8b4be"; }
+              if (dimmed) { bg = "rgba(255,255,255,0.03)"; border = "1px solid rgba(255,255,255,0.05)"; }
+              else if (turret) { bg = "linear-gradient(135deg,#f5f0e0,#e8dfc0)"; border = `1.5px solid ${C.accent}`; }
+              else if (assignment?.type === "friendly" && isLeader) { bg = "linear-gradient(135deg,#4a3a08,#6a5210)"; border = `1.5px solid ${C.gold}`; }
+              else if (assignment?.type === "friendly") { bg = "linear-gradient(135deg,#0d2e52,#0a3d6e)"; border = `1.5px solid ${C.blue}`; }
+              else if (assignment?.type === "enemy") { bg = "linear-gradient(135deg,#3a0d0d,#520a0a)"; border = `1.5px solid ${C.red}`; }
+              else { bg = "rgba(180,192,205,0.55)"; border = "1px solid rgba(160,175,190,0.5)"; }
               if (isSelected) border = `2px solid ${C.accent}`;
               return (
                 <div key={`${r},${c}`}
                   onClick={() => !turret && handleClick(r, c)}
                   onMouseEnter={e => {
                     if (assignment && !turret) setHover({ r, c, a: assignment, x: e.clientX, y: e.clientY });
-                    if (!turret && !dimmed && !isSelected) { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.filter = "brightness(1.08)"; }
+                    if (!turret && !dimmed && !isSelected) { e.currentTarget.style.filter = "brightness(1.15)"; e.currentTarget.style.boxShadow = `0 0 0 1.5px ${C.accent}88`; }
                   }}
                   onMouseLeave={e => {
                     setHover(null);
-                    e.currentTarget.style.borderColor = ""; e.currentTarget.style.filter = "";
+                    e.currentTarget.style.filter = ""; e.currentTarget.style.boxShadow = "";
                   }}
                   style={{
                     position: "absolute", left: x, top: y, width: TILE, height: TILE,
-                    background: bg, border, borderRadius: 3,
+                    background: bg, border, borderRadius: 4,
                     cursor: turret ? "default" : "pointer",
                     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
                     overflow: "hidden", boxSizing: "border-box", zIndex: turret ? 25 : 1,
+                    transition: "filter 0.1s, box-shadow 0.1s",
                   }}>
-                  {turret && <span style={{ fontSize: 7, fontWeight: 800, color: "#6a4a08", textAlign: "center", lineHeight: 1.2, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif" }}>{tLabel}</span>}
-                  {!turret && !dimmed && assignment?.type === "friendly" && (
-                    <span style={{ fontSize: 8, fontWeight: 700, color: isLeader ? "#ffd76a" : "#90c8ff", textAlign: "center", wordBreak: "break-all", padding: "0 1px", lineHeight: 1.2, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif" }}>
-                      {assignment.member.name.slice(0, 8)}
-                    </span>
+                  {turret && (
+                    <span style={{ fontSize: 9, fontWeight: 700, color: "#6a4a08", textAlign: "center", lineHeight: 1.2, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif", letterSpacing: 0.5, textTransform: "uppercase" }}>{tLabel}</span>
                   )}
+                  {!turret && !dimmed && assignment?.type === "friendly" && (() => {
+                    const full = assignment.member.name;
+                    const display = full.length > 10 ? full.slice(0, 10) + "…" : full;
+                    const len = display.length;
+                    const fs = len <= 4 ? 12 : len <= 6 ? 11 : len <= 8 ? 10 : 9;
+                    const target = assignment.member.primaryTarget || "";
+                    const targetCol = TARGET_COLORS[target] || C.textDim;
+                    const targetIconFn = TARGET_ICONS[target];
+                    return (
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, width: "100%", padding: "2px 2px" }}>
+                        <span style={{
+                          fontSize: fs, fontWeight: 700, lineHeight: 1,
+                          color: isLeader ? "#1a1200" : "#071830",
+                          background: isLeader ? "rgba(255,210,70,0.95)" : "rgba(160,210,255,0.95)",
+                          borderRadius: 3, padding: "2px 3px",
+                          fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif",
+                          letterSpacing: 0,
+                          maxWidth: TILE - 2,
+                          overflow: "hidden", whiteSpace: "nowrap",
+                          display: "block", textAlign: "center",
+                          boxShadow: "0 1px 3px rgba(0,0,0,0.25)",
+                        }}>{display}</span>
+                        {targetIconFn && (
+                          <div style={{ filter: `drop-shadow(0 0 2px ${targetCol}99)`, lineHeight: 0 }}>
+                            {targetIconFn(targetCol)}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                   {!turret && !dimmed && assignment?.type === "enemy" && (
-                    <span style={{ fontSize: 8, fontWeight: 700, color: "#ff9090", textAlign: "center", wordBreak: "break-all", padding: "0 1px", lineHeight: 1.2, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif" }}>
-                      {(assignment.name || "ENM").slice(0, 8)}
+                    <span style={{
+                      fontSize: 12, fontWeight: 600, lineHeight: 1,
+                      color: "#300000",
+                      background: "rgba(255,120,120,0.92)",
+                      borderRadius: 3, padding: "2px 5px",
+                      fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif",
+                      letterSpacing: 0.2,
+                      maxWidth: TILE - 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                      display: "block", textAlign: "center",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.25)",
+                    }}>
+                      {(assignment.name || "ENM").slice(0, 10)}
                     </span>
                   )}
                 </div>
@@ -709,8 +809,14 @@ function CastleMap({ members, assignments, setAssignments }) {
           )}
 
           {/* Castle interior */}
-          <div style={{ position: "absolute", left: interiorX, top: interiorY, width: interiorW, height: interiorH, background: "white", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 15, pointerEvents: "none" }}>
-            <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, fontWeight: 900, color: "#1a1a1a", letterSpacing: 3 }}>CASTLE</span>
+          <div style={{
+            position: "absolute", left: interiorX, top: interiorY, width: interiorW, height: interiorH,
+            background: "linear-gradient(135deg, #f8f4ee 0%, #ede8df 100%)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            zIndex: 15, pointerEvents: "none",
+            boxShadow: "inset 0 2px 12px rgba(0,0,0,0.12)",
+          }}>
+            <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, fontWeight: 900, color: "#6a5a3a", letterSpacing: 4, opacity: 0.85 }}>CASTLE</span>
           </div>
 
           {/* SVG borders */}
@@ -721,10 +827,17 @@ function CastleMap({ members, assignments, setAssignments }) {
         </div>
 
         {/* Legend */}
-        <div style={{ display: "flex", gap: 10, marginTop: 8, flexWrap: "wrap" }}>
-          {[["#d0d8df","#a8b4be","Empty"],["#4a3a08",C.gold,"Leader"],["#0d2e52",C.blue,"Joiner"],["#3a0d0d",C.red,"Enemy"],["#f5f0e0",C.accent,"Turret"],["white",C.accent,"Castle"]].map(([bg, border, label]) => (
-            <div key={label} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: C.textDim }}>
-              <div style={{ width: 10, height: 10, background: bg, border: `1.5px solid ${border}`, borderRadius: 2, flexShrink: 0 }} />
+        <div style={{ display: "flex", gap: 14, marginTop: 10, flexWrap: "wrap" }}>
+          {[
+            { bg: "rgba(180,192,205,0.55)", border: "rgba(160,175,190,0.5)", label: "Empty" },
+            { bg: "linear-gradient(135deg,#4a3a08,#6a5210)", border: C.gold, label: "Leader" },
+            { bg: "linear-gradient(135deg,#0d2e52,#0a3d6e)", border: C.blue, label: "Joiner" },
+            { bg: "linear-gradient(135deg,#3a0d0d,#520a0a)", border: C.red, label: "Enemy" },
+            { bg: "linear-gradient(135deg,#f5f0e0,#e8dfc0)", border: C.accent, label: "Turret" },
+            { bg: "linear-gradient(135deg,#f8f4ee,#ede8df)", border: C.accent, label: "Castle" },
+          ].map(({ bg, border, label }) => (
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: C.textDim }}>
+              <div style={{ width: 12, height: 12, background: bg, border: `1.5px solid ${border}`, borderRadius: 3, flexShrink: 0 }} />
               {label}
             </div>
           ))}
@@ -739,9 +852,14 @@ function CastleMap({ members, assignments, setAssignments }) {
           <TilePanel modal={modal} members={members} assignments={assignments}
             onFriendly={assignFriendly} onEnemy={assignEnemy} onClear={clearTile} onClose={() => setModal(null)} />
         ) : (
-          <div style={{ background: "#0a1820", border: `1px solid ${C.panelBorder}`, borderRadius: 8, padding: 14, textAlign: "center" }}>
-            <div style={{ fontSize: 22, marginBottom: 4 }}>🗺</div>
-            <div style={{ fontSize: 11, color: C.textDim }}>Click any tile on the map to assign a member or mark an enemy position.</div>
+          <div style={{
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 14, padding: "20px 16px", textAlign: "center",
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
+          }}>
+            <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.5 }}>🗺</div>
+            <div style={{ fontSize: 11, color: C.textDim, lineHeight: 1.5 }}>Click any tile to assign<br/>a member or mark an enemy</div>
           </div>
         )}
 
@@ -754,9 +872,9 @@ function CastleMap({ members, assignments, setAssignments }) {
               { label: "Open Tiles", value: (ROWS * COLS) - 32 - friendlyCount - enemyCount, color: C.textDim },
               { label: "Unpositioned", value: unassignedMembers.length, color: C.gold },
             ].map(({ label, value, color }) => (
-              <div key={label} style={{ background: "#0d1520", borderRadius: 5, padding: "7px 8px", border: `1px solid ${C.panelBorder}` }}>
-                <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 1 }}>{label}</div>
-                <div style={{ fontSize: 18, fontWeight: 800, color, fontFamily: "'Bebas Neue'", lineHeight: 1 }}>{value}</div>
+              <div key={label} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 8, padding: "8px 10px", border: `1px solid rgba(255,255,255,0.07)` }}>
+                <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 }}>{label}</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color, fontFamily: "'Bebas Neue'", lineHeight: 1, textShadow: `0 0 12px ${color}66` }}>{value}</div>
               </div>
             ))}
           </div>
@@ -768,8 +886,8 @@ function CastleMap({ members, assignments, setAssignments }) {
                   <div style={{ width: 7, height: 7, borderRadius: 2, background: allianceColor(al), flexShrink: 0 }} />
                   <span style={{ fontSize: 10, color: C.text, flex: 1 }}>{al}</span>
                   <span style={{ fontSize: 10, color: allianceColor(al), fontWeight: 700 }}>{cnt}</span>
-                  <div style={{ width: 40, height: 3, background: "#1a2a3a", borderRadius: 2 }}>
-                    <div style={{ width: `${(cnt / friendlyCount) * 100}%`, height: "100%", background: allianceColor(al), borderRadius: 2 }} />
+                  <div style={{ width: 40, height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
+                    <div style={{ width: `${(cnt / friendlyCount) * 100}%`, height: "100%", background: allianceColor(al), borderRadius: 2, boxShadow: `0 0 4px ${allianceColor(al)}88` }} />
                   </div>
                 </div>
               ))}
@@ -787,8 +905,8 @@ function CastleMap({ members, assignments, setAssignments }) {
                 <div style={{ width: 7, height: 7, borderRadius: 2, background: col, flexShrink: 0 }} />
                 <span style={{ fontSize: 10, color: C.text, flex: 1 }}>{t}</span>
                 <span style={{ fontSize: 10, color: col, fontWeight: 700 }}>{cnt}</span>
-                <div style={{ width: 40, height: 3, background: "#1a2a3a", borderRadius: 2 }}>
-                  <div style={{ width: `${members.length > 0 ? (cnt / members.length) * 100 : 0}%`, height: "100%", background: col, borderRadius: 2 }} />
+                <div style={{ width: 40, height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
+                  <div style={{ width: `${members.length > 0 ? (cnt / members.length) * 100 : 0}%`, height: "100%", background: col, borderRadius: 2, boxShadow: `0 0 4px ${col}88` }} />
                 </div>
               </div>
             );
@@ -802,10 +920,10 @@ function CastleMap({ members, assignments, setAssignments }) {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               {unassignedMembers.map(m => (
-                <div key={m.id} style={{ background: "#0d1520", borderRadius: 4, padding: "5px 8px", border: `1px solid ${C.panelBorder}`, display: "flex", alignItems: "center", gap: 5 }}>
-                  <div style={{ width: 5, height: 5, borderRadius: "50%", background: availColorMap[m.available] || C.textDim, flexShrink: 0 }} />
+                <div key={m.id} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 6, padding: "5px 8px", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", gap: 5 }}>
+                  <div style={{ width: 5, height: 5, borderRadius: "50%", background: availColorMap[m.available] || C.textDim, flexShrink: 0, boxShadow: `0 0 4px ${availColorMap[m.available] || C.textDim}` }} />
                   <span style={{ fontSize: 10, fontWeight: 700, color: C.text, flex: 1 }}>{m.name}</span>
-                  <span style={{ fontSize: 9, color: C.textDim }}>TC{m.tc}</span>
+                  <span style={{ fontSize: 9, color: C.textDim }}>{m.tc}</span>
                   <span style={{ fontSize: 9, color: allianceColor(m.alliance), fontWeight: 700 }}>{m.alliance}</span>
                 </div>
               ))}
@@ -819,7 +937,7 @@ function CastleMap({ members, assignments, setAssignments }) {
             {members.map(m => {
               const isOnMap = assignedMemberIds.has(m.id);
               return (
-                <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 6px", borderRadius: 4, background: isOnMap ? "#0a2040" : "#0d1520", border: `1px solid ${isOnMap ? C.blue + "44" : C.panelBorder}` }}>
+                <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 8px", borderRadius: 6, background: isOnMap ? "rgba(96,165,250,0.12)" : "rgba(255,255,255,0.03)", border: `1px solid ${isOnMap ? C.blue + "44" : "rgba(255,255,255,0.06)"}`, transition: "all 0.15s" }}>
                   <div style={{ width: 5, height: 5, borderRadius: "50%", background: availColorMap[m.available] || C.textDim, flexShrink: 0 }} />
                   <span style={{ fontSize: 10, fontWeight: 700, color: isOnMap ? "#90c8ff" : C.text, flex: 1 }}>{m.name}</span>
                   <span style={{ fontSize: 9, color: C.textDim }}>{m.tc}</span>
@@ -1127,10 +1245,17 @@ function App() {
         {tab === "map" && (
           <div>
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontFamily: "'Bebas Neue'", fontSize: 24, color: C.accent, letterSpacing: 2, marginBottom: 4 }}>⚔ KVK BATTLE MAP</div>
+              <div style={{ fontFamily: "'Bebas Neue'", fontSize: 24, color: C.accent, letterSpacing: 3, marginBottom: 4 }}>KVK BATTLE MAP</div>
               <div style={{ fontSize: 12, color: C.textDim }}>Click any gray tile to assign a member or mark an enemy position. Changes sync live to all users.</div>
             </div>
-            <div style={{ background: C.panel, border: `1px solid ${C.panelBorder}`, borderRadius: 10, padding: 20 }}>
+            <div style={{
+              background: "rgba(255,255,255,0.04)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              border: "1px solid rgba(255,255,255,0.09)",
+              borderRadius: 18, padding: 20,
+              boxShadow: "0 8px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07)",
+            }}>
               <CastleMap members={members} assignments={assignments} setAssignments={fbSetAssignments} />
             </div>
           </div>
