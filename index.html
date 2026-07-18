@@ -268,7 +268,7 @@ function StatCard({ label, value, sub, color = C.accent }) {
     }}>
       <div style={{ position: "absolute", inset: 0, background: `radial-gradient(circle at top left, ${color}18 0%, transparent 65%)`, borderRadius: 20, pointerEvents: "none" }} />
       <div style={{ fontSize: 10, color: C.textDim, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6, fontFamily: "'Roboto Condensed', sans-serif" }}>{label}</div>
-      <div style={{ fontSize: 32, fontWeight: 800, color, fontFamily: "'Syne','Segoe UI',sans-serif", lineHeight: 1, textShadow: `0 0 20px ${color}66` }}>{value}</div>
+      <div style={{ fontSize: 32, fontWeight: 800, color, fontFamily: "'Bebas Neue',sans-serif", lineHeight: 1, textShadow: `0 0 20px ${color}66` }}>{value}</div>
       {sub && <div style={{ fontSize: 11, color: C.textDim, marginTop: 4 }}>{sub}</div>}
     </div>
   );
@@ -374,7 +374,7 @@ function AllianceManager({ alliances, onAdd, onRemove, onColorChange }) {
   return (
     <div style={{ background: "#0a1820", border: `1px solid ${C.panelBorder}`, borderRadius: 10, padding: 18, marginBottom: 16, minWidth: 280, maxWidth: 380 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <div style={{ fontFamily: "'Syne','Segoe UI',sans-serif", fontSize: 20, color: C.accent, letterSpacing: 1 }}>MANAGE ALLIANCES</div>
+        <div style={{ fontFamily: "'Bebas Neue'", fontSize: 20, color: C.accent, letterSpacing: 1 }}>MANAGE ALLIANCES</div>
         <button onClick={() => setOpen(false)} style={{ ...btnSt, padding: "2px 9px", fontSize: 13 }}>✕</button>
       </div>
 
@@ -419,7 +419,7 @@ function TeamManager({ teams, onAdd, onRemove, onColorChange }) {
   return (
     <div style={{ background: "#0a1820", border: `1px solid ${C.panelBorder}`, borderRadius: 10, padding: 18, marginBottom: 16, minWidth: 280, maxWidth: 380 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <div style={{ fontFamily: "'Syne','Segoe UI',sans-serif", fontSize: 20, color: C.blue, letterSpacing: 1 }}>MANAGE TEAMS</div>
+        <div style={{ fontFamily: "'Bebas Neue'", fontSize: 20, color: C.blue, letterSpacing: 1 }}>MANAGE TEAMS</div>
         <button onClick={() => setOpen(false)} style={{ ...btnSt, padding: "2px 9px", fontSize: 13 }}>✕</button>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14 }}>
@@ -518,7 +518,7 @@ function TilePanel({ modal, members, assignments, onFriendly, onEnemy, onClear, 
       {isMobile && <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 199 }} />}
       <div style={panelStyle}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <span style={{ fontFamily: "'Syne','Segoe UI',sans-serif", fontSize: 20, color: C.accent, letterSpacing: 1 }}>TILE [{modal.r},{modal.c}]</span>
+        <span style={{ fontFamily: "'Bebas Neue'", fontSize: 20, color: C.accent, letterSpacing: 1 }}>TILE [{modal.r},{modal.c}]</span>
         <button onClick={onClose} style={{ ...btnSt, padding: "2px 9px", fontSize: 13 }}>✕</button>
       </div>
       {existing && (
@@ -841,7 +841,7 @@ function BattleGuide({ isMobile }) {
       }}>
         {/* Title */}
         <div style={{ marginBottom: 14, borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: 12 }}>
-          <div style={{ fontFamily: "'Syne','Segoe UI',sans-serif", fontSize: 20, color: C.accent, letterSpacing: 0.75, marginBottom: 2 }}>KvK Castle Rally Strategy</div>
+          <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: C.accent, letterSpacing: 2, marginBottom: 2 }}>KvK Castle Rally Strategy</div>
           <div style={{ fontSize: 10, color: C.textDim, letterSpacing: 1, textTransform: "uppercase", fontFamily: "'Roboto Condensed',sans-serif" }}>KvK Mechanics</div>
         </div>
 
@@ -1084,7 +1084,7 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
       padding: "14px 16px",
       boxShadow: "0 4px 24px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08)",
     }}>
-      <div style={{ fontSize: 10, color: accent || C.accent, letterSpacing: 0.75, marginBottom: 10, fontFamily: "'Roboto Condensed', sans-serif", fontWeight: 700, textTransform: "uppercase" }}>{title}</div>
+      <div style={{ fontSize: 10, color: accent || C.accent, letterSpacing: 2, marginBottom: 10, fontFamily: "'Roboto Condensed', sans-serif", fontWeight: 700, textTransform: "uppercase" }}>{title}</div>
       {children}
     </div>
   );
@@ -1162,7 +1162,7 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
                   }}>
                   {turret && (() => {
                     const ts = LEADER_STYLES[TURRET_LABEL_TO_TARGET[tLabel]] || LEADER_STYLES["Castle"];
-                    return <span style={{ fontSize: 9, fontWeight: 800, color: ts.border, textAlign: "center", lineHeight: 1.2, fontFamily: "'Segoe UI', Arial, sans-serif", letterSpacing: 0.15, textTransform: "none", textShadow: `0 0 6px ${ts.border}88` }}>{tLabel}</span>;
+                    return <span style={{ fontSize: 9, fontWeight: 800, color: ts.border, textAlign: "center", lineHeight: 1.2, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif", letterSpacing: 0.5, textTransform: "uppercase", textShadow: `0 0 6px ${ts.border}88` }}>{tLabel}</span>;
                   })()}
                   {!turret && !dimmed && assignment?.type === "friendly" && (() => {
                     const full = assignment.member.name;
@@ -1188,7 +1188,7 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
                           color: pillText,
                           background: pillBg,
                           borderRadius: 3, padding: "2px 3px",
-                          fontFamily: "'Segoe UI', Arial, sans-serif",
+                          fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif",
                           letterSpacing: 0,
                           maxWidth: TILE - 2,
                           overflow: "hidden", whiteSpace: "nowrap",
@@ -1217,7 +1217,7 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
             zIndex: 10, pointerEvents: "none",
             boxShadow: `inset 0 0 24px rgba(0,0,0,0.4), 0 0 12px ${LEADER_STYLES["Castle"].border}44`,
           }}>
-            <span style={{ fontFamily: "'Syne','Segoe UI',sans-serif", fontSize: isMobile ? 16 : 28, fontWeight: 800, color: LEADER_STYLES["Castle"].border, letterSpacing: 1.5, textShadow: `0 0 16px ${LEADER_STYLES["Castle"].border}88` }}>CASTLE</span>
+            <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: isMobile ? 16 : 28, fontWeight: 900, color: LEADER_STYLES["Castle"].border, letterSpacing: 4, textShadow: `0 0 16px ${LEADER_STYLES["Castle"].border}88` }}>CASTLE</span>
           </div>
 
           {/* SVG borders */}
@@ -1291,23 +1291,22 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
       {hover && (
         <div style={{
           position: "fixed", top: hover.y - 8, left: hover.x + 14,
-          background: "#09111f", border: "1px solid rgba(255,255,255,0.24)",
-          borderRadius: 9, padding: "11px 14px", zIndex: 9999, fontSize: 13, lineHeight: 1.45, color: "rgba(255,255,255,0.96)",
-          fontFamily: "'Segoe UI', Arial, sans-serif", maxWidth: 240, pointerEvents: "none",
-          boxShadow: "0 8px 28px rgba(0,0,0,0.72)",
+          background: "#0d1520f2", border: `1px solid ${C.panelBorder}`,
+          borderRadius: 7, padding: "10px 14px", zIndex: 9999, fontSize: 12, color: C.text,
+          maxWidth: 220, pointerEvents: "none", boxShadow: "0 4px 20px #000a",
         }}>
           {hover.a.type === "friendly" ? (
             <>
-              <div style={{ fontWeight: 700, color: hover.a.member.role === "Rally Leader" ? C.gold : C.blue, marginBottom: 5 }}>{hover.a.member.name}</div>
-              <div style={{ color: "rgba(255,255,255,0.72)", marginBottom: 3 }}>Role: <span style={{ color: C.text }}>{hover.a.member.role}</span></div>
-              <div style={{ color: "rgba(255,255,255,0.72)" }}>Alliance: <span style={{ color: allianceColor(hover.a.member.alliance) }}>{hover.a.member.alliance || "—"}</span></div>
+              <div style={{ fontWeight: 800, color: hover.a.member.role === "Rally Leader" ? C.gold : C.blue, marginBottom: 5 }}>{hover.a.member.name}</div>
+              <div style={{ color: C.textDim, marginBottom: 2 }}>Role: <span style={{ color: C.text }}>{hover.a.member.role}</span></div>
+              <div style={{ color: C.textDim }}>Alliance: <span style={{ color: allianceColor(hover.a.member.alliance) }}>{hover.a.member.alliance || "—"}</span></div>
             </>
           ) : (
             <>
-              <div style={{ fontWeight: 700, color: C.red, marginBottom: 5 }}>{hover.a.name || "Enemy"}</div>
-              {hover.a.kingdom && <div style={{ color: "rgba(255,255,255,0.72)", marginBottom: 3 }}>Kingdom: <span style={{ color: C.text }}>{hover.a.kingdom}</span></div>}
-              <div style={{ color: "rgba(255,255,255,0.72)", marginBottom: 3 }}>Threat: <span style={{ color: C.red }}>{hover.a.threat}</span></div>
-              {hover.a.notes && <div style={{ color: "rgba(255,255,255,0.72)", marginTop: 5, fontStyle: "italic" }}>{hover.a.notes}</div>}
+              <div style={{ fontWeight: 800, color: C.red, marginBottom: 5 }}>{hover.a.name || "Enemy"}</div>
+              {hover.a.kingdom && <div style={{ color: C.textDim, marginBottom: 2 }}>Kingdom: <span style={{ color: C.text }}>{hover.a.kingdom}</span></div>}
+              <div style={{ color: C.textDim, marginBottom: 2 }}>Threat: <span style={{ color: C.red }}>{hover.a.threat}</span></div>
+              {hover.a.notes && <div style={{ color: C.textDim, marginTop: 4, fontStyle: "italic" }}>{hover.a.notes}</div>}
             </>
           )}
         </div>
@@ -1501,9 +1500,9 @@ function App() {
 
   // ── Loading screen ─────────────────────────────────────────────────────
   if (loading) return (
-    <div style={{ minHeight: "100vh", background: C.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, fontFamily: "'Syne','Segoe UI',sans-serif" }}>
-      <div style={{ fontSize: 36, color: C.accent, letterSpacing: 1.5 }}>⚔ KINGSHOT KvK</div>
-      <div style={{ fontSize: 14, color: C.textDim, letterSpacing: 0.75 }}>CONNECTING TO DATABASE…</div>
+    <div style={{ minHeight: "100vh", background: C.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, fontFamily: "'Bebas Neue', sans-serif" }}>
+      <div style={{ fontSize: 36, color: C.accent, letterSpacing: 4 }}>⚔ KINGSHOT KvK</div>
+      <div style={{ fontSize: 14, color: C.textDim, letterSpacing: 2 }}>CONNECTING TO DATABASE…</div>
       <div style={{ width: 180, height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 99, overflow: "hidden" }}>
         <div style={{ height: "100%", background: C.accent, borderRadius: 99, animation: "loading 1.4s ease-in-out infinite", width: "40%" }} />
       </div>
@@ -1533,7 +1532,7 @@ function App() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center" }}
           onClick={e => { if (e.target === e.currentTarget) { setShowAuth(false); setAuthInput(""); setAuthError(false); } }}>
           <div style={{ background: "#0d1520", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 16, padding: 28, width: 300, boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}>
-            <div style={{ fontFamily: "'Syne','Segoe UI',sans-serif", fontSize: 22, color: C.accent, letterSpacing: 0.75, marginBottom: 6 }}>EDIT MODE</div>
+            <div style={{ fontFamily: "'Bebas Neue'", fontSize: 22, color: C.accent, letterSpacing: 2, marginBottom: 6 }}>EDIT MODE</div>
             <div style={{ fontSize: 12, color: C.textDim, marginBottom: 16 }}>Enter the passphrase to enable editing</div>
             <input type="password" autoFocus
               style={{ ...inputSt, marginBottom: authError ? 6 : 14, fontSize: 14 }}
@@ -1551,7 +1550,7 @@ function App() {
 
       {/* Header */}
       <div style={{ background: "linear-gradient(90deg,#0d1520,#101c2c 50%,#0d1520)", borderBottom: `1px solid ${C.panelBorder}`, padding: isMobile ? "0 12px" : "0 24px", display: "flex", alignItems: "center", gap: isMobile ? 8 : 20, height: isMobile ? 50 : 56 }}>
-        <div style={{ fontFamily: "'Syne','Segoe UI',sans-serif", fontSize: isMobile ? 18 : 26, color: C.accent, letterSpacing: 0.75 }}>⚔ KINGSHOT KvK</div>
+        <div style={{ fontFamily: "'Bebas Neue'", fontSize: isMobile ? 18 : 26, color: C.accent, letterSpacing: 2 }}>⚔ KINGSHOT KvK</div>
         {!isMobile && <div style={{ fontSize: 11, color: C.textDim, borderLeft: `1px solid ${C.panelBorder}`, paddingLeft: 16 }}>ALLIANCE COMMAND CENTER</div>}
         <div style={{ flex: 1 }} />
         <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: C.green }}>
@@ -1606,13 +1605,13 @@ function App() {
                 { title: "TC LEVELS", content: TC_LEVELS.slice().reverse().map(tg => { const cnt = members.filter(m => m.tc === tg).length; return cnt > 0 ? <MiniBar key={tg} label={tg} value={cnt} max={members.length} color={C.accent} /> : null; }) },
               ].map(({ title, content }) => (
                 <div key={title} style={{ background: C.panel, border: `1px solid ${C.panelBorder}`, borderRadius: 10, padding: 18 }}>
-                  <div style={{ fontFamily: "'Syne','Segoe UI',sans-serif", fontSize: 15, color: C.accent, letterSpacing: 1, marginBottom: 12 }}>{title}</div>
+                  <div style={{ fontFamily: "'Bebas Neue'", fontSize: 15, color: C.accent, letterSpacing: 1, marginBottom: 12 }}>{title}</div>
                   {content}
                 </div>
               ))}
             </div>
             <div style={{ background: C.panel, border: `1px solid ${C.panelBorder}`, borderRadius: 10, padding: 18 }}>
-              <div style={{ fontFamily: "'Syne','Segoe UI',sans-serif", fontSize: 15, color: C.accent, letterSpacing: 1, marginBottom: 12 }}>QUICK ROSTER</div>
+              <div style={{ fontFamily: "'Bebas Neue'", fontSize: 15, color: C.accent, letterSpacing: 1, marginBottom: 12 }}>QUICK ROSTER</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {members.map(m => (
                   <div key={m.id} style={{ background: m.available === "Full" ? "#0a2a1a" : "#2a0a0a", border: `1px solid ${m.available === "Full" ? C.green : C.red}33`, borderRadius: 6, padding: "6px 12px", fontSize: 12 }}>
@@ -1688,7 +1687,7 @@ function App() {
         {tab === "map" && (
           <div>
             <div style={{ marginBottom: isMobile ? 10 : 16 }}>
-              <div style={{ fontFamily: "'Syne','Segoe UI',sans-serif", fontSize: isMobile ? 20 : 24, color: C.accent, letterSpacing: 1.25, marginBottom: 4 }}>KVK BATTLE MAP</div>
+              <div style={{ fontFamily: "'Bebas Neue'", fontSize: isMobile ? 20 : 24, color: C.accent, letterSpacing: 3, marginBottom: 4 }}>KVK BATTLE MAP</div>
               {!isMobile && <div style={{ fontSize: 12, color: C.textDim }}>Click any gray tile to assign a member or mark an enemy. Changes sync live to all users.</div>}
             </div>
 
