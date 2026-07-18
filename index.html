@@ -1316,6 +1316,123 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
 }
 
 // ── Main App ───────────────────────────────────────────────────────────────
+
+// ── Language Translator ────────────────────────────────────────────────────
+// Uses Google Website Translator while keeping the visible control styled
+// consistently with the dashboard. Player names and alliance tags may still
+// be interpreted by automatic translation.
+function LanguageSelector({ isMobile }) {
+  const languages = [
+    { code: "en", label: "English", short: "EN" },
+    { code: "ko", label: "한국어", short: "KO" },
+    { code: "ar", label: "العربية", short: "AR" },
+    { code: "es", label: "Español", short: "ES" },
+  ];
+
+  function readLanguageCookie() {
+    const match = document.cookie.match(/(?:^|;\s*)googtrans=\/en\/([^;]+)/);
+    return match?.[1] || "en";
+  }
+
+  const [language, setLanguage] = useState(readLanguageCookie);
+
+  useEffect(() => {
+    window.googleTranslateElementInit = () => {
+      if (window.google?.translate?.TranslateElement) {
+        new window.google.translate.TranslateElement({
+          pageLanguage: "en",
+          includedLanguages: "en,ko,ar,es",
+          autoDisplay: false,
+        }, "google_translate_element");
+      }
+    };
+
+    if (window.google?.translate?.TranslateElement) {
+      window.googleTranslateElementInit();
+      return;
+    }
+
+    if (!document.getElementById("google-translate-script")) {
+      const script = document.createElement("script");
+      script.id = "google-translate-script";
+      script.src = "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, []);
+
+  function setTranslationCookie(code) {
+    const hostname = window.location.hostname;
+    const expires = code === "en"
+      ? "Thu, 01 Jan 1970 00:00:00 GMT"
+      : "Fri, 31 Dec 9999 23:59:59 GMT";
+    const value = code === "en" ? "" : `/en/${code}`;
+
+    document.cookie = `googtrans=${value}; path=/; expires=${expires}; SameSite=Lax`;
+    if (hostname && hostname !== "localhost") {
+      document.cookie = `googtrans=${value}; path=/; domain=.${hostname}; expires=${expires}; SameSite=Lax`;
+    }
+  }
+
+  function changeLanguage(code) {
+    setLanguage(code);
+    setTranslationCookie(code);
+    window.location.reload();
+  }
+
+  return (
+    <>
+      <div id="google_translate_element" style={{ display: "none" }} />
+      <div style={{
+        ...glassDeep({
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          padding: isMobile ? "4px 6px" : "5px 8px",
+          borderRadius: 9,
+          flexShrink: 0,
+        }),
+      }}>
+        {!isMobile && (
+          <span style={{
+            fontSize: 10,
+            color: C.textDim,
+            fontWeight: 700,
+            whiteSpace: "nowrap",
+            fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif",
+            letterSpacing: 0.4,
+          }}>
+            LANGUAGE
+          </span>
+        )}
+        <select
+          aria-label="Language"
+          value={language}
+          onChange={e => changeLanguage(e.target.value)}
+          style={{
+            ...inputSt,
+            width: isMobile ? 58 : 104,
+            minWidth: 0,
+            padding: isMobile ? "4px 5px" : "4px 24px 4px 7px",
+            border: "none",
+            background: "rgba(255,255,255,0.05)",
+            fontSize: isMobile ? 11 : 12,
+            fontWeight: 700,
+            cursor: "pointer",
+            fontFamily: "'Segoe UI',Arial,sans-serif",
+          }}
+        >
+          {languages.map(item => (
+            <option key={item.code} value={item.code}>
+              {isMobile ? item.short : item.label}
+            </option>
+          ))}
+        </select>
+      </div>
+    </>
+  );
+}
+
 function App() {
   const [loading, setLoading]       = useState(true);
   const [editMode, setEditMode]     = useState(false);
@@ -1519,6 +1636,13 @@ function App() {
         ::-webkit-scrollbar-track { background: #080c14; }
         ::-webkit-scrollbar-thumb { background: #1a2a3a; border-radius: 3px; }
         select option { background: #0d1520; }
+        .goog-te-banner-frame,
+        .goog-te-banner-frame.skiptranslate,
+        iframe.goog-te-banner-frame,
+        .goog-te-balloon-frame { display: none !important; }
+        body { top: 0 !important; }
+        #goog-gt-tt, .goog-te-balloon-frame { display: none !important; }
+        .goog-text-highlight { background: transparent !important; box-shadow: none !important; }
         .cell-edit { background: transparent; border: 1px solid transparent; border-radius: 6px; color: inherit; padding: 4px 6px; font-size: 12px; width: 100%; box-sizing: border-box; outline: none; transition: background 0.15s, border-color 0.15s; font-family: inherit; }
         .cell-edit:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); }
         .cell-edit:focus { background: rgba(255,255,255,0.09); border-color: rgba(167,139,250,0.55); }
@@ -1553,6 +1677,7 @@ function App() {
         <div style={{ fontFamily: "'Bebas Neue'", fontSize: isMobile ? 18 : 26, color: C.accent, letterSpacing: 2 }}>⚔ KINGSHOT KvK</div>
         {!isMobile && <div style={{ fontSize: 11, color: C.textDim, borderLeft: `1px solid ${C.panelBorder}`, paddingLeft: 16 }}>ALLIANCE COMMAND CENTER</div>}
         <div style={{ flex: 1 }} />
+        <LanguageSelector isMobile={isMobile} />
         <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: C.green }}>
           <div style={{ width: 7, height: 7, borderRadius: "50%", background: C.green, boxShadow: `0 0 6px ${C.green}` }} />
           {!isMobile && "LIVE"}
