@@ -793,7 +793,9 @@ function BattleGuide() {
   ];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {/* Hero cards — always side by side */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
       {sections.map(s => {
         const sImgs = guideImages[s.key] || [null, null, null];
         return (
@@ -827,6 +829,119 @@ function BattleGuide() {
           </div>
         );
       })}
+      </div>{/* end hero grid */}
+
+      {/* ── KvK Strategy Guide ── */}
+      <div style={{
+        background: "rgba(255,255,255,0.04)",
+        backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+        border: "1px solid rgba(255,255,255,0.10)",
+        borderRadius: 14, padding: "18px 20px",
+        boxShadow: "0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.06)",
+      }}>
+        {/* Title */}
+        <div style={{ marginBottom: 14, borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: 12 }}>
+          <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: C.accent, letterSpacing: 2, marginBottom: 2 }}>KvK Castle Rally Strategy</div>
+          <div style={{ fontSize: 10, color: C.textDim, letterSpacing: 1, textTransform: "uppercase", fontFamily: "'Roboto Condensed',sans-serif" }}>KvK Mechanics</div>
+        </div>
+
+        {/* Overall Strategy */}
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 9, fontWeight: 800, color: C.accent, letterSpacing: 1.5, fontFamily: "'Roboto Condensed',sans-serif", textTransform: "uppercase", marginBottom: 8 }}>Overall Strategy</div>
+          {[
+            { badge: "MKP", color: C.gold,  label: "Assault Squad",         desc: "Launch 3–4 synchronized rallies to remove the enemy from the castle." },
+            { badge: "WFP", color: C.green, label: "Castle Garrison Squad",  desc: "Follow directly behind MKP, take control, and reinforce the castle." },
+            { badge: "MKP", color: "#ff8040", label: "Counter-Rally Squad", desc: "Prepare counter-rallies whenever the enemy launches against the castle." },
+          ].map(r => (
+            <div key={r.label} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 7 }}>
+              <span style={{ fontSize: 9, fontWeight: 800, color: r.color, background: r.color + "22", border: `1px solid ${r.color}44`, borderRadius: 4, padding: "1px 6px", lineHeight: 1.5, flexShrink: 0, marginTop: 1 }}>{r.badge}</span>
+              <div style={{ fontSize: 11, color: C.textDim, lineHeight: 1.5 }}>
+                <span style={{ color: C.text, fontWeight: 700 }}>{r.label} — </span>{r.desc}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Opening */}
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 9, fontWeight: 800, color: "#20d0d0", letterSpacing: 1.5, fontFamily: "'Roboto Condensed',sans-serif", textTransform: "uppercase", marginBottom: 8 }}>Opening — 12:00:00 UTC</div>
+          <div style={{ fontSize: 11, color: C.textDim, lineHeight: 1.6, marginBottom: 8 }}>
+            Garrison Squad solo rushes Castle to achieve first castle occupation.
+          </div>
+          {[
+            { color: C.green,   prefix: "If Successful:",   desc: "Assault Squad prepares to launch synchronized counter rally once the opposing Kingdom starts Castle Rally." },
+            { color: "#ff8040", prefix: "If Unsuccessful:", desc: "Assault Squad launches synchronized rallies at 12:01:00 UTC. Garrison Squad launches rally at 12:01:15." },
+          ].map(b => (
+            <div key={b.prefix} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 6, paddingLeft: 12, borderLeft: `2px solid ${b.color}44` }}>
+              <div style={{ fontSize: 11, color: C.textDim, lineHeight: 1.5 }}>
+                <span style={{ color: b.color, fontWeight: 700 }}>{b.prefix} </span>{b.desc}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Rally Sequence */}
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 9, fontWeight: 800, color: C.blue, letterSpacing: 1.5, fontFamily: "'Roboto Condensed',sans-serif", textTransform: "uppercase", marginBottom: 6 }}>Rally Sequence</div>
+          <div style={{ fontSize: 11, color: C.textDim, lineHeight: 1.6, marginBottom: 8 }}>
+            Assault Squad rallies should land in sequence with minimal gaps so the enemy cannot refill between attacks.
+          </div>
+          {[
+            { n: "1", color: "#ff8040", desc: "First rallies weaken the enemy garrison." },
+            { n: "2", color: C.gold,    desc: "Final rally clears or captures the castle." },
+            { n: "3", color: C.green,   desc: "Garrison Squad arrives immediately afterward." },
+          ].map(s => (
+            <div key={s.n} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 6 }}>
+              <div style={{ width: 20, height: 20, borderRadius: 6, background: s.color + "22", border: `1px solid ${s.color}55`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, color: s.color, flexShrink: 0 }}>{s.n}</div>
+              <div style={{ fontSize: 11, color: C.textDim, lineHeight: 1.5, paddingTop: 2 }}>{s.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Garrison Support Squad */}
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 9, fontWeight: 800, color: C.green, letterSpacing: 1.5, fontFamily: "'Roboto Condensed',sans-serif", textTransform: "uppercase", marginBottom: 6 }}>Garrison Support Squad</div>
+          <div style={{ fontSize: 11, color: C.textDim, lineHeight: 1.6, marginBottom: 8 }}>
+            Garrison Squad should prepare while MKP's rallies are traveling and enter the castle immediately after it is cleared. Once inside:
+          </div>
+          {[
+            "Continuously refill lost troops.",
+            "Prioritize strong defensive heroes and infantry.",
+            "Rotate damaged marches when instructed.",
+            "Increase reinforcement as soon as enemy rallies are launched.",
+          ].map(item => (
+            <div key={item} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 5 }}>
+              <div style={{ width: 5, height: 5, borderRadius: "50%", background: C.green, flexShrink: 0, marginTop: 5, boxShadow: `0 0 4px ${C.green}` }} />
+              <div style={{ fontSize: 11, color: C.textDim, lineHeight: 1.5 }}>{item}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Trigger Events */}
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 9, fontWeight: 800, color: C.red, letterSpacing: 1.5, fontFamily: "'Roboto Condensed',sans-serif", textTransform: "uppercase", marginBottom: 8 }}>Trigger Events</div>
+          {[
+            { color: C.red,     event: "Enemy controls castle",    action: "MKP begins synchronized assault rallies." },
+            { color: C.green,   event: "Castle is cleared",        action: "WFP sends the hold march immediately." },
+            { color: "#ff8040", event: "Enemy launches a rally",   action: "MKP prepares a counter-rally and WFP refills." },
+            { color: C.red,     event: "Castle is lost",           action: "Stop solo attacks, reset, and repeat the MKP assault → WFP hold sequence." },
+          ].map(t => (
+            <div key={t.event} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 7 }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: t.color, flexShrink: 0, marginTop: 4, boxShadow: `0 0 4px ${t.color}` }} />
+              <div style={{ fontSize: 11, lineHeight: 1.5 }}>
+                <span style={{ color: t.color, fontWeight: 700 }}>{t.event}: </span>
+                <span style={{ color: C.textDim }}>{t.action}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 12, textAlign: "center" }}>
+          <span style={{ fontSize: 12, fontWeight: 800, color: C.gold, fontFamily: "'Roboto Condensed',sans-serif", letterSpacing: 0.5 }}>MKP clears and counters. </span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: C.green, fontFamily: "'Roboto Condensed',sans-serif", letterSpacing: 0.5 }}>WFP captures and holds.</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -1149,76 +1264,25 @@ function CastleMap({ members, assignments, setAssignments, isMobile }) {
             onFriendly={assignFriendly} onEnemy={assignEnemy} onClear={clearTile} onClose={() => setModal(null)} isMobile={isMobile} />
         )}
 
-        {/* Battle Guide — always visible below tile panel */}
-        <BattleGuide />
-
-        {/* Map overview stats */}
-        <SideSection title="MAP OVERVIEW">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 10 }}>
-            {[
-              { label: "Friendly", value: friendlyCount, color: C.blue },
-              { label: "Enemy", value: enemyCount, color: C.red },
-              { label: "Open Tiles", value: (ROWS * COLS) - 32 - friendlyCount - enemyCount, color: C.textDim },
-              { label: "Unpositioned", value: unassignedMembers.length, color: C.gold },
-            ].map(({ label, value, color }) => (
-              <div key={label} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 8, padding: "8px 10px", border: `1px solid rgba(255,255,255,0.07)` }}>
-                <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 }}>{label}</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color, fontFamily: "'Bebas Neue'", lineHeight: 1, textShadow: `0 0 12px ${color}66` }}>{value}</div>
-              </div>
-            ))}
-          </div>
-          {friendlyCount > 0 && (
-            <>
-              <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 5 }}>Friendly by Alliance</div>
-              {Object.entries(friendlyByAlliance).map(([al, cnt]) => (
-                <div key={al} style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 4 }}>
-                  <div style={{ width: 7, height: 7, borderRadius: 2, background: allianceColor(al), flexShrink: 0 }} />
-                  <span style={{ fontSize: 10, color: C.text, flex: 1 }}>{al}</span>
-                  <span style={{ fontSize: 10, color: allianceColor(al), fontWeight: 700 }}>{cnt}</span>
-                  <div style={{ width: 40, height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
-                    <div style={{ width: `${(cnt / friendlyCount) * 100}%`, height: "100%", background: allianceColor(al), borderRadius: 2, boxShadow: `0 0 4px ${allianceColor(al)}88` }} />
+        {/* Unpositioned members — desktop only */}
+        {!isMobile && (
+          <SideSection title={`UNPOSITIONED (${unassignedMembers.length})`}>
+            {unassignedMembers.length === 0 ? (
+              <div style={{ fontSize: 10, color: C.green, textAlign: "center", padding: "6px 0" }}>✓ All members positioned</div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                {unassignedMembers.map(m => (
+                  <div key={m.id} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 6, padding: "5px 8px", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", gap: 5 }}>
+                    <div style={{ width: 5, height: 5, borderRadius: "50%", background: availColorMap[m.available] || C.textDim, flexShrink: 0, boxShadow: `0 0 4px ${availColorMap[m.available] || C.textDim}` }} />
+                    <span style={{ fontSize: 10, fontWeight: 700, color: C.text, flex: 1 }}>{m.name}</span>
+                    <span style={{ fontSize: 9, color: C.textDim }}>{m.tc}</span>
+                    <span style={{ fontSize: 9, color: allianceColor(m.alliance), fontWeight: 700 }}>{m.alliance}</span>
                   </div>
-                </div>
-              ))}
-            </>
-          )}
-        </SideSection>
-
-        {/* Target assignment breakdown */}
-        <SideSection title="TARGET ASSIGNMENTS">
-          {PRIMARY_TARGETS.map(t => {
-            const cnt = targetCounts[t] || 0;
-            const col = targetColorMap[t] || C.textDim;
-            return (
-              <div key={t} style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
-                <div style={{ width: 7, height: 7, borderRadius: 2, background: col, flexShrink: 0 }} />
-                <span style={{ fontSize: 10, color: C.text, flex: 1 }}>{t}</span>
-                <span style={{ fontSize: 10, color: col, fontWeight: 700 }}>{cnt}</span>
-                <div style={{ width: 40, height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
-                  <div style={{ width: `${members.length > 0 ? (cnt / members.length) * 100 : 0}%`, height: "100%", background: col, borderRadius: 2, boxShadow: `0 0 4px ${col}88` }} />
-                </div>
+                ))}
               </div>
-            );
-          })}
-        </SideSection>
-
-        {/* Unpositioned members */}
-        <SideSection title={`UNPOSITIONED (${unassignedMembers.length})`}>
-          {unassignedMembers.length === 0 ? (
-            <div style={{ fontSize: 10, color: C.green, textAlign: "center", padding: "6px 0" }}>✓ All members positioned</div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              {unassignedMembers.map(m => (
-                <div key={m.id} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 6, padding: "5px 8px", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", gap: 5 }}>
-                  <div style={{ width: 5, height: 5, borderRadius: "50%", background: availColorMap[m.available] || C.textDim, flexShrink: 0, boxShadow: `0 0 4px ${availColorMap[m.available] || C.textDim}` }} />
-                  <span style={{ fontSize: 10, fontWeight: 700, color: C.text, flex: 1 }}>{m.name}</span>
-                  <span style={{ fontSize: 9, color: C.textDim }}>{m.tc}</span>
-                  <span style={{ fontSize: 9, color: allianceColor(m.alliance), fontWeight: 700 }}>{m.alliance}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </SideSection>
+            )}
+          </SideSection>
+        )}
 
         {/* Full member roster with availability */}
         <SideSection title="MEMBER ROSTER">
@@ -1270,6 +1334,10 @@ function CastleMap({ members, assignments, setAssignments, isMobile }) {
 // ── Main App ───────────────────────────────────────────────────────────────
 function App() {
   const [loading, setLoading]       = useState(true);
+  const [editMode, setEditMode]     = useState(false);
+  const [showAuth, setShowAuth]     = useState(false);
+  const [authInput, setAuthInput]   = useState("");
+  const [authError, setAuthError]   = useState(false);
   const [members, setMembers]       = useState([]);
   const [assignments, setAssignments] = useState({});
   const [alliances, setAlliances]   = useState(DEFAULT_ALLIANCES);
@@ -1333,26 +1401,32 @@ function App() {
   }, []);
 
   // ── Member writes ──────────────────────────────────────────────────────
+  function tryAuth() {
+    if (authInput.toLowerCase() === "hammad") {
+      setEditMode(true); setShowAuth(false); setAuthInput(""); setAuthError(false);
+    } else { setAuthError(true); setAuthInput(""); }
+  }
+  function requireEdit() { if (!editMode) { setShowAuth(true); return false; } return true; }
+
   function addMember(m) {
+    if (!requireEdit()) return;
     db.ref(`members/${m.id}`).set(m);
   }
   function updateMember(id, field, value) {
+    if (!requireEdit()) return;
     db.ref(`members/${id}`).update({ [field]: value });
-    // Sync the same field change into any map tiles where this member is assigned
     const affected = Object.keys(assignments).filter(
       k => assignments[k]?.type === "friendly" && assignments[k]?.member?.id === id
     );
     if (affected.length) {
       const tileUpdates = {};
-      affected.forEach(k => {
-        tileUpdates[`assignments/${toFbKey(k)}/member/${field}`] = value;
-      });
+      affected.forEach(k => { tileUpdates[`assignments/${toFbKey(k)}/member/${field}`] = value; });
       db.ref().update(tileUpdates);
     }
   }
   function deleteMember(id) {
+    if (!requireEdit()) return;
     db.ref(`members/${id}`).remove();
-    // Remove this member from any map tiles
     const updates = {};
     Object.keys(assignments).forEach(k => {
       if (assignments[k].type === "friendly" && assignments[k].member.id === id)
@@ -1361,64 +1435,56 @@ function App() {
     if (Object.keys(updates).length) db.ref().update(updates);
   }
   function importMembers(newOnes) {
+    if (!requireEdit()) return;
     const updates = {};
     newOnes.forEach(m => { updates[`members/${m.id}`] = m; });
     db.ref().update(updates);
-    // Auto-create any new alliances found in the CSV
     const known = new Set(alliances.map(a => a.name));
     const additions = [];
     newOnes.forEach(m => {
-      if (m.alliance && !known.has(m.alliance)) {
-        additions.push({ name: m.alliance, color: randomAllianceColor() });
-        known.add(m.alliance);
-      }
+      if (m.alliance && !known.has(m.alliance)) { additions.push({ name: m.alliance, color: randomAllianceColor() }); known.add(m.alliance); }
     });
     if (additions.length) db.ref("alliances").set([...alliances, ...additions]);
   }
 
-  // ── Assignment writes ──────────────────────────────────────────────────
-  // CastleMap calls setAssignments with an updater fn or plain object.
-  // We intercept both and mirror to Firebase.
   function fbSetAssignments(updaterOrValue) {
+    if (!requireEdit()) return;
     setAssignments(prev => {
       const next = typeof updaterOrValue === "function" ? updaterOrValue(prev) : updaterOrValue;
-      // Build Firebase update — null values delete keys
       const fbObj = {};
-      // Mark all old keys for removal
       Object.keys(prev).forEach(k => { fbObj[toFbKey(k)] = null; });
-      // Set new values
       Object.entries(next).forEach(([k, v]) => { fbObj[toFbKey(k)] = v; });
       if (Object.keys(fbObj).length) db.ref("assignments").update(fbObj);
       return next;
     });
   }
 
-  // ── Alliance writes ────────────────────────────────────────────────────
   function addAlliance(name, color) {
+    if (!requireEdit()) return;
     if (alliances.some(a => a.name.toLowerCase() === name.toLowerCase())) return;
     db.ref("alliances").set([...alliances, { name, color }]);
   }
   function removeAlliance(name) {
+    if (!requireEdit()) return;
     db.ref("alliances").set(alliances.filter(a => a.name !== name));
-    members.forEach(m => {
-      if (m.alliance === name) db.ref(`members/${m.id}`).update({ alliance: "" });
-    });
+    members.forEach(m => { if (m.alliance === name) db.ref(`members/${m.id}`).update({ alliance: "" }); });
   }
   function updateAllianceColor(name, color) {
+    if (!requireEdit()) return;
     db.ref("alliances").set(alliances.map(a => a.name === name ? { ...a, color } : a));
   }
-
   function addTeam(name, color) {
+    if (!requireEdit()) return;
     if (teams.some(t => t.name.toLowerCase() === name.toLowerCase())) return;
     db.ref("teams").set([...teams, { name, color }]);
   }
   function removeTeam(name) {
+    if (!requireEdit()) return;
     db.ref("teams").set(teams.filter(t => t.name !== name));
-    members.forEach(m => {
-      if (m.team === name) db.ref(`members/${m.id}`).update({ team: "" });
-    });
+    members.forEach(m => { if (m.team === name) db.ref(`members/${m.id}`).update({ team: "" }); });
   }
   function updateTeamColor(name, color) {
+    if (!requireEdit()) return;
     db.ref("teams").set(teams.map(t => t.name === name ? { ...t, color } : t));
   }
 
@@ -1477,6 +1543,27 @@ function App() {
         .cell-edit::placeholder { color: rgba(255,255,255,0.3); }
       `}</style>
 
+      {/* Passphrase modal */}
+      {showAuth && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center" }}
+          onClick={e => { if (e.target === e.currentTarget) { setShowAuth(false); setAuthInput(""); setAuthError(false); } }}>
+          <div style={{ background: "#0d1520", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 16, padding: 28, width: 300, boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}>
+            <div style={{ fontFamily: "'Bebas Neue'", fontSize: 22, color: C.accent, letterSpacing: 2, marginBottom: 6 }}>EDIT MODE</div>
+            <div style={{ fontSize: 12, color: C.textDim, marginBottom: 16 }}>Enter the passphrase to enable editing</div>
+            <input type="password" autoFocus
+              style={{ ...inputSt, marginBottom: authError ? 6 : 14, fontSize: 14 }}
+              value={authInput} placeholder="Passphrase..."
+              onChange={e => { setAuthInput(e.target.value); setAuthError(false); }}
+              onKeyDown={e => e.key === "Enter" && tryAuth()} />
+            {authError && <div style={{ fontSize: 11, color: C.red, marginBottom: 10 }}>✕ Incorrect passphrase</div>}
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={tryAuth} style={{ ...btnSt, background: C.accentDim, color: C.accent, flex: 1, padding: "9px 0", fontWeight: 800, fontSize: 13 }}>Unlock</button>
+              <button onClick={() => { setShowAuth(false); setAuthInput(""); setAuthError(false); }} style={{ ...btnSt, padding: "9px 16px" }}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div style={{ background: "linear-gradient(90deg,#0d1520,#101c2c 50%,#0d1520)", borderBottom: `1px solid ${C.panelBorder}`, padding: isMobile ? "0 12px" : "0 24px", display: "flex", alignItems: "center", gap: isMobile ? 8 : 20, height: isMobile ? 50 : 56 }}>
         <div style={{ fontFamily: "'Bebas Neue'", fontSize: isMobile ? 18 : 26, color: C.accent, letterSpacing: 2 }}>⚔ KINGSHOT KvK</div>
@@ -1486,6 +1573,16 @@ function App() {
           <div style={{ width: 7, height: 7, borderRadius: "50%", background: C.green, boxShadow: `0 0 6px ${C.green}` }} />
           {!isMobile && "LIVE"}
         </div>
+        {/* Lock / Unlock button */}
+        <button onClick={() => editMode ? setEditMode(false) : setShowAuth(true)} style={{
+          ...btnSt, padding: "5px 12px", fontSize: 11, fontWeight: 700,
+          fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif", letterSpacing: 0.5,
+          background: editMode ? "rgba(52,211,153,0.15)" : "rgba(255,255,255,0.06)",
+          color: editMode ? C.green : C.textDim,
+          border: editMode ? `1px solid ${C.green}44` : "1px solid rgba(255,255,255,0.10)",
+        }}>
+          {editMode ? "🔓 EDITING" : "🔒 VIEW ONLY"}
+        </button>
         {[["dashboard", isMobile ? "📊" : "📊 Dashboard"], ["members", isMobile ? "👥" : "👥 Members"], ["map", isMobile ? "🗺" : "🗺 Battle Map"]].map(([k, label]) => (
           <button key={k} onClick={() => setTab(k)} style={{ ...btnSt, padding: isMobile ? "6px 10px" : "6px 18px", fontSize: isMobile ? 18 : 13, fontWeight: 700, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif", letterSpacing: 0.5, background: tab === k ? C.accentDim : "transparent", color: tab === k ? C.accent : C.textDim, border: tab === k ? `1px solid ${C.accent}44` : "1px solid transparent" }}>{label}</button>
         ))}
@@ -1619,6 +1716,11 @@ function App() {
               boxShadow: "0 8px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07)",
             }}>
               <CastleMap members={members} assignments={assignments} setAssignments={fbSetAssignments} isMobile={isMobile} />
+            </div>
+
+            {/* Join Rally + Garrison Support side by side, then strategy guide */}
+            <div style={{ marginTop: 16 }}>
+              <BattleGuide />
             </div>
           </div>
         )}
