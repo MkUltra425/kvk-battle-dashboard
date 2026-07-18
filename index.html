@@ -1327,6 +1327,8 @@ function LanguageSelector({ isMobile }) {
     { code: "ko", label: "한국어", short: "KO" },
     { code: "ar", label: "العربية", short: "AR" },
     { code: "es", label: "Español", short: "ES" },
+    { code: "de", label: "Deutsch", short: "DE" },
+    { code: "zh-CN", label: "中文", short: "ZH" },
   ];
 
   function readLanguageCookie() {
@@ -1341,7 +1343,7 @@ function LanguageSelector({ isMobile }) {
       if (window.google?.translate?.TranslateElement) {
         new window.google.translate.TranslateElement({
           pageLanguage: "en",
-          includedLanguages: "en,ko,ar,es",
+          includedLanguages: "en,ko,ar,es,de,zh-CN",
           autoDisplay: false,
         }, "google_translate_element");
       }
