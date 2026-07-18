@@ -1162,7 +1162,7 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
                   }}>
                   {turret && (() => {
                     const ts = LEADER_STYLES[TURRET_LABEL_TO_TARGET[tLabel]] || LEADER_STYLES["Castle"];
-                    return <span style={{ fontSize: 9, fontWeight: 800, color: ts.border, textAlign: "center", lineHeight: 1.2, fontFamily: "'Segoe UI', Arial, sans-serif", letterSpacing: 0.15, textTransform: "none", textShadow: `0 0 6px ${ts.border}88` }}>{tLabel}</span>;
+                    return <span style={{ fontSize: 9, fontWeight: 800, color: ts.border, textAlign: "center", lineHeight: 1.2, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif", letterSpacing: 0.5, textTransform: "uppercase", textShadow: `0 0 6px ${ts.border}88` }}>{tLabel}</span>;
                   })()}
                   {!turret && !dimmed && assignment?.type === "friendly" && (() => {
                     const full = assignment.member.name;
@@ -1188,7 +1188,7 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
                           color: pillText,
                           background: pillBg,
                           borderRadius: 3, padding: "2px 3px",
-                          fontFamily: "'Segoe UI', Arial, sans-serif",
+                          fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif",
                           letterSpacing: 0,
                           maxWidth: TILE - 2,
                           overflow: "hidden", whiteSpace: "nowrap",
@@ -1293,18 +1293,18 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
           position: "fixed", top: hover.y - 8, left: hover.x + 14,
           background: "#09111f", border: "1px solid rgba(255,255,255,0.24)",
           borderRadius: 9, padding: "11px 14px", zIndex: 9999, fontSize: 13, lineHeight: 1.45, color: "rgba(255,255,255,0.96)",
-          fontFamily: "'Segoe UI', Arial, sans-serif", maxWidth: 240, pointerEvents: "none",
+          fontFamily: "'Syne','Segoe UI',sans-serif", maxWidth: 240, pointerEvents: "none",
           boxShadow: "0 8px 28px rgba(0,0,0,0.72)",
         }}>
           {hover.a.type === "friendly" ? (
             <>
-              <div style={{ fontWeight: 700, color: hover.a.member.role === "Rally Leader" ? C.gold : C.blue, marginBottom: 5 }}>{hover.a.member.name}</div>
+              <div style={{ fontWeight: 800, color: hover.a.member.role === "Rally Leader" ? C.gold : C.blue, marginBottom: 5 }}>{hover.a.member.name}</div>
               <div style={{ color: "rgba(255,255,255,0.72)", marginBottom: 3 }}>Role: <span style={{ color: C.text }}>{hover.a.member.role}</span></div>
               <div style={{ color: "rgba(255,255,255,0.72)" }}>Alliance: <span style={{ color: allianceColor(hover.a.member.alliance) }}>{hover.a.member.alliance || "—"}</span></div>
             </>
           ) : (
             <>
-              <div style={{ fontWeight: 700, color: C.red, marginBottom: 5 }}>{hover.a.name || "Enemy"}</div>
+              <div style={{ fontWeight: 800, color: C.red, marginBottom: 5 }}>{hover.a.name || "Enemy"}</div>
               {hover.a.kingdom && <div style={{ color: "rgba(255,255,255,0.72)", marginBottom: 3 }}>Kingdom: <span style={{ color: C.text }}>{hover.a.kingdom}</span></div>}
               <div style={{ color: "rgba(255,255,255,0.72)", marginBottom: 3 }}>Threat: <span style={{ color: C.red }}>{hover.a.threat}</span></div>
               {hover.a.notes && <div style={{ color: "rgba(255,255,255,0.72)", marginTop: 5, fontStyle: "italic" }}>{hover.a.notes}</div>}
