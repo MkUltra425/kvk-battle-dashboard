@@ -1764,7 +1764,7 @@ function App() {
               </button>
             </div>
             <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
-              <input style={{ ...inputSt, flex: "1 1 140px", minWidth: 0 }} placeholder="🔍 Search name…" value={search} onChange={e => setSearch(e.target.value)} />
+              {!isMobile && <input style={{ ...inputSt, flex: "1 1 140px", minWidth: 0 }} placeholder="🔍 Search name…" value={search} onChange={e => setSearch(e.target.value)} />}
               {!isMobile && <>
                 <select style={{ ...inputSt, width: 150 }} value={filterRole} onChange={e => setFilterRole(e.target.value)}>
                   <option value="all">All Roles</option>{ROLES.map(r => <option key={r} value={r}>{r}</option>)}
@@ -1776,12 +1776,17 @@ function App() {
                 </select>
               </>}
               {isMobile && <>
-                <select style={{ ...inputSt, flex: "1 1 100px" }} value={filterAvail} onChange={e => setFilterAvail(e.target.value)}>
-                  <option value="all">All Avail.</option>
+                <select style={{ ...inputSt, flex: "1 1 120px" }} value={filterAlliance ? filterAlliance : "all"}
+                  onChange={e => setFilterAlliance(e.target.value === "all" ? "" : e.target.value)}>
+                  <option value="all">All Alliances</option>
+                  {alliances.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
+                </select>
+                <select style={{ ...inputSt, flex: "1 1 120px" }} value={filterAvail} onChange={e => setFilterAvail(e.target.value)}>
+                  <option value="all">All Availability</option>
                   {AVAILABILITY_OPTS.map(o => <option key={o} value={o}>{o}</option>)}
                 </select>
               </>}
-              <span style={{ fontSize: 12, color: C.textDim }}>{filtered.length}/{members.length}</span>
+              <span style={{ fontSize: 12, color: C.textDim, flexShrink: 0 }}>{filtered.length}/{members.length}</span>
             </div>
             {isMobile ? (
               <div>
