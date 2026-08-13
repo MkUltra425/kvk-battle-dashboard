@@ -9,14 +9,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;700;800&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; }
-    body { margin: 0; padding: 0; background: #0a0f1e; -webkit-tap-highlight-color: transparent; }
+    body { margin: 0; padding: 0; background: #0a0f1e; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
     #root { min-height: 100vh; }
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: #080c14; }
     ::-webkit-scrollbar-thumb { background: #1a2a3a; border-radius: 3px; }
     select option { background: #0d1520; }
-    button, select, input { touch-action: manipulation; }
-    .cell-edit { background: transparent; border: 1px solid transparent; border-radius: 6px; color: inherit; padding: 4px 6px; font-size: 12px; width: 100%; box-sizing: border-box; outline: none; transition: background 0.15s, border-color 0.15s; font-family: inherit; }
+    button, select, input { touch-action: manipulation; -webkit-font-smoothing: antialiased; }
+    .cell-edit { background: transparent; border: 1px solid transparent; border-radius: 6px; color: inherit; padding: 4px 6px; font-size: 13px; font-family: 'Roboto Condensed', 'Arial Narrow', sans-serif; letter-spacing: 0.2px; width: 100%; box-sizing: border-box; outline: none; transition: background 0.15s, border-color 0.15s; }
     .cell-edit:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); }
     .cell-edit:focus { background: rgba(255,255,255,0.09); border-color: rgba(167,139,250,0.55); }
     select.cell-edit { cursor: pointer; }
@@ -24,6 +24,10 @@
     .cell-edit::placeholder { color: rgba(255,255,255,0.3); }
     @keyframes loadbar { 0% { margin-left: -40%; } 100% { margin-left: 100%; } }
     .loadbar { height: 100%; width: 40%; background: #e8a020; border-radius: 99px; animation: loadbar 1.4s ease-in-out infinite; }
+    .goog-te-banner-frame, .goog-te-banner-frame.skiptranslate, iframe.goog-te-banner-frame { display: none !important; }
+    body { top: 0 !important; }
+    #goog-gt-tt, .goog-te-balloon-frame { display: none !important; }
+    .goog-text-highlight { background: transparent !important; box-shadow: none !important; }
     @media (max-width: 767px) { .cell-edit { font-size: 14px; padding: 6px 8px; } }
   </style>
   <!-- React 18 -->
@@ -448,7 +452,7 @@ function TeamManager({ teams, onAdd, onRemove, onColorChange }) {
 
 // ── Member Table Row ───────────────────────────────────────────────────────
 function MemberRow({ m, alliances, teams, onUpdate, onDelete }) {
-  const td = { padding: "6px 8px", fontSize: 12, color: C.text, borderBottom: `1px solid ${C.panelBorder}` };
+  const td = { padding: "8px 10px", fontSize: 13, color: C.text, borderBottom: `1px solid ${C.panelBorder}`, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif", letterSpacing: 0.2 };
   const f = (k, v) => onUpdate(m.id, k, v);
   const availColor = { Full: C.green, "1st Half": C.blue, "2nd Half": C.gold, "On/Off": C.red }[m.available] || C.textDim;
   const targetColor = { Castle: C.accent, "Turret (N)": "#20d0d0", "Turret (E)": "#c060ff", "Turret (S)": "#ff8040", "Turret (W)": "#40c080" }[m.primaryTarget] || C.textDim;
@@ -645,47 +649,69 @@ const LEADER_STYLES = {
 
 // ── Mobile Member Card ─────────────────────────────────────────────────────
 function MemberCard({ m, alliances, teams, onUpdate, onDelete }) {
+  const [expanded, setExpanded] = useState(false);
   const f = (k, v) => onUpdate(m.id, k, v);
   const availColor = { Full: C.green, "1st Half": C.blue, "2nd Half": C.gold, "On/Off": C.red }[m.available] || C.textDim;
   const targetColor = { Castle: C.accent, "Turret (N)": "#20d0d0", "Turret (E)": "#c084fc", "Turret (S)": "#ff8040", "Turret (W)": "#40c080" }[m.primaryTarget] || C.textDim;
+
   return (
-    <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 14, padding: "14px 14px 10px", marginBottom: 10, boxShadow: "0 2px 12px rgba(0,0,0,0.2)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-        <input className="cell-edit" style={{ fontWeight: 800, fontSize: 15, flex: 1, color: C.text }} value={m.name} onChange={e => f("name", e.target.value)} />
-        <button onClick={() => onDelete(m.id)} style={{ ...btnSt, background: "rgba(248,113,113,0.18)", color: C.red, padding: "5px 11px", borderRadius: 8, flexShrink: 0 }}>✕</button>
+    <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, marginBottom: 5, overflow: "hidden" }}>
+      {/* Compact row — always visible */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", cursor: "pointer" }}
+        onClick={() => setExpanded(e => !e)}>
+        <div style={{ width: 6, height: 6, borderRadius: "50%", background: availColor, flexShrink: 0, boxShadow: `0 0 4px ${availColor}` }} />
+        <span style={{ fontSize: 13, fontWeight: 700, color: C.text, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</span>
+        <span style={{ fontSize: 11, color: C.accent, fontWeight: 700, flexShrink: 0 }}>{m.tc}</span>
+        {m.alliance ? <span style={{ fontSize: 11, color: allianceColor(m.alliance), fontWeight: 700, flexShrink: 0 }}>{m.alliance}</span> : null}
+        <span style={{ fontSize: 10, color: roleColor(m.role), fontWeight: 700, flexShrink: 0 }}>{m.role === "Rally Leader" ? "Leader" : "Joiner"}</span>
+        <span style={{ fontSize: 11, color: C.textDim, flexShrink: 0, transition: "transform 0.2s", display: "inline-block", transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        {[
-          { label: "TC", key: "tc", opts: TC_LEVELS, color: C.accent },
-          { label: "Available", key: "available", opts: AVAILABILITY_OPTS, color: availColor },
-          { label: "Role", key: "role", opts: ROLES, color: roleColor(m.role) },
-          { label: "Target", key: "primaryTarget", opts: PRIMARY_TARGETS, color: targetColor },
-        ].map(({ label, key, opts, color }) => (
-          <div key={key}>
-            <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 3 }}>{label}</div>
-            <select className="cell-edit" style={{ color, fontWeight: 700 }} value={m[key]} onChange={e => f(key, e.target.value)}>
-              {opts.map(o => <option key={o}>{o}</option>)}
-            </select>
+
+      {/* Expanded edit form */}
+      {expanded && (
+        <div style={{ padding: "0 10px 10px", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+          <div style={{ paddingTop: 8, marginBottom: 8 }}>
+            <input className="cell-edit" style={{ fontWeight: 700, fontSize: 14, color: C.text }} value={m.name}
+              onChange={e => f("name", e.target.value)} placeholder="Name" />
           </div>
-        ))}
-        <div>
-          <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 3 }}>Alliance</div>
-          <select className="cell-edit" style={{ color: allianceColor(m.alliance), fontWeight: 700 }} value={m.alliance || ""} onChange={e => f("alliance", e.target.value)}>
-            <option value="">—</option>
-            {alliances.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
-          </select>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+            {[
+              { label: "TC", key: "tc", opts: TC_LEVELS, color: C.accent },
+              { label: "Available", key: "available", opts: AVAILABILITY_OPTS, color: availColor },
+              { label: "Role", key: "role", opts: ROLES, color: roleColor(m.role) },
+              { label: "Target", key: "primaryTarget", opts: PRIMARY_TARGETS, color: targetColor },
+            ].map(({ label, key, opts, color }) => (
+              <div key={key}>
+                <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 2 }}>{label}</div>
+                <select className="cell-edit" style={{ color, fontWeight: 700 }} value={m[key]} onChange={e => f(key, e.target.value)}>
+                  {opts.map(o => <option key={o}>{o}</option>)}
+                </select>
+              </div>
+            ))}
+            <div>
+              <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 2 }}>Alliance</div>
+              <select className="cell-edit" style={{ color: allianceColor(m.alliance), fontWeight: 700 }} value={m.alliance || ""} onChange={e => f("alliance", e.target.value)}>
+                <option value="">—</option>
+                {alliances.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 2 }}>Team</div>
+              <select className="cell-edit" style={{ color: teamColor(m.team), fontWeight: 700 }} value={m.team || ""} onChange={e => f("team", e.target.value)}>
+                <option value="">—</option>
+                {teams.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
+              </select>
+            </div>
+            <div style={{ gridColumn: "span 2" }}>
+              <input className="cell-edit" style={{ color: C.textDim, fontSize: 12 }} value={m.notes} placeholder="Notes…" onChange={e => f("notes", e.target.value)} />
+            </div>
+          </div>
+          <button onClick={() => { onDelete(m.id); setExpanded(false); }}
+            style={{ ...btnSt, background: "rgba(248,113,113,0.15)", color: C.red, padding: "5px 14px", marginTop: 8, fontSize: 12, width: "100%" }}>
+            ✕ Remove Member
+          </button>
         </div>
-        <div>
-          <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 3 }}>Team</div>
-          <select className="cell-edit" style={{ color: teamColor(m.team), fontWeight: 700 }} value={m.team || ""} onChange={e => f("team", e.target.value)}>
-            <option value="">—</option>
-            {teams.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
-          </select>
-        </div>
-        <div style={{ gridColumn: "span 2" }}>
-          <input className="cell-edit" style={{ color: C.textDim }} value={m.notes} placeholder="Notes…" onChange={e => f("notes", e.target.value)} />
-        </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -729,7 +755,7 @@ function HeroSlot({ image, color, name, onUpload, onRemove }) {
   );
 }
 
-function BattleGuide({ isMobile }) {
+function BattleGuide() {
   const [guideImages, setGuideImages] = useState({ joinRally: [null,null,null], garrison: [null,null,null] });
 
   useEffect(() => {
@@ -795,7 +821,7 @@ function BattleGuide({ isMobile }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       {/* Hero cards — always side by side */}
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
       {sections.map(s => {
         const sImgs = guideImages[s.key] || [null, null, null];
         return (
@@ -849,9 +875,9 @@ function BattleGuide({ isMobile }) {
         <div style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 9, fontWeight: 800, color: C.accent, letterSpacing: 1.5, fontFamily: "'Roboto Condensed',sans-serif", textTransform: "uppercase", marginBottom: 8 }}>Overall Strategy</div>
           {[
-            { badge: "MKP", color: C.gold,  label: "Assault Squad",         desc: "Launch 3–4 synchronized rallies to remove the enemy from the castle." },
-            { badge: "WFP", color: C.green, label: "Castle Garrison Squad",  desc: "Follow directly behind MKP, take control, and reinforce the castle." },
-            { badge: "MKP", color: "#ff8040", label: "Counter-Rally Squad", desc: "Prepare counter-rallies whenever the enemy launches against the castle." },
+            { badge: "WAR", color: C.gold,  label: "Assault Squad",         desc: "Launch 3–4 synchronized rallies to remove the enemy from the castle." },
+            { badge: "MKP", color: C.green, label: "Castle Garrison Squad",  desc: "Follow directly behind WAR, take control, and reinforce the castle." },
+            { badge: "WAR", color: "#ff8040", label: "Counter-Rally Squad", desc: "Prepare counter-rallies whenever the enemy launches against the castle." },
           ].map(r => (
             <div key={r.label} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 7 }}>
               <span style={{ fontSize: 9, fontWeight: 800, color: r.color, background: r.color + "22", border: `1px solid ${r.color}44`, borderRadius: 4, padding: "1px 6px", lineHeight: 1.5, flexShrink: 0, marginTop: 1 }}>{r.badge}</span>
@@ -902,7 +928,7 @@ function BattleGuide({ isMobile }) {
         <div style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 9, fontWeight: 800, color: C.green, letterSpacing: 1.5, fontFamily: "'Roboto Condensed',sans-serif", textTransform: "uppercase", marginBottom: 6 }}>Garrison Support Squad</div>
           <div style={{ fontSize: 11, color: C.textDim, lineHeight: 1.6, marginBottom: 8 }}>
-            Garrison Squad should prepare while MKP's rallies are traveling and enter the castle immediately after it is cleared. Once inside:
+            Garrison Squad should prepare while WAR's rallies are traveling and enter the castle immediately after it is cleared. Once inside:
           </div>
           {[
             "Continuously refill lost troops.",
@@ -922,9 +948,9 @@ function BattleGuide({ isMobile }) {
           <div style={{ fontSize: 9, fontWeight: 800, color: C.red, letterSpacing: 1.5, fontFamily: "'Roboto Condensed',sans-serif", textTransform: "uppercase", marginBottom: 8 }}>Trigger Events</div>
           {[
             { color: C.red,     event: "Enemy controls castle",    action: "MKP begins synchronized assault rallies." },
-            { color: C.green,   event: "Castle is cleared",        action: "WFP sends the hold march immediately." },
-            { color: "#ff8040", event: "Enemy launches a rally",   action: "MKP prepares a counter-rally and WFP refills." },
-            { color: C.red,     event: "Castle is lost",           action: "Stop solo attacks, reset, and repeat the MKP assault → WFP hold sequence." },
+            { color: C.green,   event: "Castle is cleared",        action: "MKP sends the hold march immediately." },
+            { color: "#ff8040", event: "Enemy launches a rally",   action: "WAR prepares a counter-rally and MKP refills." },
+            { color: C.red,     event: "Castle is lost",           action: "Stop solo attacks, reset, and repeat the WAR assault → MKP hold sequence." },
           ].map(t => (
             <div key={t.event} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 7 }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: t.color, flexShrink: 0, marginTop: 4, boxShadow: `0 0 4px ${t.color}` }} />
@@ -938,8 +964,8 @@ function BattleGuide({ isMobile }) {
 
         {/* Footer */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 12, textAlign: "center" }}>
-          <span style={{ fontSize: 12, fontWeight: 800, color: C.gold, fontFamily: "'Roboto Condensed',sans-serif", letterSpacing: 0.5 }}>MKP clears and counters. </span>
-          <span style={{ fontSize: 12, fontWeight: 800, color: C.green, fontFamily: "'Roboto Condensed',sans-serif", letterSpacing: 0.5 }}>WFP captures and holds.</span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: C.gold, fontFamily: "'Roboto Condensed',sans-serif", letterSpacing: 0.5 }}>WAR clears and counters. </span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: C.green, fontFamily: "'Roboto Condensed',sans-serif", letterSpacing: 0.5 }}>MKP captures and holds.</span>
         </div>
       </div>
     </div>
@@ -1093,9 +1119,9 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
     <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 16, alignItems: "flex-start" }}>
 
       {/* ── LEFT: Map ── */}
-      <div style={{ flex: "0 0 auto", width: isMobile ? "100%" : "auto", overflowX: "visible" }}>
+      <div style={{ flex: "0 0 auto", width: isMobile ? "100%" : "auto", overflowX: isMobile ? "auto" : "visible" }}>
         {/* Filters */}
-        <div style={{ display: "flex", gap: 5, marginBottom: 10, alignItems: "center", flexWrap: "wrap", width: isMobile ? gridW : "auto" }}>
+        <div style={{ display: "flex", gap: 5, marginBottom: 10, alignItems: "center", flexWrap: "wrap" }}>
           {[["all","All"],["friendly","🤝 Friendly"],["enemy","⚔ Enemy"],["unassigned","○ Unassigned"]].map(([v, label]) => (
             <button key={v} onClick={() => setFilter(v)} style={{
               ...btnSt, fontSize: 11, padding: "5px 12px",
@@ -1285,6 +1311,23 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
           </SideSection>
         )}
 
+        {/* Full member roster with availability */}
+        <SideSection title="MEMBER ROSTER">
+          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            {members.map(m => {
+              const isOnMap = assignedMemberIds.has(m.id);
+              return (
+                <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 8px", borderRadius: 6, background: isOnMap ? "rgba(96,165,250,0.12)" : "rgba(255,255,255,0.03)", border: `1px solid ${isOnMap ? C.blue + "44" : "rgba(255,255,255,0.06)"}`, transition: "all 0.15s" }}>
+                  <div style={{ width: 5, height: 5, borderRadius: "50%", background: availColorMap[m.available] || C.textDim, flexShrink: 0 }} />
+                  <span style={{ fontSize: 10, fontWeight: 700, color: isOnMap ? "#90c8ff" : C.text, flex: 1 }}>{m.name}</span>
+                  <span style={{ fontSize: 9, color: C.textDim }}>{m.tc}</span>
+                  <span style={{ fontSize: 9, color: allianceColor(m.alliance), fontWeight: 700 }}>{m.alliance}</span>
+                  {isOnMap && <span style={{ fontSize: 8, color: C.blue }}>●</span>}
+                </div>
+              );
+            })}
+          </div>
+        </SideSection>
       </div>
 
       {/* Hover tooltip */}
@@ -1316,19 +1359,15 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
 }
 
 // ── Main App ───────────────────────────────────────────────────────────────
-
-// ── Language Translator ────────────────────────────────────────────────────
-// Uses Google Website Translator while keeping the visible control styled
-// consistently with the dashboard. Player names and alliance tags may still
-// be interpreted by automatic translation.
+// ── Language Selector ──────────────────────────────────────────────────────
 function LanguageSelector({ isMobile }) {
   const languages = [
-    { code: "en", label: "English", short: "EN" },
-    { code: "ko", label: "한국어", short: "KO" },
-    { code: "ar", label: "العربية", short: "AR" },
-    { code: "es", label: "Español", short: "ES" },
-    { code: "de", label: "Deutsch", short: "DE" },
-    { code: "zh-CN", label: "中文", short: "ZH" },
+    { code: "en",    label: "English",  short: "EN" },
+    { code: "ko",    label: "한국어",    short: "KO" },
+    { code: "ar",    label: "العربية",  short: "AR" },
+    { code: "es",    label: "Español",  short: "ES" },
+    { code: "de",    label: "Deutsch",  short: "DE" },
+    { code: "zh-CN", label: "中文",     short: "ZH" },
   ];
 
   function readLanguageCookie() {
@@ -1348,12 +1387,7 @@ function LanguageSelector({ isMobile }) {
         }, "google_translate_element");
       }
     };
-
-    if (window.google?.translate?.TranslateElement) {
-      window.googleTranslateElementInit();
-      return;
-    }
-
+    if (window.google?.translate?.TranslateElement) { window.googleTranslateElementInit(); return; }
     if (!document.getElementById("google-translate-script")) {
       const script = document.createElement("script");
       script.id = "google-translate-script";
@@ -1365,11 +1399,8 @@ function LanguageSelector({ isMobile }) {
 
   function setTranslationCookie(code) {
     const hostname = window.location.hostname;
-    const expires = code === "en"
-      ? "Thu, 01 Jan 1970 00:00:00 GMT"
-      : "Fri, 31 Dec 9999 23:59:59 GMT";
+    const expires = code === "en" ? "Thu, 01 Jan 1970 00:00:00 GMT" : "Fri, 31 Dec 9999 23:59:59 GMT";
     const value = code === "en" ? "" : `/en/${code}`;
-
     document.cookie = `googtrans=${value}; path=/; expires=${expires}; SameSite=Lax`;
     if (hostname && hostname !== "localhost") {
       document.cookie = `googtrans=${value}; path=/; domain=.${hostname}; expires=${expires}; SameSite=Lax`;
@@ -1386,48 +1417,17 @@ function LanguageSelector({ isMobile }) {
     <>
       <div id="google_translate_element" style={{ display: "none" }} />
       <div style={{
-        ...glassDeep({
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          padding: isMobile ? "4px 6px" : "5px 8px",
-          borderRadius: 9,
-          flexShrink: 0,
-        }),
+        ...glassDeep({ display: "flex", alignItems: "center", gap: 6, padding: isMobile ? "4px 6px" : "5px 8px", borderRadius: 9, flexShrink: 0 }),
       }}>
         {!isMobile && (
-          <span style={{
-            fontSize: 10,
-            color: C.textDim,
-            fontWeight: 700,
-            whiteSpace: "nowrap",
-            fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif",
-            letterSpacing: 0.4,
-          }}>
+          <span style={{ fontSize: 10, color: C.textDim, fontWeight: 700, whiteSpace: "nowrap", fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif", letterSpacing: 0.4 }}>
             LANGUAGE
           </span>
         )}
-        <select
-          aria-label="Language"
-          value={language}
-          onChange={e => changeLanguage(e.target.value)}
-          style={{
-            ...inputSt,
-            width: isMobile ? 58 : 104,
-            minWidth: 0,
-            padding: isMobile ? "4px 5px" : "4px 24px 4px 7px",
-            border: "none",
-            background: "rgba(255,255,255,0.05)",
-            fontSize: isMobile ? 11 : 12,
-            fontWeight: 700,
-            cursor: "pointer",
-            fontFamily: "'Segoe UI',Arial,sans-serif",
-          }}
-        >
+        <select aria-label="Language" value={language} onChange={e => changeLanguage(e.target.value)}
+          style={{ ...inputSt, width: isMobile ? 58 : 104, minWidth: 0, padding: isMobile ? "4px 5px" : "4px 24px 4px 7px", border: "none", background: "rgba(255,255,255,0.05)", fontSize: isMobile ? 11 : 12, fontWeight: 700, cursor: "pointer" }}>
           {languages.map(item => (
-            <option key={item.code} value={item.code}>
-              {isMobile ? item.short : item.label}
-            </option>
+            <option key={item.code} value={item.code}>{isMobile ? item.short : item.label}</option>
           ))}
         </select>
       </div>
@@ -1590,6 +1590,12 @@ function App() {
     if (!requireEdit()) return;
     db.ref("teams").set(teams.map(t => t.name === name ? { ...t, color } : t));
   }
+  function clearAllMembers() {
+    if (!requireEdit()) return;
+    if (!window.confirm("Clear ALL members? This cannot be undone.")) return;
+    db.ref("members").set(null);
+    db.ref("assignments").set(null);
+  }
 
   // ── Derived stats ──────────────────────────────────────────────────────
   const avail        = members.filter(m => m.available === "Full").length;
@@ -1615,7 +1621,7 @@ function App() {
   });
 
   function toggleSort(k) { if (sortKey === k) setSortDir(d => -d); else { setSortKey(k); setSortDir(1); } }
-  const thSt = { padding: "10px 10px", fontSize: 10, color: C.textDim, textAlign: "left", borderBottom: `1px solid ${C.panelBorder}`, cursor: "pointer", textTransform: "uppercase", letterSpacing: 0.8, userSelect: "none", whiteSpace: "nowrap" };
+  const thSt = { padding: "10px 10px", fontSize: 10, color: C.textDim, textAlign: "left", borderBottom: `1px solid ${C.panelBorder}`, cursor: "pointer", textTransform: "uppercase", letterSpacing: 1.2, userSelect: "none", whiteSpace: "nowrap", fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif", fontWeight: 700 };
 
   // ── Loading screen ─────────────────────────────────────────────────────
   if (loading) return (
@@ -1638,13 +1644,6 @@ function App() {
         ::-webkit-scrollbar-track { background: #080c14; }
         ::-webkit-scrollbar-thumb { background: #1a2a3a; border-radius: 3px; }
         select option { background: #0d1520; }
-        .goog-te-banner-frame,
-        .goog-te-banner-frame.skiptranslate,
-        iframe.goog-te-banner-frame,
-        .goog-te-balloon-frame { display: none !important; }
-        body { top: 0 !important; }
-        #goog-gt-tt, .goog-te-balloon-frame { display: none !important; }
-        .goog-text-highlight { background: transparent !important; box-shadow: none !important; }
         .cell-edit { background: transparent; border: 1px solid transparent; border-radius: 6px; color: inherit; padding: 4px 6px; font-size: 12px; width: 100%; box-sizing: border-box; outline: none; transition: background 0.15s, border-color 0.15s; font-family: inherit; }
         .cell-edit:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); }
         .cell-edit:focus { background: rgba(255,255,255,0.09); border-color: rgba(167,139,250,0.55); }
@@ -1694,7 +1693,7 @@ function App() {
         }}>
           {editMode ? "🔓 EDITING" : "🔒 VIEW ONLY"}
         </button>
-        {[["map", isMobile ? "🗺" : "🗺 Battle Map"], ["dashboard", isMobile ? "📊" : "📊 Dashboard"], ["members", isMobile ? "👥" : "👥 Members"]].map(([k, label]) => (
+        {[["map", isMobile ? "🗺" : "🗺 Battle Map"], ["members", isMobile ? "👥" : "👥 Members"], ["dashboard", isMobile ? "📊" : "📊 Dashboard"]].map(([k, label]) => (
           <button key={k} onClick={() => setTab(k)} style={{ ...btnSt, padding: isMobile ? "6px 10px" : "6px 18px", fontSize: isMobile ? 18 : 13, fontWeight: 700, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif", letterSpacing: 0.5, background: tab === k ? C.accentDim : "transparent", color: tab === k ? C.accent : C.textDim, border: tab === k ? `1px solid ${C.accent}44` : "1px solid transparent" }}>{label}</button>
         ))}
       </div>
@@ -1760,6 +1759,9 @@ function App() {
               <CsvUploadButton onImport={importMembers} />
               <AllianceManager alliances={alliances} onAdd={addAlliance} onRemove={removeAlliance} onColorChange={updateAllianceColor} />
               <TeamManager teams={teams} onAdd={addTeam} onRemove={removeTeam} onColorChange={updateTeamColor} />
+              <button onClick={clearAllMembers} style={{ ...btnSt, background: "rgba(248,113,113,0.15)", color: C.red, padding: "7px 20px", fontWeight: 700, fontSize: 13, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif", letterSpacing: 0.5, border: `1px solid ${C.red}33` }}>
+                🗑 Clear All
+              </button>
             </div>
             <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
               <input style={{ ...inputSt, flex: "1 1 140px", minWidth: 0 }} placeholder="🔍 Search name…" value={search} onChange={e => setSearch(e.target.value)} />
@@ -1831,7 +1833,7 @@ function App() {
 
             {/* Join Rally + Garrison Support side by side, then strategy guide */}
             <div style={{ marginTop: 16 }}>
-              <BattleGuide isMobile={isMobile} />
+              <BattleGuide />
             </div>
           </div>
         )}
