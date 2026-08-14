@@ -117,6 +117,7 @@ const CSV_HEADER_ALIASES = {
   role: "role",
   alliance: "alliance",
   team: "team",
+  kvkalliance: "kvkAlliance", kvk: "kvkAlliance", kvkteam: "kvkAlliance",
   primarytarget: "primaryTarget", target: "primaryTarget", primarytargets: "primaryTarget",
   notes: "notes", note: "notes",
 };
@@ -169,6 +170,7 @@ function rowToMember(row) {
     role: matchOption(row.role, ROLES, "Rally Joiner"),
     alliance: row.alliance || "",
     team: row.team || "",
+    kvkAlliance: row.kvkAlliance || "",
     primaryTarget: matchOption(row.primaryTarget, PRIMARY_TARGETS, "Castle"),
     notes: row.notes || "",
   };
@@ -1095,6 +1097,121 @@ function isCastleWall(r, c) { return isCastle(r, c) && !isTurret(r, c) && !isCas
 function isTurret(r, c) { return TURRETS.some(t => t.r === r && t.c === c); }
 function getTurretLabel(r, c) { return TURRETS.find(t => t.r === r && t.c === c)?.label || null; }
 
+// ── Roster Progress Bars ──────────────────────────────────────────────────
+function RosterProgress({ members, kvkAlliances }) {
+  const isFull    = m => m.available === "Full";
+  const isActive  = m => m.available === "Full" || m.available === "1st Half";
+  const isTG1Plus = m => m.tc && m.tc.startsWith("TG");
+  const isTG2Plus = m => m.tc && ["TG2","TG3","TG4","TG5","TG6","TG7","TG8"].includes(m.tc);
+  const isTG3     = m => m.tc === "TG3";
+  const isWAR     = m => m.kvkAlliance === "WAR";
+  const isMKP     = m => m.kvkAlliance === "MKP";
+
+  const warColor = kvkAlliances.find(a => a.name === "WAR")?.color || "#fbbf24";
+  const mkpColor = kvkAlliances.find(a => a.name === "MKP")?.color || "#60a5fa";
+
+  const squads = [
+    {
+      name: "WAR", color: warColor, subtitle: "Assault · 4 Rallies",
+      rows: [
+        {
+          label: "Rally Leaders",
+          note: "Full avail · TG1+",
+          have: members.filter(m => isWAR(m) && isFull(m) && m.role === "Rally Leader" && isTG1Plus(m)).length,
+          need: 4,
+        },
+        {
+          label: "Rally Joiners",
+          note: "Full/1st Half · TG1+",
+          have: members.filter(m => isWAR(m) && isActive(m) && m.role === "Rally Joiner" && isTG1Plus(m)).length,
+          need: 28,
+        },
+        {
+          label: "Turret Hold N & S",
+          note: "Primary target = N or S",
+          have: members.filter(m => isWAR(m) && ["Turret (N)","Turret (S)"].includes(m.primaryTarget)).length,
+          need: 8,
+        },
+      ],
+    },
+    {
+      name: "MKP", color: mkpColor, subtitle: "Garrison · 2 Squads",
+      rows: [
+        {
+          label: "Garrison Core",
+          note: "TG3 · Castle target",
+          have: members.filter(m => isMKP(m) && isTG3(m) && m.primaryTarget === "Castle").length,
+          need: 15,
+        },
+        {
+          label: "Turret Hold E & W",
+          note: "Primary target = E or W",
+          have: members.filter(m => isMKP(m) && ["Turret (E)","Turret (W)"].includes(m.primaryTarget)).length,
+          need: 7,
+        },
+      ],
+    },
+  ];
+
+  const totalWAR = members.filter(m => isWAR(m)).length;
+  const totalMKP = members.filter(m => isMKP(m)).length;
+
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        {squads.map(sq => (
+          <div key={sq.name} style={{
+            background: "rgba(255,255,255,0.05)",
+            backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
+            border: `1px solid ${sq.color}44`,
+            borderRadius: 12, padding: "12px 14px",
+            boxShadow: `0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.07)`,
+          }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                <span style={{ fontFamily: "'Bebas Neue'", fontSize: 17, color: sq.color, letterSpacing: 1 }}>{sq.name}</span>
+                <span style={{ fontSize: 10, color: C.textDim }}>{sq.subtitle}</span>
+              </div>
+              <span style={{ fontSize: 10, color: sq.color, fontWeight: 700, fontFamily: "'Roboto Condensed',sans-serif" }}>
+                {sq.name === "WAR" ? totalWAR : totalMKP} assigned
+              </span>
+            </div>
+            {sq.rows.map(row => {
+              const pct = Math.min(row.have / row.need, 1);
+              const done = row.have >= row.need;
+              const col = done ? C.green : sq.color;
+              return (
+                <div key={row.label} style={{ marginBottom: 9 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+                    <div>
+                      <span style={{ fontSize: 10, color: C.text, fontWeight: 600 }}>{row.label}</span>
+                      <span style={{ fontSize: 9, color: C.textDim, marginLeft: 5 }}>({row.note})</span>
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: col, fontFamily: "'Roboto Condensed',sans-serif", flexShrink: 0, marginLeft: 8 }}>
+                      {row.have}/{row.need}{done ? " ✓" : ""}
+                    </span>
+                  </div>
+                  <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 99, height: 6, overflow: "hidden" }}>
+                    <div style={{
+                      width: `${pct * 100}%`, height: "100%",
+                      background: done
+                        ? `linear-gradient(90deg, ${C.green}cc, ${C.green})`
+                        : `linear-gradient(90deg, ${col}88, ${col})`,
+                      borderRadius: 99,
+                      boxShadow: done ? `0 0 8px ${C.green}88` : `0 0 6px ${col}44`,
+                      transition: "width 0.5s ease",
+                    }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function CastleMap({ members, assignments, setAssignments, isMobile, viewportWidth, kvkAlliances }) {
   const GAP = isMobile ? 1 : 3;
   const mobileMapWidth = Math.max(252, (viewportWidth || 375) - 44);
@@ -1102,6 +1219,8 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
   const [modal, setModal] = useState(null);
   const [hover, setHover] = useState(null);
   const [filter, setFilter] = useState("all");
+  const [dragOverTile, setDragOverTile] = useState(null);
+  const [unpFilter, setUnpFilter] = useState({ kvk: "all", avail: "all", role: "all", target: "all" });
 
   const key = (r, c) => `${r},${c}`;
   const getA = (r, c) => assignments[key(r, c)];
@@ -1197,6 +1316,15 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
               borderRadius: 20,
             }}>{label}</button>
           ))}
+          {kvkAlliances.map(a => (
+            <button key={a.name} onClick={() => setFilter(`kvk:${a.name}`)} style={{
+              ...btnSt, fontSize: 11, padding: "5px 12px", fontWeight: 800,
+              background: filter === `kvk:${a.name}` ? `${a.color}33` : "rgba(255,255,255,0.05)",
+              color: filter === `kvk:${a.name}` ? a.color : C.textDim,
+              border: filter === `kvk:${a.name}` ? `1px solid ${a.color}77` : "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 20,
+            }}>{a.name}</button>
+          ))}
           <div style={{ flex: 1 }} />
           <button onClick={() => setAssignments({})} style={{ ...btnSt, fontSize: 11, padding: "5px 12px", background: "rgba(248,113,113,0.15)", color: C.red, border: `1px solid ${C.red}44`, borderRadius: 20 }}>↺ Reset</button>
         </div>
@@ -1219,6 +1347,10 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
               if (filter === "friendly" && assignment?.type !== "friendly") dimmed = true;
               if (filter === "enemy" && assignment?.type !== "enemy") dimmed = true;
               if (filter === "unassigned" && assignment) dimmed = true;
+              if (filter.startsWith("kvk:")) {
+                const kvkName = filter.slice(4);
+                if (!assignment || assignment.type !== "friendly" || assignment.member.kvkAlliance !== kvkName) dimmed = true;
+              }
               let bg, border;
               const isLeader = assignment?.type === "friendly" && assignment.member.role === "Rally Leader";
               const leaderTarget = isLeader ? (assignment.member.primaryTarget || "Castle") : null;
@@ -1249,6 +1381,7 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
               else if (assignment?.type === "enemy") { bg = "linear-gradient(135deg,#3a0d0d,#520a0a)"; border = `1.5px solid ${C.red}`; }
               else { bg = "rgba(180,192,205,0.55)"; border = "1px solid rgba(160,175,190,0.5)"; }
               if (isSelected) border = `2px solid ${C.accent}`;
+              if (dragOverTile === key(r, c) && !castle && !dimmed) border = `2.5px dashed ${C.accent}`;
               return (
                 <div key={`${r},${c}`}
                   onClick={() => !turret && handleClick(r, c)}
@@ -1259,6 +1392,20 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
                   onMouseLeave={e => {
                     setHover(null);
                     e.currentTarget.style.filter = ""; e.currentTarget.style.boxShadow = "";
+                  }}
+                  onDragOver={e => {
+                    if (castle || dimmed) return;
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                    setDragOverTile(key(r, c));
+                  }}
+                  onDragLeave={() => setDragOverTile(null)}
+                  onDrop={e => {
+                    e.preventDefault();
+                    setDragOverTile(null);
+                    if (castle || dimmed) return;
+                    const memberId = parseInt(e.dataTransfer.getData("memberId"));
+                    if (memberId) assignFriendly(r, c, memberId);
                   }}
                   style={{
                     position: "absolute", left: x, top: y, width: TILE, height: TILE,
@@ -1380,16 +1527,108 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
             {unassignedMembers.length === 0 ? (
               <div style={{ fontSize: 10, color: C.green, textAlign: "center", padding: "6px 0" }}>✓ All members positioned</div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                {unassignedMembers.map(m => (
-                  <div key={m.id} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 6, padding: "5px 8px", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", gap: 5 }}>
-                    <div style={{ width: 5, height: 5, borderRadius: "50%", background: availColorMap[m.available] || C.textDim, flexShrink: 0, boxShadow: `0 0 4px ${availColorMap[m.available] || C.textDim}` }} />
-                    <span style={{ fontSize: 10, fontWeight: 700, color: C.text, flex: 1 }}>{m.name}</span>
-                    <span style={{ fontSize: 9, color: C.textDim }}>{m.tc}</span>
-                    <span style={{ fontSize: 9, color: allianceColor(m.alliance), fontWeight: 700 }}>{m.alliance}</span>
-                  </div>
-                ))}
-              </div>
+              <>
+                {/* Filter bar */}
+                <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 8 }}>
+                  {[
+                    { key: "kvk", label: "KvK", opts: ["all", ...kvkAlliances.map(a => a.name)] },
+                    { key: "avail", label: "Avail", opts: ["all", ...AVAILABILITY_OPTS] },
+                    { key: "role", label: "Role", opts: ["all", "Rally Leader", "Rally Joiner"] },
+                    { key: "target", label: "Target", opts: ["all", ...PRIMARY_TARGETS] },
+                  ].map(({ key, label, opts }) => (
+                    <select key={key} value={unpFilter[key]}
+                      onChange={e => setUnpFilter(f => ({ ...f, [key]: e.target.value }))}
+                      style={{ ...inputSt, fontSize: 9, padding: "3px 6px", flex: "1 1 60px", minWidth: 0,
+                        color: unpFilter[key] !== "all" ? C.accent : C.textDim,
+                        border: unpFilter[key] !== "all" ? `1px solid ${C.accent}55` : "1px solid rgba(255,255,255,0.1)",
+                      }}>
+                      <option value="all">{label}</option>
+                      {opts.filter(o => o !== "all").map(o => <option key={o} value={o}>{o === "Rally Leader" ? "Leader" : o === "Rally Joiner" ? "Joiner" : o}</option>)}
+                    </select>
+                  ))}
+                  {Object.values(unpFilter).some(v => v !== "all") && (
+                    <button onClick={() => setUnpFilter({ kvk: "all", avail: "all", role: "all", target: "all" })}
+                      style={{ ...btnSt, fontSize: 9, padding: "3px 8px", color: C.red, background: C.redDim, border: "none" }}>✕</button>
+                  )}
+                </div>
+                <div style={{ fontSize: 9, color: C.textDim, marginBottom: 6, fontStyle: "italic" }}>Drag a player onto any tile to assign them</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  {unassignedMembers.filter(m =>
+                    (unpFilter.kvk === "all" || m.kvkAlliance === unpFilter.kvk) &&
+                    (unpFilter.avail === "all" || m.available === unpFilter.avail) &&
+                    (unpFilter.role === "all" || m.role === unpFilter.role) &&
+                    (unpFilter.target === "all" || m.primaryTarget === unpFilter.target)
+                  ).map(m => (
+                    <div key={m.id}
+                      draggable={true}
+                      onDragStart={e => {
+                        e.dataTransfer.setData("memberId", String(m.id));
+                        e.dataTransfer.effectAllowed = "move";
+                        e.currentTarget.style.opacity = "0.5";
+                      }}
+                      onDragEnd={e => {
+                        e.currentTarget.style.opacity = "1";
+                        setDragOverTile(null);
+                      }}
+                      style={{
+                        background: "rgba(255,255,255,0.04)", borderRadius: 8, padding: "7px 10px",
+                        border: "1px solid rgba(255,255,255,0.07)", display: "flex", flexDirection: "column", gap: 4,
+                        cursor: "grab", userSelect: "none",
+                      }}>
+                      {/* Row 1: dot + name + TC + drag handle */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: availColorMap[m.available] || C.textDim, flexShrink: 0, boxShadow: `0 0 4px ${availColorMap[m.available] || C.textDim}` }} />
+                        <span style={{ fontSize: 11, fontWeight: 700, color: C.text, flex: 1 }}>{m.name}</span>
+                        <span style={{ fontSize: 10, color: C.accent, fontWeight: 700 }}>{m.tc}</span>
+                        <span style={{ fontSize: 12, color: C.textDim, lineHeight: 1 }}>⠿</span>
+                      </div>
+                      {/* Row 2: tags */}
+                      <div style={{ display: "flex", gap: 4, flexWrap: "wrap", paddingLeft: 12 }}>
+                        {/* Availability */}
+                        <span style={{
+                          fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, lineHeight: 1.5,
+                          color: availColorMap[m.available] || C.textDim,
+                          background: (availColorMap[m.available] || C.textDim) + "22",
+                          border: `1px solid ${(availColorMap[m.available] || C.textDim)}44`,
+                        }}>{m.available || "—"}</span>
+                        {/* Role */}
+                        <span style={{
+                          fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, lineHeight: 1.5,
+                          color: roleColor(m.role), background: roleColor(m.role) + "22",
+                          border: `1px solid ${roleColor(m.role)}44`,
+                        }}>{m.role === "Rally Leader" ? "Leader" : "Joiner"}</span>
+                        {/* KvK Alliance */}
+                        {m.kvkAlliance && (
+                          <span style={{
+                            fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, lineHeight: 1.5,
+                            color: kvkAllianceColor(m.kvkAlliance),
+                            background: kvkAllianceColor(m.kvkAlliance) + "22",
+                            border: `1px solid ${kvkAllianceColor(m.kvkAlliance)}55`,
+                          }}>{m.kvkAlliance}</span>
+                        )}
+                        {/* Alliance */}
+                        {m.alliance && (
+                          <span style={{
+                            fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, lineHeight: 1.5,
+                            color: allianceColor(m.alliance), background: allianceColor(m.alliance) + "18",
+                            border: `1px solid ${allianceColor(m.alliance)}33`,
+                          }}>{m.alliance}</span>
+                        )}
+                        {/* Primary Target */}
+                        {m.primaryTarget && m.primaryTarget !== "None" && (() => {
+                          const tc = { Castle: C.accent, "Turret (N)": "#20d0d0", "Turret (E)": "#c084fc", "Turret (S)": "#ff8040", "Turret (W)": "#40c080" }[m.primaryTarget] || C.textDim;
+                          return (
+                            <span style={{
+                              fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, lineHeight: 1.5,
+                              color: tc, background: tc + "18", border: `1px solid ${tc}33`,
+                            }}>{m.primaryTarget}</span>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </SideSection>
         )}
@@ -1863,6 +2102,7 @@ function App() {
         {/* ── Members ── */}
         {tab === "members" && (
           <div>
+            <RosterProgress members={members} kvkAlliances={kvkAlliances} />
             <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap" }}>
               <AddMemberButton onAdd={addMember} alliances={alliances} />
               <CsvUploadButton onImport={importMembers} />
@@ -1934,6 +2174,9 @@ function App() {
               <div style={{ fontFamily: "'Bebas Neue'", fontSize: isMobile ? 20 : 24, color: C.accent, letterSpacing: 3, marginBottom: 4 }}>KVK BATTLE MAP</div>
               {!isMobile && <div style={{ fontSize: 12, color: C.textDim }}>Click any gray tile to assign a member or mark an enemy. Changes sync live to all users.</div>}
             </div>
+
+            {/* Roster progress */}
+            <RosterProgress members={members} kvkAlliances={kvkAlliances} />
 
             <div style={{
               background: "rgba(255,255,255,0.04)",
