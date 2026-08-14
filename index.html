@@ -1220,7 +1220,7 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
   const [hover, setHover] = useState(null);
   const [filter, setFilter] = useState("all");
   const [dragOverTile, setDragOverTile] = useState(null);
-  const [unpFilter, setUnpFilter] = useState({ kvk: "all", avail: "all", role: "all", target: "all" });
+  const [unpFilter, setUnpFilter] = useState({ kvk: "all", avail: "all", role: "all", tc: "all", target: "all" });
 
   const key = (r, c) => `${r},${c}`;
   const getA = (r, c) => assignments[key(r, c)];
@@ -1534,6 +1534,7 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
                     { key: "kvk", label: "KvK", opts: ["all", ...kvkAlliances.map(a => a.name)] },
                     { key: "avail", label: "Avail", opts: ["all", ...AVAILABILITY_OPTS] },
                     { key: "role", label: "Role", opts: ["all", "Rally Leader", "Rally Joiner"] },
+                    { key: "tc", label: "TC", opts: ["all", ...TC_LEVELS.slice().reverse()] },
                     { key: "target", label: "Target", opts: ["all", ...PRIMARY_TARGETS] },
                   ].map(({ key, label, opts }) => (
                     <select key={key} value={unpFilter[key]}
@@ -1547,7 +1548,7 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
                     </select>
                   ))}
                   {Object.values(unpFilter).some(v => v !== "all") && (
-                    <button onClick={() => setUnpFilter({ kvk: "all", avail: "all", role: "all", target: "all" })}
+                    <button onClick={() => setUnpFilter({ kvk: "all", avail: "all", role: "all", tc: "all", target: "all" })}
                       style={{ ...btnSt, fontSize: 9, padding: "3px 8px", color: C.red, background: C.redDim, border: "none" }}>✕</button>
                   )}
                 </div>
@@ -1557,6 +1558,7 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
                     (unpFilter.kvk === "all" || m.kvkAlliance === unpFilter.kvk) &&
                     (unpFilter.avail === "all" || m.available === unpFilter.avail) &&
                     (unpFilter.role === "all" || m.role === unpFilter.role) &&
+                    (unpFilter.tc === "all" || m.tc === unpFilter.tc) &&
                     (unpFilter.target === "all" || m.primaryTarget === unpFilter.target)
                   ).map(m => (
                     <div key={m.id}
