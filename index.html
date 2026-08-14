@@ -211,6 +211,16 @@ function teamColor(t) {
   if (!t) return C.textDim;
   return _teamColorMap[t] || C.textDim;
 }
+
+const DEFAULT_KVK_ALLIANCES = [
+  { name: "WAR", color: "#fbbf24" },
+  { name: "MKP", color: "#60a5fa" },
+];
+let _kvkAllianceColorMap = Object.fromEntries(DEFAULT_KVK_ALLIANCES.map(a => [a.name, a.color]));
+function kvkAllianceColor(a) {
+  if (!a) return C.textDim;
+  return _kvkAllianceColorMap[a] || C.textDim;
+}
 function hslToHex(h, s, l) {
   s /= 100; l /= 100;
   const k = n => (n + h / 30) % 12;
@@ -450,8 +460,50 @@ function TeamManager({ teams, onAdd, onRemove, onColorChange }) {
   );
 }
 
+// ── KvK Alliance Manager ──────────────────────────────────────────────────
+function KvkAllianceManager({ kvkAlliances, onAdd, onRemove, onColorChange }) {
+  const [open, setOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newColor, setNewColor] = useState(() => randomAllianceColor());
+
+  if (!open) return (
+    <button onClick={() => setOpen(true)} style={{ ...btnSt, background: "rgba(251,191,36,0.15)", color: C.gold, padding: "7px 20px", fontWeight: 700, fontSize: 13, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif", letterSpacing: 0.5 }}>
+      ⚔ KvK Alliances
+    </button>
+  );
+
+  return (
+    <div style={{ background: "#0a1820", border: `1px solid ${C.panelBorder}`, borderRadius: 10, padding: 18, marginBottom: 16, minWidth: 280, maxWidth: 380 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+        <div style={{ fontFamily: "'Bebas Neue'", fontSize: 20, color: C.gold, letterSpacing: 1 }}>KvK ALLIANCES</div>
+        <button onClick={() => setOpen(false)} style={{ ...btnSt, padding: "2px 9px", fontSize: 13 }}>✕</button>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14 }}>
+        {kvkAlliances.map(a => (
+          <div key={a.name} style={{ display: "flex", alignItems: "center", gap: 8, background: "#0d1520", borderRadius: 6, padding: "5px 10px" }}>
+            <input type="color" value={a.color} onChange={e => onColorChange(a.name, e.target.value)}
+              style={{ width: 26, height: 26, border: "none", borderRadius: 6, background: "none", cursor: "pointer", padding: 0, flexShrink: 0 }} />
+            <span style={{ flex: 1, fontSize: 12, fontWeight: 700, color: a.color }}>{a.name}</span>
+            <button onClick={() => onRemove(a.name)} style={{ ...btnSt, background: C.redDim, color: C.red, padding: "2px 8px", fontSize: 10 }}>✕</button>
+          </div>
+        ))}
+        {kvkAlliances.length === 0 && <div style={{ fontSize: 11, color: C.textDim, textAlign: "center", padding: "8px 0" }}>No KvK alliances yet</div>}
+      </div>
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <input type="color" value={newColor} onChange={e => setNewColor(e.target.value)}
+          style={{ width: 32, height: 32, border: "none", borderRadius: 6, background: "none", cursor: "pointer", padding: 0, flexShrink: 0 }} />
+        <input style={{ ...inputSt, flex: 1 }} placeholder="New KvK alliance name" value={newName}
+          onChange={e => setNewName(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter" && newName.trim()) { onAdd(newName.trim(), newColor); setNewName(""); setNewColor(randomAllianceColor()); } }} />
+        <button onClick={() => { if (newName.trim()) { onAdd(newName.trim(), newColor); setNewName(""); setNewColor(randomAllianceColor()); } }}
+          style={{ ...btnSt, background: C.greenDim, color: C.green, padding: "7px 16px", fontWeight: 700 }}>Add</button>
+      </div>
+    </div>
+  );
+}
+
 // ── Member Table Row ───────────────────────────────────────────────────────
-function MemberRow({ m, alliances, teams, onUpdate, onDelete }) {
+function MemberRow({ m, alliances, teams, kvkAlliances, onUpdate, onDelete }) {
   const td = { padding: "8px 10px", fontSize: 13, color: C.text, borderBottom: `1px solid ${C.panelBorder}`, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif", letterSpacing: 0.2 };
   const f = (k, v) => onUpdate(m.id, k, v);
   const availColor = { Full: C.green, "1st Half": C.blue, "2nd Half": C.gold, "On/Off": C.red }[m.available] || C.textDim;
@@ -478,6 +530,12 @@ function MemberRow({ m, alliances, teams, onUpdate, onDelete }) {
         <select className="cell-edit" style={{ color: allianceColor(m.alliance), fontWeight: 700 }} value={m.alliance || ""} onChange={e => f("alliance", e.target.value)}>
           <option value="">—</option>
           {alliances.map(a => <option key={a.name} value={a.name} style={{ color: a.color }}>{a.name}</option>)}
+        </select>
+      </td>
+      <td style={td}>
+        <select className="cell-edit" style={{ color: kvkAllianceColor(m.kvkAlliance), fontWeight: 700 }} value={m.kvkAlliance || ""} onChange={e => f("kvkAlliance", e.target.value)}>
+          <option value="">—</option>
+          {kvkAlliances.map(a => <option key={a.name} value={a.name} style={{ color: a.color }}>{a.name}</option>)}
         </select>
       </td>
       <td style={td}>
@@ -648,7 +706,7 @@ const LEADER_STYLES = {
 };
 
 // ── Mobile Member Card ─────────────────────────────────────────────────────
-function MemberCard({ m, alliances, teams, onUpdate, onDelete }) {
+function MemberCard({ m, alliances, teams, kvkAlliances, onUpdate, onDelete }) {
   const [expanded, setExpanded] = useState(false);
   const f = (k, v) => onUpdate(m.id, k, v);
   const availColor = { Full: C.green, "1st Half": C.blue, "2nd Half": C.gold, "On/Off": C.red }[m.available] || C.textDim;
@@ -693,6 +751,13 @@ function MemberCard({ m, alliances, teams, onUpdate, onDelete }) {
               <select className="cell-edit" style={{ color: allianceColor(m.alliance), fontWeight: 700 }} value={m.alliance || ""} onChange={e => f("alliance", e.target.value)}>
                 <option value="">—</option>
                 {alliances.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 2 }}>KvK Alliance</div>
+              <select className="cell-edit" style={{ color: kvkAllianceColor(m.kvkAlliance), fontWeight: 700 }} value={m.kvkAlliance || ""} onChange={e => f("kvkAlliance", e.target.value)}>
+                <option value="">—</option>
+                {kvkAlliances.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
               </select>
             </div>
             <div>
@@ -1030,7 +1095,7 @@ function isCastleWall(r, c) { return isCastle(r, c) && !isTurret(r, c) && !isCas
 function isTurret(r, c) { return TURRETS.some(t => t.r === r && t.c === c); }
 function getTurretLabel(r, c) { return TURRETS.find(t => t.r === r && t.c === c)?.label || null; }
 
-function CastleMap({ members, assignments, setAssignments, isMobile, viewportWidth }) {
+function CastleMap({ members, assignments, setAssignments, isMobile, viewportWidth, kvkAlliances }) {
   const GAP = isMobile ? 1 : 3;
   const mobileMapWidth = Math.max(252, (viewportWidth || 375) - 44);
   const TILE = isMobile ? Math.max(18, Math.floor((mobileMapWidth - (COLS - 1) * GAP) / COLS)) : 50;
@@ -1158,13 +1223,29 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
               const isLeader = assignment?.type === "friendly" && assignment.member.role === "Rally Leader";
               const leaderTarget = isLeader ? (assignment.member.primaryTarget || "Castle") : null;
               const leaderStyle = leaderTarget ? (LEADER_STYLES[leaderTarget] || LEADER_STYLES["Castle"]) : null;
+              // KvK alliance color — applies to all friendly tiles
+              const kvkCol = assignment?.type === "friendly"
+                ? (_kvkAllianceColorMap[assignment.member.kvkAlliance] || null)
+                : null;
               if (dimmed) { bg = "rgba(255,255,255,0.03)"; border = "1px solid rgba(255,255,255,0.05)"; }
               else if (turret) {
                 const ts = LEADER_STYLES[TURRET_LABEL_TO_TARGET[tLabel]] || LEADER_STYLES["Castle"];
                 bg = ts.bg; border = `1.5px solid ${ts.border}`;
               }
-              else if (isLeader) { bg = leaderStyle.bg; border = `1.5px solid ${leaderStyle.border}`; }
-              else if (assignment?.type === "friendly") { bg = "linear-gradient(135deg,#0d2e52,#0a3d6e)"; border = `1.5px solid ${C.blue}`; }
+              else if (isLeader) {
+                // Background from target style, border from KvK alliance if set
+                bg = leaderStyle.bg;
+                border = kvkCol ? `2px solid ${kvkCol}` : `1.5px solid ${leaderStyle.border}`;
+              }
+              else if (assignment?.type === "friendly") {
+                if (kvkCol) {
+                  bg = `linear-gradient(135deg, ${kvkCol}22, ${kvkCol}3a)`;
+                  border = `1.5px solid ${kvkCol}99`;
+                } else {
+                  bg = "linear-gradient(135deg,#0d2e52,#0a3d6e)";
+                  border = `1.5px solid ${C.blue}`;
+                }
+              }
               else if (assignment?.type === "enemy") { bg = "linear-gradient(135deg,#3a0d0d,#520a0a)"; border = `1.5px solid ${C.red}`; }
               else { bg = "rgba(180,192,205,0.55)"; border = "1px solid rgba(160,175,190,0.5)"; }
               if (isSelected) border = `2px solid ${C.accent}`;
@@ -1206,8 +1287,8 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
                         ? (col) => <TurretIcon color={col} letter={target.slice(8,9)} size={turretSize} />
                         : null;
                     const ls = isLeader ? (LEADER_STYLES[target] || LEADER_STYLES["Castle"]) : null;
-                    const pillBg = isLeader ? ls.pill : "rgba(160,210,255,0.95)";
-                    const pillText = isLeader ? ls.text : "#071830";
+                    const pillBg = isLeader ? ls.pill : (kvkCol ? `${kvkCol}dd` : "rgba(160,210,255,0.95)");
+                    const pillText = isLeader ? ls.text : (kvkCol ? "#050505" : "#071830");
                     return (
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, width: "100%", padding: "2px 2px" }}>
                         <span style={{
@@ -1272,7 +1353,8 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
               bg: s.bg, border: s.border,
               label: k === "Castle" ? "Leader·🏰" : `Leader·${k.slice(8,9)}`
             })),
-            { bg: "linear-gradient(135deg,#0d2e52,#0a3d6e)", border: C.blue,   label: "Joiner" },
+            { bg: "linear-gradient(135deg,#0d2e52,#0a3d6e)", border: C.blue, label: "Joiner" },
+            ...kvkAlliances.map(a => ({ bg: `linear-gradient(135deg, ${a.color}22, ${a.color}3a)`, border: `${a.color}99`, label: a.name })),
             { bg: "linear-gradient(135deg,#3a0d0d,#520a0a)", border: C.red,    label: "Enemy" },
           ].map(({ bg, border, label }) => (
             <div key={label} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: C.textDim }}>
@@ -1448,6 +1530,7 @@ function App() {
   const [assignments, setAssignments] = useState({});
   const [alliances, setAlliances]   = useState(DEFAULT_ALLIANCES);
   const [teams, setTeams]           = useState(DEFAULT_TEAMS);
+  const [kvkAlliances, setKvkAlliances] = useState(DEFAULT_KVK_ALLIANCES);
   const [tab, setTab]               = useState("map");
   const [filterRole, setFilterRole] = useState("all");
   const [filterAlliance, setFilterAlliance] = useState("");
@@ -1467,6 +1550,7 @@ function App() {
   // Keep module-level color maps in sync
   _allianceColorMap = Object.fromEntries(alliances.map(a => [a.name, a.color]));
   _teamColorMap = Object.fromEntries(teams.map(t => [t.name, t.color]));
+  _kvkAllianceColorMap = Object.fromEntries(kvkAlliances.map(a => [a.name, a.color]));
 
   // ── Firebase listeners ─────────────────────────────────────────────────
   useEffect(() => {
@@ -1498,11 +1582,19 @@ function App() {
     };
     db.ref("teams").on("value", teamsHandler);
 
+    const kvkAlliancesHandler = snap => {
+      const data = snap.val();
+      if (data) setKvkAlliances(Array.isArray(data) ? data : Object.values(data));
+      else db.ref("kvkAlliances").set(DEFAULT_KVK_ALLIANCES);
+    };
+    db.ref("kvkAlliances").on("value", kvkAlliancesHandler);
+
     return () => {
       db.ref("members").off("value", membersHandler);
       db.ref("assignments").off("value", assignmentsHandler);
       db.ref("alliances").off("value", alliancesHandler);
       db.ref("teams").off("value", teamsHandler);
+      db.ref("kvkAlliances").off("value", kvkAlliancesHandler);
     };
   }, []);
 
@@ -1592,6 +1684,20 @@ function App() {
   function updateTeamColor(name, color) {
     if (!requireEdit()) return;
     db.ref("teams").set(teams.map(t => t.name === name ? { ...t, color } : t));
+  }
+  function addKvkAlliance(name, color) {
+    if (!requireEdit()) return;
+    if (kvkAlliances.some(a => a.name.toLowerCase() === name.toLowerCase())) return;
+    db.ref("kvkAlliances").set([...kvkAlliances, { name, color }]);
+  }
+  function removeKvkAlliance(name) {
+    if (!requireEdit()) return;
+    db.ref("kvkAlliances").set(kvkAlliances.filter(a => a.name !== name));
+    members.forEach(m => { if (m.kvkAlliance === name) db.ref(`members/${m.id}`).update({ kvkAlliance: "" }); });
+  }
+  function updateKvkAllianceColor(name, color) {
+    if (!requireEdit()) return;
+    db.ref("kvkAlliances").set(kvkAlliances.map(a => a.name === name ? { ...a, color } : a));
   }
   function clearAllMembers() {
     if (!requireEdit()) return;
@@ -1762,6 +1868,7 @@ function App() {
               <CsvUploadButton onImport={importMembers} />
               <AllianceManager alliances={alliances} onAdd={addAlliance} onRemove={removeAlliance} onColorChange={updateAllianceColor} />
               <TeamManager teams={teams} onAdd={addTeam} onRemove={removeTeam} onColorChange={updateTeamColor} />
+              <KvkAllianceManager kvkAlliances={kvkAlliances} onAdd={addKvkAlliance} onRemove={removeKvkAlliance} onColorChange={updateKvkAllianceColor} />
               <button onClick={clearAllMembers} style={{ ...btnSt, background: "rgba(248,113,113,0.15)", color: C.red, padding: "7px 20px", fontWeight: 700, fontSize: 13, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif", letterSpacing: 0.5, border: `1px solid ${C.red}33` }}>
                 🗑 Clear All
               </button>
@@ -1795,24 +1902,24 @@ function App() {
               <div>
                 {filtered.length === 0 && <div style={{ textAlign: "center", color: C.textDim, padding: 40 }}>No members match filters</div>}
                 {filtered.map(m => (
-                  <MemberCard key={m.id} m={m} alliances={alliances} teams={teams} onUpdate={updateMember} onDelete={deleteMember} />
+                  <MemberCard key={m.id} m={m} alliances={alliances} teams={teams} kvkAlliances={kvkAlliances} onUpdate={updateMember} onDelete={deleteMember} />
                 ))}
               </div>
             ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", background: C.panel, borderRadius: 10, overflow: "hidden" }}>
+            <div style={{ overflowX: "auto", overflowY: "auto", maxHeight: "calc(100vh - 200px)", borderRadius: 10 }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", background: C.panel, borderRadius: 10 }}>
                 <thead>
                   <tr style={{ background: "#0a1820" }}>
-                    {[["name","Name"],["tc","TC"],["available","Avail."],["role","Role"],["alliance","Alliance"],["team","Team"],["primaryTarget","Primary Target"],["notes","Notes"],[null,"Actions"]].map(([k, label]) => (
-                      <th key={label} style={thSt} onClick={() => k && toggleSort(k)}>{label}{k && sortKey === k ? (sortDir === 1 ? " ↑" : " ↓") : ""}</th>
+                    {[["name","Name"],["tc","TC"],["available","Avail."],["role","Role"],["alliance","Alliance"],["kvkAlliance","KvK Alliance"],["team","Team"],["primaryTarget","Primary Target"],["notes","Notes"],[null,"Actions"]].map(([k, label]) => (
+                      <th key={label} style={{ ...thSt, position: "sticky", top: 0, background: "#0a1820", zIndex: 10, boxShadow: "0 1px 0 rgba(255,255,255,0.08)" }} onClick={() => k && toggleSort(k)}>{label}{k && sortKey === k ? (sortDir === 1 ? " ↑" : " ↓") : ""}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map(m => (
-                    <MemberRow key={m.id} m={m} alliances={alliances} teams={teams} onUpdate={updateMember} onDelete={deleteMember} />
+                    <MemberRow key={m.id} m={m} alliances={alliances} teams={teams} kvkAlliances={kvkAlliances} onUpdate={updateMember} onDelete={deleteMember} />
                   ))}
-                  {!filtered.length && <tr><td colSpan={9} style={{ padding: 40, textAlign: "center", color: C.textDim }}>No members match filters</td></tr>}
+                  {!filtered.length && <tr><td colSpan={10} style={{ padding: 40, textAlign: "center", color: C.textDim }}>No members match filters</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -1836,7 +1943,7 @@ function App() {
               borderRadius: 18, padding: isMobile ? 10 : 20,
               boxShadow: "0 8px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07)",
             }}>
-              <CastleMap members={members} assignments={assignments} setAssignments={fbSetAssignments} isMobile={isMobile} viewportWidth={windowWidth} />
+              <CastleMap members={members} assignments={assignments} setAssignments={fbSetAssignments} isMobile={isMobile} viewportWidth={windowWidth} kvkAlliances={kvkAlliances} />
             </div>
 
             {/* Join Rally + Garrison Support side by side, then strategy guide */}
