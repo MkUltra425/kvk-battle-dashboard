@@ -1097,12 +1097,87 @@ function isCastleWall(r, c) { return isCastle(r, c) && !isTurret(r, c) && !isCas
 function isTurret(r, c) { return TURRETS.some(t => t.r === r && t.c === c); }
 function getTurretLabel(r, c) { return TURRETS.find(t => t.r === r && t.c === c)?.label || null; }
 
+// ── Member Tab Summary ────────────────────────────────────────────────────
+function MemberSummary({ members, alliances, kvkAlliances }) {
+  const total = members.length;
+
+  const availGroups = [
+    { label: "Full",     color: C.green,  count: members.filter(m => m.available === "Full").length },
+    { label: "1st Half", color: C.blue,   count: members.filter(m => m.available === "1st Half").length },
+    { label: "2nd Half", color: C.gold,   count: members.filter(m => m.available === "2nd Half").length },
+    { label: "On/Off",   color: "#ff8040", count: members.filter(m => m.available === "On/Off").length },
+    { label: "None",     color: C.textDim, count: members.filter(m => m.available === "None").length },
+  ].filter(g => g.count > 0);
+
+  const tcGroups = [
+    { label: "TG3", color: "#fbbf24", count: members.filter(m => m.tc === "TG3").length },
+    { label: "TG2", color: "#60a5fa", count: members.filter(m => m.tc === "TG2").length },
+    { label: "TG1", color: "#a78bfa", count: members.filter(m => m.tc === "TG1").length },
+    { label: "Sub", color: C.textDim,  count: members.filter(m => m.tc && !m.tc.startsWith("TG")).length },
+  ].filter(g => g.count > 0);
+
+  const kvkGroups = [
+    ...kvkAlliances.map(a => ({ label: a.name, color: _kvkAllianceColorMap[a.name] || C.textDim, count: members.filter(m => m.kvkAlliance === a.name).length })),
+    { label: "Unassigned", color: C.textDim, count: members.filter(m => !m.kvkAlliance).length },
+  ].filter(g => g.count > 0);
+
+  const leaders = members.filter(m => m.role === "Rally Leader").length;
+  const joiners = members.filter(m => m.role === "Rally Joiner").length;
+  const confirmed = members.filter(m => m.available !== "None").length;
+
+  const StatGroup = ({ title, items }) => (
+    <div style={{ flex: "1 1 0" }}>
+      <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6, fontFamily: "'Roboto Condensed',sans-serif", fontWeight: 700 }}>{title}</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        {items.map(g => (
+          <div key={g.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ flex: 1, background: "rgba(255,255,255,0.07)", borderRadius: 99, height: 5, overflow: "hidden" }}>
+              <div style={{ width: `${total > 0 ? (g.count / total) * 100 : 0}%`, height: "100%", background: g.color, borderRadius: 99, boxShadow: `0 0 4px ${g.color}88`, transition: "width 0.4s ease" }} />
+            </div>
+            <span style={{ fontSize: 10, color: g.color, fontWeight: 700, minWidth: 24, textAlign: "right", fontFamily: "'Roboto Condensed',sans-serif" }}>{g.count}</span>
+            <span style={{ fontSize: 9, color: C.textDim, minWidth: 50 }}>{g.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ background: "rgba(255,255,255,0.05)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 14, padding: "14px 18px", marginBottom: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.07)" }}>
+      {/* Top row — headline numbers */}
+      <div style={{ display: "flex", gap: 20, marginBottom: 14, paddingBottom: 12, borderBottom: "1px solid rgba(255,255,255,0.07)", flexWrap: "wrap" }}>
+        {[
+          { label: "Total", value: total, color: C.text },
+          { label: "Confirmed", value: confirmed, color: C.green, sub: `${total > 0 ? Math.round(confirmed/total*100) : 0}%` },
+          { label: "Leaders", value: leaders, color: C.gold },
+          { label: "Joiners", value: joiners, color: C.blue },
+        ].map(s => (
+          <div key={s.label} style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+              <span style={{ fontFamily: "'Bebas Neue'", fontSize: 22, color: s.color, lineHeight: 1, letterSpacing: 1 }}>{s.value}</span>
+              {s.sub && <span style={{ fontSize: 10, color: s.color, fontWeight: 700 }}>{s.sub}</span>}
+            </div>
+            <span style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8 }}>{s.label}</span>
+          </div>
+        ))}
+      </div>
+      {/* Breakdown bars */}
+      <div style={{ display: "flex", gap: 24 }}>
+        <StatGroup title="Availability" items={availGroups} />
+        <div style={{ width: 1, background: "rgba(255,255,255,0.07)", flexShrink: 0 }} />
+        <StatGroup title="TC Level" items={tcGroups} />
+        <div style={{ width: 1, background: "rgba(255,255,255,0.07)", flexShrink: 0 }} />
+        <StatGroup title="KvK Alliance" items={kvkGroups} />
+      </div>
+    </div>
+  );
+}
+
 // ── Roster Progress Bars ──────────────────────────────────────────────────
-function RosterProgress({ members, kvkAlliances }) {
+function RosterProgress({ members, kvkAlliances, assignments, mapOnly }) {
   const isFull    = m => m.available === "Full";
   const isActive  = m => m.available === "Full" || m.available === "1st Half";
   const isTG1Plus = m => m.tc && m.tc.startsWith("TG");
-  const isTG2Plus = m => m.tc && ["TG2","TG3","TG4","TG5","TG6","TG7","TG8"].includes(m.tc);
   const isTG3     = m => m.tc === "TG3";
   const isWAR     = m => m.kvkAlliance === "WAR";
   const isMKP     = m => m.kvkAlliance === "MKP";
@@ -1110,104 +1185,134 @@ function RosterProgress({ members, kvkAlliances }) {
   const warColor = kvkAlliances.find(a => a.name === "WAR")?.color || "#fbbf24";
   const mkpColor = kvkAlliances.find(a => a.name === "MKP")?.color || "#60a5fa";
 
+  // Map placement — members whose ID appears in a named (non-placeholder) tile
+  const assignedIds = new Set(
+    Object.values(assignments || {})
+      .filter(a => a.type === "friendly" && !a.placeholder && a.member?.id)
+      .map(a => a.member.id)
+  );
+  const warOnMap  = members.filter(m => isWAR(m) && assignedIds.has(m.id)).length;
+  const mkpOnMap  = members.filter(m => isMKP(m) && assignedIds.has(m.id)).length;
+  const warTotal  = members.filter(m => isWAR(m)).length;
+  const mkpTotal  = members.filter(m => isMKP(m)).length;
+
   const squads = [
     {
       name: "WAR", color: warColor, subtitle: "Assault · 4 Rallies",
+      onMap: warOnMap, total: warTotal,
       rows: [
-        {
-          label: "Rally Leaders",
-          note: "Full avail · TG1+",
-          have: members.filter(m => isWAR(m) && isFull(m) && m.role === "Rally Leader" && isTG1Plus(m)).length,
-          need: 4,
-        },
-        {
-          label: "Rally Joiners",
-          note: "Full/1st Half · TG1+",
-          have: members.filter(m => isWAR(m) && isActive(m) && m.role === "Rally Joiner" && isTG1Plus(m)).length,
-          need: 28,
-        },
-        {
-          label: "Turret Hold N & S",
-          note: "Primary target = N or S",
-          have: members.filter(m => isWAR(m) && ["Turret (N)","Turret (S)"].includes(m.primaryTarget)).length,
-          need: 8,
-        },
+        { label: "Rally Leaders", note: "Full only · TG1+",     have: members.filter(m => isWAR(m) && isFull(m) && m.role === "Rally Leader" && isTG1Plus(m)).length, need: 4 },
+        { label: "Rally Joiners", note: "Full/1st Half · TG1+", have: members.filter(m => isWAR(m) && isActive(m) && m.role === "Rally Joiner" && isTG1Plus(m)).length, need: 28 },
+        { label: "Turret N & S",  note: "Primary target N or S",have: members.filter(m => isWAR(m) && ["Turret (N)","Turret (S)"].includes(m.primaryTarget)).length, need: 8 },
       ],
     },
     {
       name: "MKP", color: mkpColor, subtitle: "Garrison · 2 Squads",
+      onMap: mkpOnMap, total: mkpTotal,
       rows: [
-        {
-          label: "Garrison Core",
-          note: "TG3 · Castle target",
-          have: members.filter(m => isMKP(m) && isTG3(m) && m.primaryTarget === "Castle").length,
-          need: 15,
-        },
-        {
-          label: "Turret Hold E & W",
-          note: "Primary target = E or W",
-          have: members.filter(m => isMKP(m) && ["Turret (E)","Turret (W)"].includes(m.primaryTarget)).length,
-          need: 7,
-        },
+        { label: "Garrison Core", note: "TG3 · Castle target",  have: members.filter(m => isMKP(m) && isTG3(m) && m.primaryTarget === "Castle").length, need: 15 },
+        { label: "Turret E & W",  note: "Primary target E or W",have: members.filter(m => isMKP(m) && ["Turret (E)","Turret (W)"].includes(m.primaryTarget)).length, need: 7 },
       ],
     },
   ];
 
-  const totalWAR = members.filter(m => isWAR(m)).length;
-  const totalMKP = members.filter(m => isMKP(m)).length;
+  // Overall readiness %
+  const totalHave = squads.reduce((s, sq) => s + sq.rows.reduce((a, r) => a + Math.min(r.have, r.need), 0), 0);
+  const totalNeed = squads.reduce((s, sq) => s + sq.rows.reduce((a, r) => a + r.need, 0), 0);
+  const readinessPct = Math.round((totalHave / totalNeed) * 100);
+  const readyColor = readinessPct >= 90 ? C.green : readinessPct >= 60 ? C.gold : C.red;
+
+  // Warnings
+  const warnings = [];
+  const warLeadersUnreliable = members.filter(m => isWAR(m) && m.role === "Rally Leader" && !isActive(m));
+  if (warLeadersUnreliable.length) warnings.push({ color: C.red,  msg: `${warLeadersUnreliable.length} WAR Rally Leader${warLeadersUnreliable.length > 1 ? "s" : ""} have unreliable availability (${warLeadersUnreliable.map(m => m.name).join(", ")})` });
+  const mkpUnconfirmed = members.filter(m => isMKP(m) && isTG3(m) && m.available === "None");
+  if (mkpUnconfirmed.length) warnings.push({ color: C.gold, msg: `${mkpUnconfirmed.length} MKP TG3 player${mkpUnconfirmed.length > 1 ? "s" : ""} haven't confirmed availability yet` });
+  if (warTotal > 0 && warOnMap < warTotal * 0.5) warnings.push({ color: C.gold, msg: `Only ${warOnMap} of ${warTotal} WAR players are placed on the map — drag from UNPOSITIONED to fill tiles` });
+  if (mkpTotal > 0 && mkpOnMap < mkpTotal * 0.5) warnings.push({ color: C.gold, msg: `Only ${mkpOnMap} of ${mkpTotal} MKP players are placed on the map` });
 
   return (
     <div style={{ marginBottom: 14 }}>
+      {/* Overall readiness — full view only */}
+      {!mapOnly && (
+      <div style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${readyColor}44`, borderRadius: 10, padding: "10px 14px", marginBottom: 10, display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: 1, fontFamily: "'Roboto Condensed',sans-serif" }}>Overall Readiness</span>
+            <span style={{ fontSize: 16, fontWeight: 800, color: readyColor, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1 }}>{readinessPct}%</span>
+          </div>
+          <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 99, height: 7, overflow: "hidden" }}>
+            <div style={{ width: `${readinessPct}%`, height: "100%", background: `linear-gradient(90deg, ${readyColor}aa, ${readyColor})`, borderRadius: 99, transition: "width 0.5s ease", boxShadow: `0 0 10px ${readyColor}66` }} />
+          </div>
+        </div>
+        <div style={{ fontSize: 11, fontWeight: 800, color: readyColor, flexShrink: 0, fontFamily: "'Roboto Condensed',sans-serif" }}>
+          {readinessPct >= 90 ? "✓ Battle Ready" : readinessPct >= 60 ? "⚠ Nearly Ready" : "✗ Not Ready"}
+        </div>
+      </div>
+      )}
+
+      {/* Squad cards */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         {squads.map(sq => (
-          <div key={sq.name} style={{
-            background: "rgba(255,255,255,0.05)",
-            backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
-            border: `1px solid ${sq.color}44`,
-            borderRadius: 12, padding: "12px 14px",
-            boxShadow: `0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.07)`,
-          }}>
+          <div key={sq.name} style={{ background: "rgba(255,255,255,0.05)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", border: `1px solid ${sq.color}44`, borderRadius: 12, padding: "12px 14px", boxShadow: `0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.07)` }}>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
                 <span style={{ fontFamily: "'Bebas Neue'", fontSize: 17, color: sq.color, letterSpacing: 1 }}>{sq.name}</span>
                 <span style={{ fontSize: 10, color: C.textDim }}>{sq.subtitle}</span>
               </div>
-              <span style={{ fontSize: 10, color: sq.color, fontWeight: 700, fontFamily: "'Roboto Condensed',sans-serif" }}>
-                {sq.name === "WAR" ? totalWAR : totalMKP} assigned
-              </span>
+              <span style={{ fontSize: 10, color: sq.color, fontWeight: 700, fontFamily: "'Roboto Condensed',sans-serif" }}>{sq.total} assigned</span>
             </div>
-            {sq.rows.map(row => {
+
+            {/* Role bars — full view only */}
+            {!mapOnly && sq.rows.map(row => {
               const pct = Math.min(row.have / row.need, 1);
               const done = row.have >= row.need;
               const col = done ? C.green : sq.color;
+              const gap = row.need - row.have;
               return (
-                <div key={row.label} style={{ marginBottom: 9 }}>
+                <div key={row.label} style={{ marginBottom: 10 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
-                    <div>
-                      <span style={{ fontSize: 10, color: C.text, fontWeight: 600 }}>{row.label}</span>
-                      <span style={{ fontSize: 9, color: C.textDim, marginLeft: 5 }}>({row.note})</span>
-                    </div>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: col, fontFamily: "'Roboto Condensed',sans-serif", flexShrink: 0, marginLeft: 8 }}>
-                      {row.have}/{row.need}{done ? " ✓" : ""}
-                    </span>
+                    <span style={{ fontSize: 10, color: C.text, fontWeight: 600 }}>{row.label}</span>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: col, fontFamily: "'Roboto Condensed',sans-serif", flexShrink: 0, marginLeft: 8 }}>{row.have}/{row.need}{done ? " ✓" : ""}</span>
                   </div>
-                  <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 99, height: 6, overflow: "hidden" }}>
-                    <div style={{
-                      width: `${pct * 100}%`, height: "100%",
-                      background: done
-                        ? `linear-gradient(90deg, ${C.green}cc, ${C.green})`
-                        : `linear-gradient(90deg, ${col}88, ${col})`,
-                      borderRadius: 99,
-                      boxShadow: done ? `0 0 8px ${C.green}88` : `0 0 6px ${col}44`,
-                      transition: "width 0.5s ease",
-                    }} />
+                  <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 99, height: 6, overflow: "hidden", marginBottom: 3 }}>
+                    <div style={{ width: `${pct * 100}%`, height: "100%", background: done ? `linear-gradient(90deg, ${C.green}cc, ${C.green})` : `linear-gradient(90deg, ${col}88, ${col})`, borderRadius: 99, boxShadow: done ? `0 0 8px ${C.green}88` : `0 0 6px ${col}44`, transition: "width 0.5s ease" }} />
                   </div>
+                  {!done && <div style={{ fontSize: 9, color: C.red, fontStyle: "italic" }}>Need {gap} more · {row.note}</div>}
                 </div>
               );
             })}
+
+            {/* Map placement — always shown */}
+            <div style={{ borderTop: mapOnly ? "none" : "1px solid rgba(255,255,255,0.07)", paddingTop: mapOnly ? 0 : 8, marginTop: mapOnly ? 0 : 4 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+                <span style={{ fontSize: 10, color: C.textDim, fontWeight: 600 }}>Map Placement</span>
+                <span style={{ fontSize: 11, fontWeight: 800, fontFamily: "'Roboto Condensed',sans-serif", color: sq.onMap === sq.total && sq.total > 0 ? C.green : sq.color }}>
+                  {sq.onMap}/{sq.total} · {sq.total > 0 ? Math.round(sq.onMap / sq.total * 100) : 0}%
+                </span>
+              </div>
+              <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 99, height: 6, overflow: "hidden", marginBottom: 3 }}>
+                <div style={{ width: sq.total > 0 ? `${(sq.onMap / sq.total) * 100}%` : "0%", height: "100%", background: sq.onMap === sq.total && sq.total > 0 ? `linear-gradient(90deg, ${C.green}cc, ${C.green})` : `linear-gradient(90deg, ${sq.color}88, ${sq.color})`, borderRadius: 99, transition: "width 0.5s ease" }} />
+              </div>
+              {sq.onMap < sq.total && sq.total > 0 && (
+                <div style={{ fontSize: 9, color: C.textDim, fontStyle: "italic" }}>{sq.total - sq.onMap} tagged but not yet placed on map</div>
+              )}
+            </div>
           </div>
         ))}
       </div>
+
+      {/* Warnings — full view only */}
+      {!mapOnly && warnings.length > 0 && (
+        <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 4 }}>
+          {warnings.map((w, i) => (
+            <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", background: w.color + "11", border: `1px solid ${w.color}33`, borderRadius: 8, padding: "6px 10px" }}>
+              <span style={{ color: w.color, fontSize: 11, flexShrink: 0 }}>⚠</span>
+              <span style={{ fontSize: 10, color: C.textDim, lineHeight: 1.5 }}>{w.msg}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -1240,6 +1345,14 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
   }
   function assignEnemy(r, c, data) {
     setAssignments(p => ({ ...p, [key(r, c)]: { type: "enemy", ...data } }));
+    setModal(null);
+  }
+  function assignPlaceholder(r, c, ph) {
+    if (ph.isEnemy) {
+      setAssignments(p => ({ ...p, [key(r, c)]: { type: "enemy", placeholder: true, name: "ENM", kingdom: "", threat: "Rally", notes: "" } }));
+    } else {
+      setAssignments(p => ({ ...p, [key(r, c)]: { type: "friendly", placeholder: true, kvkAlliance: ph.kvkAlliance, tc: ph.tc } }));
+    }
     setModal(null);
   }
   function clearTile(r, c) {
@@ -1353,30 +1466,32 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
               }
               let bg, border;
               const isLeader = assignment?.type === "friendly" && assignment.member.role === "Rally Leader";
-              const leaderTarget = isLeader ? (assignment.member.primaryTarget || "Castle") : null;
+              const isPlaceholder = assignment?.placeholder === true;
+              const leaderTarget = isLeader && !isPlaceholder ? (assignment.member?.primaryTarget || "Castle") : null;
               const leaderStyle = leaderTarget ? (LEADER_STYLES[leaderTarget] || LEADER_STYLES["Castle"]) : null;
-              // KvK alliance color — applies to all friendly tiles
+              // KvK alliance color — named tiles use member field, placeholders use direct field
               const kvkCol = assignment?.type === "friendly"
-                ? (_kvkAllianceColorMap[assignment.member.kvkAlliance] || null)
+                ? (isPlaceholder
+                    ? (_kvkAllianceColorMap[assignment.kvkAlliance] || null)
+                    : (_kvkAllianceColorMap[assignment.member?.kvkAlliance] || null))
                 : null;
               if (dimmed) { bg = "rgba(255,255,255,0.03)"; border = "1px solid rgba(255,255,255,0.05)"; }
               else if (turret) {
                 const ts = LEADER_STYLES[TURRET_LABEL_TO_TARGET[tLabel]] || LEADER_STYLES["Castle"];
                 bg = ts.bg; border = `1.5px solid ${ts.border}`;
               }
+              else if (assignment?.type === "friendly" && isPlaceholder) {
+                const phCol = kvkCol || "#6b7280";
+                bg = `linear-gradient(135deg, ${phCol}14, ${phCol}22)`;
+                border = `1.5px dashed ${phCol}99`;
+              }
               else if (isLeader) {
-                // Background from target style, border from KvK alliance if set
                 bg = leaderStyle.bg;
                 border = kvkCol ? `2px solid ${kvkCol}` : `1.5px solid ${leaderStyle.border}`;
               }
               else if (assignment?.type === "friendly") {
-                if (kvkCol) {
-                  bg = `linear-gradient(135deg, ${kvkCol}22, ${kvkCol}3a)`;
-                  border = `1.5px solid ${kvkCol}99`;
-                } else {
-                  bg = "linear-gradient(135deg,#0d2e52,#0a3d6e)";
-                  border = `1.5px solid ${C.blue}`;
-                }
+                if (kvkCol) { bg = `linear-gradient(135deg, ${kvkCol}22, ${kvkCol}3a)`; border = `1.5px solid ${kvkCol}99`; }
+                else { bg = "linear-gradient(135deg,#0d2e52,#0a3d6e)"; border = `1.5px solid ${C.blue}`; }
               }
               else if (assignment?.type === "enemy") { bg = "linear-gradient(135deg,#3a0d0d,#520a0a)"; border = `1.5px solid ${C.red}`; }
               else { bg = "rgba(180,192,205,0.55)"; border = "1px solid rgba(160,175,190,0.5)"; }
@@ -1405,7 +1520,9 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
                     setDragOverTile(null);
                     if (castle || dimmed) return;
                     const memberId = parseInt(e.dataTransfer.getData("memberId"));
+                    const phStr = e.dataTransfer.getData("placeholder");
                     if (memberId) assignFriendly(r, c, memberId);
+                    else if (phStr) assignPlaceholder(r, c, JSON.parse(phStr));
                   }}
                   style={{
                     position: "absolute", left: x, top: y, width: TILE, height: TILE,
@@ -1419,7 +1536,16 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
                     const ts = LEADER_STYLES[TURRET_LABEL_TO_TARGET[tLabel]] || LEADER_STYLES["Castle"];
                     return <span style={{ fontSize: 9, fontWeight: 800, color: ts.border, textAlign: "center", lineHeight: 1.2, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif", letterSpacing: 0.5, textTransform: "uppercase", textShadow: `0 0 6px ${ts.border}88` }}>{tLabel}</span>;
                   })()}
-                  {!turret && !dimmed && assignment?.type === "friendly" && (() => {
+                  {!turret && !dimmed && assignment?.type === "friendly" && isPlaceholder && (() => {
+                    const phCol = kvkCol || "#9ca3af";
+                    return (
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "2px" }}>
+                        <span style={{ fontSize: isMobile ? 7 : 9, fontWeight: 700, color: phCol, fontFamily: "'Roboto Condensed',sans-serif", lineHeight: 1, textAlign: "center" }}>{assignment.tc}</span>
+                        <span style={{ fontSize: isMobile ? 6 : 8, fontWeight: 600, color: phCol + "cc", fontFamily: "'Roboto Condensed',sans-serif", lineHeight: 1 }}>{assignment.kvkAlliance}</span>
+                      </div>
+                    );
+                  })()}
+                  {!turret && !dimmed && assignment?.type === "friendly" && !isPlaceholder && (() => {
                     const full = assignment.member.name;
                     const display = full.length > 10 ? full.slice(0, 10) + "…" : full;
                     const len = display.length;
@@ -1519,6 +1645,56 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
         {modal && (
           <TilePanel modal={modal} members={members} assignments={assignments}
             onFriendly={assignFriendly} onEnemy={assignEnemy} onClear={clearTile} onClose={() => setModal(null)} isMobile={isMobile} />
+        )}
+
+        {/* Placeholder chips */}
+        {!isMobile && (
+          <SideSection title="PLACEHOLDERS">
+            <div style={{ fontSize: 9, color: C.textDim, marginBottom: 8, fontStyle: "italic" }}>Drag onto a tile to reserve a slot</div>
+
+            <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 5 }}>Friendly</div>
+            <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 10 }}>
+              {kvkAlliances.map(a =>
+                ["TG3", "TG2+", "TG1+"].map(tc => {
+                  const col = _kvkAllianceColorMap[a.name] || C.textDim;
+                  return (
+                    <div key={`${a.name}-${tc}`}
+                      draggable
+                      onDragStart={e => {
+                        e.dataTransfer.setData("placeholder", JSON.stringify({ kvkAlliance: a.name, tc }));
+                        e.currentTarget.style.opacity = "0.5";
+                      }}
+                      onDragEnd={e => { e.currentTarget.style.opacity = "1"; }}
+                      style={{
+                        background: col + "18", border: `1.5px dashed ${col}66`,
+                        borderRadius: 6, padding: "4px 8px",
+                        fontSize: 10, fontWeight: 700, color: col,
+                        cursor: "grab", userSelect: "none", lineHeight: 1.4,
+                      }}>
+                      {tc} {a.name}
+                    </div>
+                  );
+                })
+              ).flat()}
+            </div>
+
+            <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 5 }}>Enemy</div>
+            <div
+              draggable
+              onDragStart={e => {
+                e.dataTransfer.setData("placeholder", JSON.stringify({ isEnemy: true }));
+                e.currentTarget.style.opacity = "0.5";
+              }}
+              onDragEnd={e => { e.currentTarget.style.opacity = "1"; }}
+              style={{
+                background: C.redDim, border: `1.5px dashed ${C.red}77`,
+                borderRadius: 6, padding: "4px 10px", display: "inline-block",
+                fontSize: 10, fontWeight: 700, color: C.red,
+                cursor: "grab", userSelect: "none",
+              }}>
+              Enemy
+            </div>
+          </SideSection>
         )}
 
         {/* Unpositioned members — desktop only */}
@@ -2104,7 +2280,7 @@ function App() {
         {/* ── Members ── */}
         {tab === "members" && (
           <div>
-            <RosterProgress members={members} kvkAlliances={kvkAlliances} />
+            <MemberSummary members={members} alliances={alliances} kvkAlliances={kvkAlliances} />
             <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap" }}>
               <AddMemberButton onAdd={addMember} alliances={alliances} />
               <CsvUploadButton onImport={importMembers} />
@@ -2178,7 +2354,7 @@ function App() {
             </div>
 
             {/* Roster progress */}
-            <RosterProgress members={members} kvkAlliances={kvkAlliances} />
+            <RosterProgress members={members} kvkAlliances={kvkAlliances} assignments={assignments} mapOnly={true} />
 
             <div style={{
               background: "rgba(255,255,255,0.04)",
