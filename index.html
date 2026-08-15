@@ -565,7 +565,7 @@ function TilePanel({ modal, members, assignments, onFriendly, onEnemy, onClear, 
   const [sel, setSel] = useState("");
   const [en, setEn] = useState({ name: "", kingdom: "", threat: "Scout", notes: "" });
   const existing = modal?.existing;
-  const assignedIds = new Set(Object.values(assignments).filter(a => a.type === "friendly").map(a => a.member.id));
+  const assignedIds = new Set(Object.values(assignments).filter(a => a.type === "friendly" && !a.placeholder && a.member).map(a => a.member.id));
   if (!modal) return null;
   const panelStyle = isMobile ? {
     position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 200,
@@ -588,9 +588,9 @@ function TilePanel({ modal, members, assignments, onFriendly, onEnemy, onClear, 
       {existing && (
         <div style={{ background: existing.type === "friendly" ? "#0a2a4a" : C.redDim, border: `1px solid ${existing.type === "friendly" ? C.blue : C.red}55`, borderRadius: 6, padding: "8px 12px", marginBottom: 12 }}>
           <div style={{ fontWeight: 700, color: existing.type === "friendly" ? C.blue : C.red, fontSize: 13, marginBottom: 4 }}>
-            {existing.type === "friendly" ? `🤝 ${existing.member.name}` : `⚔ ${existing.name || "Enemy"}`}
+            {existing.type === "friendly" ? `🤝 ${existing.member?.name || "Placeholder"}` : `⚔ ${existing.name || "Enemy"}`}
           </div>
-          {existing.type === "friendly" && <div style={{ fontSize: 11, color: C.textDim }}>{existing.member.role} · {existing.member.alliance}</div>}
+          {existing.type === "friendly" && existing.member && <div style={{ fontSize: 11, color: C.textDim }}>{existing.member.role} · {existing.member.alliance}</div>}
           {existing.type === "enemy" && existing.kingdom && <div style={{ fontSize: 11, color: C.textDim }}>{existing.kingdom} · {existing.threat}</div>}
           <button onClick={() => onClear(modal.r, modal.c)} style={{ ...btnSt, background: C.redDim, color: C.red, marginTop: 8, width: "100%", padding: 4, fontSize: 11 }}>Clear Tile</button>
         </div>
@@ -1388,12 +1388,12 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
   // ── Sidebar derived data ──────────────────────────────────────────────────
   const friendlyByAlliance = {};
   Object.values(assignments).filter(a => a.type === "friendly").forEach(a => {
-    const al = a.member.alliance;
+    const al = a.member?.alliance;
     friendlyByAlliance[al] = (friendlyByAlliance[al] || 0) + 1;
   });
   const targetCounts = {};
   members.forEach(m => { targetCounts[m.primaryTarget] = (targetCounts[m.primaryTarget] || 0) + 1; });
-  const assignedMemberIds = new Set(Object.values(assignments).filter(a => a.type === "friendly").map(a => a.member.id));
+  const assignedMemberIds = new Set(Object.values(assignments).filter(a => a.type === "friendly" && !a.placeholder && a.member).map(a => a.member.id));
   const unassignedMembers = members.filter(m => !assignedMemberIds.has(m.id)).sort((a, b) => a.name.localeCompare(b.name));
   const availColorMap = { Full: C.green, "1st Half": C.blue, "2nd Half": C.gold, "On/Off": C.red };
   const targetColorMap = { Castle: C.accent, "Turret (N)": "#20d0d0", "Turret (E)": "#c060ff", "Turret (S)": "#ff8040", "Turret (W)": "#40c080" };
@@ -1462,10 +1462,10 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
               if (filter === "unassigned" && assignment) dimmed = true;
               if (filter.startsWith("kvk:")) {
                 const kvkName = filter.slice(4);
-                if (!assignment || assignment.type !== "friendly" || assignment.member.kvkAlliance !== kvkName) dimmed = true;
+                if (!assignment || assignment.type !== "friendly" || assignment.member?.kvkAlliance !== kvkName) dimmed = true;
               }
               let bg, border;
-              const isLeader = assignment?.type === "friendly" && assignment.member.role === "Rally Leader";
+              const isLeader = assignment?.type === "friendly" && !assignment.placeholder && assignment.member?.role === "Rally Leader";
               const isPlaceholder = assignment?.placeholder === true;
               const leaderTarget = isLeader && !isPlaceholder ? (assignment.member?.primaryTarget || "Castle") : null;
               const leaderStyle = leaderTarget ? (LEADER_STYLES[leaderTarget] || LEADER_STYLES["Castle"]) : null;
@@ -1545,7 +1545,7 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
                       </div>
                     );
                   })()}
-                  {!turret && !dimmed && assignment?.type === "friendly" && !isPlaceholder && (() => {
+                  {!turret && !dimmed && assignment?.type === "friendly" && !isPlaceholder && assignment.member && (() => {
                     const full = assignment.member.name;
                     const display = full.length > 10 ? full.slice(0, 10) + "…" : full;
                     const len = display.length;
@@ -1842,9 +1842,20 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
         }}>
           {hover.a.type === "friendly" ? (
             <>
-              <div style={{ fontWeight: 800, color: hover.a.member.role === "Rally Leader" ? C.gold : C.blue, marginBottom: 5 }}>{hover.a.member.name}</div>
-              <div style={{ color: C.textDim, marginBottom: 2 }}>Role: <span style={{ color: C.text }}>{hover.a.member.role}</span></div>
-              <div style={{ color: C.textDim }}>Alliance: <span style={{ color: allianceColor(hover.a.member.alliance) }}>{hover.a.member.alliance || "—"}</span></div>
+              {hover.a.placeholder ? (
+                <>
+                  <div style={{ fontWeight: 800, color: _kvkAllianceColorMap[hover.a.kvkAlliance] || C.textDim, marginBottom: 5 }}>
+                    {hover.a.tc} — {hover.a.kvkAlliance || "Unassigned"}
+                  </div>
+                  <div style={{ color: C.textDim, fontSize: 11, fontStyle: "italic" }}>Placeholder slot</div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontWeight: 800, color: hover.a.member?.role === "Rally Leader" ? C.gold : C.blue, marginBottom: 5 }}>{hover.a.member?.name || "—"}</div>
+                  <div style={{ color: C.textDim, marginBottom: 2 }}>Role: <span style={{ color: C.text }}>{hover.a.member?.role || "—"}</span></div>
+                  <div style={{ color: C.textDim }}>Alliance: <span style={{ color: allianceColor(hover.a.member?.alliance) }}>{hover.a.member?.alliance || "—"}</span></div>
+                </>
+              )}
             </>
           ) : (
             <>
@@ -2044,7 +2055,7 @@ function App() {
     db.ref(`members/${id}`).remove();
     const updates = {};
     Object.keys(assignments).forEach(k => {
-      if (assignments[k].type === "friendly" && assignments[k].member.id === id)
+      if (assignments[k].type === "friendly" && !assignments[k].placeholder && assignments[k].member?.id === id)
         updates[`assignments/${toFbKey(k)}`] = null;
     });
     if (Object.keys(updates).length) db.ref().update(updates);
