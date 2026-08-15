@@ -1394,7 +1394,7 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
   const targetCounts = {};
   members.forEach(m => { targetCounts[m.primaryTarget] = (targetCounts[m.primaryTarget] || 0) + 1; });
   const assignedMemberIds = new Set(Object.values(assignments).filter(a => a.type === "friendly").map(a => a.member.id));
-  const unassignedMembers = members.filter(m => !assignedMemberIds.has(m.id));
+  const unassignedMembers = members.filter(m => !assignedMemberIds.has(m.id)).sort((a, b) => a.name.localeCompare(b.name));
   const availColorMap = { Full: C.green, "1st Half": C.blue, "2nd Half": C.gold, "On/Off": C.red };
   const targetColorMap = { Castle: C.accent, "Turret (N)": "#20d0d0", "Turret (E)": "#c060ff", "Turret (S)": "#ff8040", "Turret (W)": "#40c080" };
 
