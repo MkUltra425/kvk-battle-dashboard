@@ -215,8 +215,8 @@ function teamColor(t) {
 }
 
 const DEFAULT_KVK_ALLIANCES = [
-  { name: "WAR", color: "#fbbf24" },
-  { name: "MKP", color: "#60a5fa" },
+  { name: "MKP", color: "#fbbf24" },
+  { name: "WFP", color: "#60a5fa" },
 ];
 let _kvkAllianceColorMap = Object.fromEntries(DEFAULT_KVK_ALLIANCES.map(a => [a.name, a.color]));
 function kvkAllianceColor(a) {
@@ -942,9 +942,9 @@ function BattleGuide() {
         <div style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 9, fontWeight: 800, color: C.accent, letterSpacing: 1.5, fontFamily: "'Roboto Condensed',sans-serif", textTransform: "uppercase", marginBottom: 8 }}>Overall Strategy</div>
           {[
-            { badge: "WAR", color: C.gold,  label: "Assault Squad",         desc: "Launch 3–4 synchronized rallies to remove the enemy from the castle." },
-            { badge: "MKP", color: C.green, label: "Castle Garrison Squad",  desc: "Follow directly behind WAR, take control, and reinforce the castle." },
-            { badge: "WAR", color: "#ff8040", label: "Counter-Rally Squad", desc: "Prepare counter-rallies whenever the enemy launches against the castle." },
+            { badge: "MKP", color: C.gold,  label: "Assault Squad",         desc: "Launch 3–4 synchronized rallies to remove the enemy from the castle." },
+            { badge: "WFP", color: C.green, label: "Castle Garrison Squad",  desc: "Follow directly behind MKP, take control, and reinforce the castle." },
+            { badge: "MKP", color: "#ff8040", label: "Counter-Rally Squad", desc: "Prepare counter-rallies whenever the enemy launches against the castle." },
           ].map(r => (
             <div key={r.label} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 7 }}>
               <span style={{ fontSize: 9, fontWeight: 800, color: r.color, background: r.color + "22", border: `1px solid ${r.color}44`, borderRadius: 4, padding: "1px 6px", lineHeight: 1.5, flexShrink: 0, marginTop: 1 }}>{r.badge}</span>
@@ -1017,7 +1017,7 @@ function BattleGuide() {
             { color: C.red,     event: "Enemy controls castle",    action: "MKP begins synchronized assault rallies." },
             { color: C.green,   event: "Castle is cleared",        action: "MKP sends the hold march immediately." },
             { color: "#ff8040", event: "Enemy launches a rally",   action: "WAR prepares a counter-rally and MKP refills." },
-            { color: C.red,     event: "Castle is lost",           action: "Stop solo attacks, reset, and repeat the WAR assault → MKP hold sequence." },
+            { color: C.red,     event: "Castle is lost",           action: "Stop solo attacks, reset, and repeat the MKP assault → WFP hold sequence." },
           ].map(t => (
             <div key={t.event} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 7 }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: t.color, flexShrink: 0, marginTop: 4, boxShadow: `0 0 4px ${t.color}` }} />
@@ -1031,8 +1031,8 @@ function BattleGuide() {
 
         {/* Footer */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 12, textAlign: "center" }}>
-          <span style={{ fontSize: 12, fontWeight: 800, color: C.gold, fontFamily: "'Roboto Condensed',sans-serif", letterSpacing: 0.5 }}>WAR clears and counters. </span>
-          <span style={{ fontSize: 12, fontWeight: 800, color: C.green, fontFamily: "'Roboto Condensed',sans-serif", letterSpacing: 0.5 }}>MKP captures and holds.</span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: C.gold, fontFamily: "'Roboto Condensed',sans-serif", letterSpacing: 0.5 }}>MKP clears and counters. </span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: C.green, fontFamily: "'Roboto Condensed',sans-serif", letterSpacing: 0.5 }}>WFP captures and holds.</span>
         </div>
       </div>
     </div>
@@ -1179,11 +1179,11 @@ function RosterProgress({ members, kvkAlliances, assignments, mapOnly }) {
   const isActive  = m => m.available === "Full" || m.available === "1st Half";
   const isTG1Plus = m => m.tc && m.tc.startsWith("TG");
   const isTG3     = m => m.tc === "TG3";
-  const isWAR     = m => m.kvkAlliance === "WAR";
-  const isMKP     = m => m.kvkAlliance === "MKP";
+  const isWAR     = m => m.kvkAlliance === "MKP";  // MKP = Assault Squad
+  const isMKP     = m => m.kvkAlliance === "WFP";  // WFP = Garrison Squad
 
-  const warColor = kvkAlliances.find(a => a.name === "WAR")?.color || "#fbbf24";
-  const mkpColor = kvkAlliances.find(a => a.name === "MKP")?.color || "#60a5fa";
+  const warColor = kvkAlliances.find(a => a.name === "MKP")?.color || "#fbbf24";
+  const mkpColor = kvkAlliances.find(a => a.name === "WFP")?.color || "#60a5fa";
 
   // Map placement — members whose ID appears in a named (non-placeholder) tile
   const assignedIds = new Set(
@@ -1198,7 +1198,7 @@ function RosterProgress({ members, kvkAlliances, assignments, mapOnly }) {
 
   const squads = [
     {
-      name: "WAR", color: warColor, subtitle: "Assault · 4 Rallies",
+      name: "MKP", color: warColor, subtitle: "Assault Squad · 4 Rallies",
       onMap: warOnMap, total: warTotal,
       rows: [
         { label: "Rally Leaders", note: "Full only · TG1+",     have: members.filter(m => isWAR(m) && isFull(m) && m.role === "Rally Leader" && isTG1Plus(m)).length, need: 4 },
@@ -1207,7 +1207,7 @@ function RosterProgress({ members, kvkAlliances, assignments, mapOnly }) {
       ],
     },
     {
-      name: "MKP", color: mkpColor, subtitle: "Garrison · 2 Squads",
+      name: "WFP", color: mkpColor, subtitle: "Garrison Squad · 2 Squads",
       onMap: mkpOnMap, total: mkpTotal,
       rows: [
         { label: "Garrison Core", note: "TG3 · Castle target",  have: members.filter(m => isMKP(m) && isTG3(m) && m.primaryTarget === "Castle").length, need: 15 },
@@ -1225,11 +1225,11 @@ function RosterProgress({ members, kvkAlliances, assignments, mapOnly }) {
   // Warnings
   const warnings = [];
   const warLeadersUnreliable = members.filter(m => isWAR(m) && m.role === "Rally Leader" && !isActive(m));
-  if (warLeadersUnreliable.length) warnings.push({ color: C.red,  msg: `${warLeadersUnreliable.length} WAR Rally Leader${warLeadersUnreliable.length > 1 ? "s" : ""} have unreliable availability (${warLeadersUnreliable.map(m => m.name).join(", ")})` });
+  if (warLeadersUnreliable.length) warnings.push({ color: C.red,  msg: `${warLeadersUnreliable.length} MKP Rally Leader${warLeadersUnreliable.length > 1 ? "s" : ""} have unreliable availability (${warLeadersUnreliable.map(m => m.name).join(", ")})` });
   const mkpUnconfirmed = members.filter(m => isMKP(m) && isTG3(m) && m.available === "None");
-  if (mkpUnconfirmed.length) warnings.push({ color: C.gold, msg: `${mkpUnconfirmed.length} MKP TG3 player${mkpUnconfirmed.length > 1 ? "s" : ""} haven't confirmed availability yet` });
-  if (warTotal > 0 && warOnMap < warTotal * 0.5) warnings.push({ color: C.gold, msg: `Only ${warOnMap} of ${warTotal} WAR players are placed on the map — drag from UNPOSITIONED to fill tiles` });
-  if (mkpTotal > 0 && mkpOnMap < mkpTotal * 0.5) warnings.push({ color: C.gold, msg: `Only ${mkpOnMap} of ${mkpTotal} MKP players are placed on the map` });
+  if (mkpUnconfirmed.length) warnings.push({ color: C.gold, msg: `${mkpUnconfirmed.length} WFP TG3 player${mkpUnconfirmed.length > 1 ? "s" : ""} haven't confirmed availability yet` });
+  if (warTotal > 0 && warOnMap < warTotal * 0.5) warnings.push({ color: C.gold, msg: `Only ${warOnMap} of ${warTotal} MKP (Assault) players are placed on the map — drag from UNPOSITIONED to fill tiles` });
+  if (mkpTotal > 0 && mkpOnMap < mkpTotal * 0.5) warnings.push({ color: C.gold, msg: `Only ${mkpOnMap} of ${mkpTotal} WFP (Garrison) players are placed on the map` });
 
   return (
     <div style={{ marginBottom: 14 }}>
@@ -2580,8 +2580,7 @@ function App() {
               {!isMobile && <div style={{ fontSize: 12, color: C.textDim }}>Click any gray tile to assign a member or mark an enemy. Changes sync live to all users.</div>}
             </div>
 
-            {/* Roster progress */}
-            <RosterProgress members={members} kvkAlliances={kvkAlliances} assignments={assignments} mapOnly={true} />
+            {/* Roster progress removed from map tab */}
 
             <div style={{
               background: "rgba(255,255,255,0.04)",
