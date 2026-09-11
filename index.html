@@ -100,10 +100,10 @@ const glassDeep = (extra = {}) => ({
   ...extra,
 });
 
-const AVAILABILITY_OPTS = ["Full", "1st Half", "2nd Half", "On/Off", "None"];
+const AVAILABILITY_OPTS = ["Full", "1st Half", "2nd Half", "On/Off", "None", ""];
 const PRIMARY_TARGETS = ["Castle", "Turret (N)", "Turret (E)", "Turret (S)", "Turret (W)", "None"];
 const TC_LEVELS = ["28","29","30","TG1","TG2","TG3","TG4","TG5","TG6","TG7","TG8"];
-const ROLES = ["Rally Leader", "Rally Joiner"];
+const ROLES = ["Rally Leader", "Rally Joiner", ""];
 const THREAT_TYPES = ["Scout", "Rally", "Garrison", "Attacker", "Unknown"];
 
 let _uid = 100;
@@ -166,8 +166,8 @@ function rowToMember(row) {
     id: uid(),
     name: row.name,
     tc: matchOption(row.tc, TC_LEVELS, "TG1"),
-    available: matchOption(row.available, AVAILABILITY_OPTS, "Full"),
-    role: matchOption(row.role, ROLES, "Rally Joiner"),
+    available: matchOption(row.available, AVAILABILITY_OPTS, "") || "",
+    role: matchOption(row.role, ROLES, "") || "",
     alliance: row.alliance || "",
     team: row.team || "",
     kvkAlliance: row.kvkAlliance || "",
@@ -520,12 +520,12 @@ function MemberRow({ m, alliances, teams, kvkAlliances, onUpdate, onDelete }) {
       </td>
       <td style={{ ...td, textAlign: "center" }}>
         <select className="cell-edit" style={{ color: availColor, fontWeight: 700 }} value={m.available} onChange={e => f("available", e.target.value)}>
-          {AVAILABILITY_OPTS.map(o => <option key={o}>{o}</option>)}
+          {AVAILABILITY_OPTS.map(o => <option key={o} value={o}>{o === "" ? "—" : o}</option>)}
         </select>
       </td>
       <td style={td}>
         <select className="cell-edit" style={{ color: roleColor(m.role), fontWeight: 700 }} value={m.role} onChange={e => f("role", e.target.value)}>
-          {ROLES.map(r => <option key={r}>{r}</option>)}
+          {ROLES.map(r => <option key={r} value={r}>{r === "" ? "—" : r}</option>)}
         </select>
       </td>
       <td style={td}>
@@ -2306,12 +2306,12 @@ function App() {
               {!isMobile && <input style={{ ...inputSt, flex: "1 1 140px", minWidth: 0 }} placeholder="🔍 Search name…" value={search} onChange={e => setSearch(e.target.value)} />}
               {!isMobile && <>
                 <select style={{ ...inputSt, width: 150 }} value={filterRole} onChange={e => setFilterRole(e.target.value)}>
-                  <option value="all">All Roles</option>{ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                  <option value="all">All Roles</option>{ROLES.filter(r => r !== "").map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
                 <input style={{ ...inputSt, width: 150 }} placeholder="Filter alliance…" value={filterAlliance} onChange={e => setFilterAlliance(e.target.value)} />
                 <select style={{ ...inputSt, width: 160 }} value={filterAvail} onChange={e => setFilterAvail(e.target.value)}>
                   <option value="all">All Availability</option>
-                  {AVAILABILITY_OPTS.map(o => <option key={o} value={o}>{o}</option>)}
+                  {AVAILABILITY_OPTS.filter(o => o !== "").map(o => <option key={o} value={o}>{o}</option>)}
                 </select>
               </>}
               {isMobile && <>
@@ -2322,7 +2322,7 @@ function App() {
                 </select>
                 <select style={{ ...inputSt, flex: "1 1 120px" }} value={filterAvail} onChange={e => setFilterAvail(e.target.value)}>
                   <option value="all">All Availability</option>
-                  {AVAILABILITY_OPTS.map(o => <option key={o} value={o}>{o}</option>)}
+                  {AVAILABILITY_OPTS.filter(o => o !== "").map(o => <option key={o} value={o}>{o}</option>)}
                 </select>
               </>}
               <span style={{ fontSize: 12, color: C.textDim, flexShrink: 0 }}>{filtered.length}/{members.length}</span>
