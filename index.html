@@ -1232,6 +1232,8 @@ function MemberSummary({ members, alliances, kvkAlliances }) {
   ].filter(g => g.count > 0);
 
   const tcGroups = [
+    { label: "TG5", color: "#fb7185", count: members.filter(m => m.tc === "TG5").length },
+    { label: "TG4", color: "#34d399", count: members.filter(m => m.tc === "TG4").length },
     { label: "TG3", color: "#fbbf24", count: members.filter(m => m.tc === "TG3").length },
     { label: "TG2", color: "#60a5fa", count: members.filter(m => m.tc === "TG2").length },
     { label: "TG1", color: "#a78bfa", count: members.filter(m => m.tc === "TG1").length },
