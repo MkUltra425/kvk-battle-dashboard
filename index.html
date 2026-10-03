@@ -850,7 +850,7 @@ function MemberCard({ m, alliances, teams, kvkAlliances, onUpdate, onDelete }) {
         <div style={{ width: 6, height: 6, borderRadius: "50%", background: availColor, flexShrink: 0, boxShadow: `0 0 4px ${availColor}` }} />
         <span style={{ fontSize: 13, fontWeight: 700, color: C.text, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</span>
         <span style={{ fontSize: 11, color: C.accent, fontWeight: 700, flexShrink: 0 }}>{m.tc}</span>
-        {m.alliance ? <span style={{ fontSize: 11, color: allianceColor(m.alliance), fontWeight: 700, flexShrink: 0 }}>{m.alliance}</span> : null}
+        {m.kvkAlliance ? <span style={{ fontSize: 11, color: kvkAlliances.find(a => a.name === m.kvkAlliance)?.color || C.textDim, fontWeight: 700, flexShrink: 0 }}>{m.kvkAlliance}</span> : null}
         <span style={{ fontSize: 10, color: roleColor(m.role), fontWeight: 700, flexShrink: 0 }}>{m.role === "Rally Leader" ? "Leader" : "Joiner"}</span>
         <span style={{ fontSize: 11, color: C.textDim, flexShrink: 0, transition: "transform 0.2s", display: "inline-block", transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
       </div>
@@ -1815,7 +1815,7 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
             <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 5 }}>Friendly</div>
             <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 10 }}>
               {kvkAlliances.map(a =>
-                ["TG3", "TG2+", "TG1+"].map(tc => {
+                ["TG5", "TG4+", "TG3+"].map(tc => {
                   const col = _kvkAllianceColorMap[a.name] || C.textDim;
                   return (
                     <div key={`${a.name}-${tc}`}
@@ -2627,7 +2627,7 @@ function App() {
       )}
 
       {/* Header */}
-      <div style={{ background: "linear-gradient(90deg,#0d1520,#101c2c 50%,#0d1520)", borderBottom: `1px solid ${C.panelBorder}`, padding: isMobile ? "0 12px" : "0 24px", display: "flex", alignItems: "center", gap: isMobile ? 8 : 20, height: isMobile ? 50 : 56 }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 100, flexShrink: 0, boxShadow: "0 3px 12px #0004", background: "linear-gradient(90deg,#0d1520,#101c2c 50%,#0d1520)", borderBottom: `1px solid ${C.panelBorder}`, padding: isMobile ? "0 12px" : "0 24px", display: "flex", alignItems: "center", gap: isMobile ? 8 : 20, height: isMobile ? 50 : 56 }}>
         <div style={{ fontFamily: "'Bebas Neue'", fontSize: isMobile ? 18 : 26, color: C.accent, letterSpacing: 2 }}>⚔ KINGSHOT KvK</div>
         {!isMobile && <div style={{ fontSize: 11, color: C.textDim, borderLeft: `1px solid ${C.panelBorder}`, paddingLeft: 16 }}>ALLIANCE COMMAND CENTER</div>}
         <div style={{ flex: 1 }} />
