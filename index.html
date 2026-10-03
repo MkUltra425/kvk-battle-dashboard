@@ -512,7 +512,13 @@ function MemberRow({ m, alliances, teams, kvkAlliances, onUpdate, onDelete }) {
   const targetColor = { Castle: C.accent, "Turret (N)": "#20d0d0", "Turret (E)": "#c060ff", "Turret (S)": "#ff8040", "Turret (W)": "#40c080" }[m.primaryTarget] || C.textDim;
   return (
     <tr onMouseEnter={e => e.currentTarget.style.background = "#1a2a3a22"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-      <td style={td}><input className="cell-edit" style={{ fontWeight: 700 }} value={m.name} onChange={e => f("name", e.target.value)} /></td>
+      <td style={{ ...td, position: "sticky", left: 0, zIndex: 2, background: "#19202e", minWidth: 210, width: 210, boxShadow: "2px 0 5px #0003" }}><input title={m.name} className="cell-edit" style={{ fontWeight: 700, minWidth: 185 }} value={m.name} onChange={e => f("name", e.target.value)} /></td>
+      <td style={td}>
+        <select className="cell-edit" style={{ color: allianceColor(m.alliance), fontWeight: 700 }} value={m.alliance || ""} onChange={e => f("alliance", e.target.value)}>
+          <option value="">—</option>
+          {alliances.map(a => <option key={a.name} value={a.name} style={{ color: a.color }}>{a.name}</option>)}
+        </select>
+      </td>
       <td style={{ ...td, textAlign: "center" }}>
         <select className="cell-edit" style={{ color: C.accent, fontWeight: 700, textAlign: "center" }} value={m.tc} onChange={e => f("tc", e.target.value)}>
           {TC_LEVELS.map(t => <option key={t}>{t}</option>)}
@@ -529,9 +535,8 @@ function MemberRow({ m, alliances, teams, kvkAlliances, onUpdate, onDelete }) {
         </select>
       </td>
       <td style={td}>
-        <select className="cell-edit" style={{ color: allianceColor(m.alliance), fontWeight: 700 }} value={m.alliance || ""} onChange={e => f("alliance", e.target.value)}>
-          <option value="">—</option>
-          {alliances.map(a => <option key={a.name} value={a.name} style={{ color: a.color }}>{a.name}</option>)}
+        <select className="cell-edit" style={{ color: targetColor, fontWeight: 700 }} value={m.primaryTarget} onChange={e => f("primaryTarget", e.target.value)}>
+          {PRIMARY_TARGETS.map(t => <option key={t}>{t}</option>)}
         </select>
       </td>
       <td style={td}>
@@ -540,18 +545,7 @@ function MemberRow({ m, alliances, teams, kvkAlliances, onUpdate, onDelete }) {
           {kvkAlliances.map(a => <option key={a.name} value={a.name} style={{ color: a.color }}>{a.name}</option>)}
         </select>
       </td>
-      <td style={td}>
-        <select className="cell-edit" style={{ color: teamColor(m.team), fontWeight: 700 }} value={m.team || ""} onChange={e => f("team", e.target.value)}>
-          <option value="">—</option>
-          {teams.map(t => <option key={t.name} value={t.name} style={{ color: t.color }}>{t.name}</option>)}
-        </select>
-      </td>
-      <td style={td}>
-        <select className="cell-edit" style={{ color: targetColor, fontWeight: 700 }} value={m.primaryTarget} onChange={e => f("primaryTarget", e.target.value)}>
-          {PRIMARY_TARGETS.map(t => <option key={t}>{t}</option>)}
-        </select>
-      </td>
-      <td style={td}><input className="cell-edit" style={{ color: C.textDim }} value={m.notes} placeholder="—" onChange={e => f("notes", e.target.value)} /></td>
+      <td style={{ ...td, fontVariantNumeric: "tabular-nums" }}><RallyScoreDetails m={m} /></td>
       <td style={td}>
         <button onClick={() => onDelete(m.id)} style={{ ...btnSt, background: C.redDim, color: C.red, padding: "3px 10px" }}>✕</button>
       </td>
@@ -708,6 +702,140 @@ const LEADER_STYLES = {
 };
 
 // ── Mobile Member Card ─────────────────────────────────────────────────────
+
+const MEMBER_POWER_SNAPSHOT = {"fetched_at":"2026-10-03T21:20:56.041747+00:00","boards":{"single_hero":{"captured_at":1790987834.63639,"rows":[{"governor_id":296629741,"score":14472099},{"governor_id":292507568,"score":10401847},{"governor_id":292523380,"score":7983862},{"governor_id":290278912,"score":7840581},{"governor_id":291000043,"score":7642297},{"governor_id":290852283,"score":6865932},{"governor_id":293146142,"score":6817487},{"governor_id":290999671,"score":6392681},{"governor_id":289902368,"score":5671295},{"governor_id":291114666,"score":5637102},{"governor_id":295658824,"score":5397032},{"governor_id":291721064,"score":4863815},{"governor_id":289460113,"score":4739290},{"governor_id":290967219,"score":4695175},{"governor_id":291213216,"score":4679795},{"governor_id":291458880,"score":4652209},{"governor_id":292507073,"score":4641249},{"governor_id":292048346,"score":4476112},{"governor_id":292900521,"score":4330802},{"governor_id":292113894,"score":4317362},{"governor_id":291966169,"score":4308685},{"governor_id":291180291,"score":4300414},{"governor_id":296968258,"score":4225421},{"governor_id":293522600,"score":4129675},{"governor_id":292981956,"score":4016867},{"governor_id":292752947,"score":3936161},{"governor_id":293436823,"score":3895156},{"governor_id":291212907,"score":3891565},{"governor_id":291032600,"score":3890232},{"governor_id":289410298,"score":3786700},{"governor_id":296981537,"score":3738329},{"governor_id":290721531,"score":3635890},{"governor_id":290590324,"score":3488999},{"governor_id":291982749,"score":3464400},{"governor_id":292523405,"score":3433625},{"governor_id":291687601,"score":3420300},{"governor_id":291786491,"score":3409925},{"governor_id":292638292,"score":3342295},{"governor_id":293113378,"score":3250182},{"governor_id":292933045,"score":3209887},{"governor_id":293343010,"score":3194420},{"governor_id":290098862,"score":3176467},{"governor_id":290246557,"score":3166549},{"governor_id":290917728,"score":3125090},{"governor_id":292261889,"score":3023462},{"governor_id":294982088,"score":2951930},{"governor_id":289640390,"score":2950425},{"governor_id":290656056,"score":2949824},{"governor_id":291754006,"score":2938025},{"governor_id":291786437,"score":2935670},{"governor_id":292383969,"score":2925957},{"governor_id":291704225,"score":2923445},{"governor_id":289975492,"score":2900444},{"governor_id":303287890,"score":2895225},{"governor_id":291065669,"score":2889085},{"governor_id":289459825,"score":2853664},{"governor_id":289951217,"score":2846282},{"governor_id":290000502,"score":2840900},{"governor_id":291671266,"score":2822625},{"governor_id":291278110,"score":2798170},{"governor_id":291081781,"score":2763570},{"governor_id":293113438,"score":2752445},{"governor_id":289705629,"score":2743850},{"governor_id":289705715,"score":2738985},{"governor_id":292278245,"score":2731402},{"governor_id":289427158,"score":2710829},{"governor_id":291392891,"score":2689630},{"governor_id":292130799,"score":2684422},{"governor_id":291671457,"score":2681925},{"governor_id":291048873,"score":2644774},{"governor_id":290770338,"score":2644325},{"governor_id":291557050,"score":2643507},{"governor_id":293375850,"score":2639590},{"governor_id":291147168,"score":2613020},{"governor_id":293015423,"score":2608524},{"governor_id":290852397,"score":2593269},{"governor_id":291867885,"score":2585024},{"governor_id":291786507,"score":2581835},{"governor_id":289672835,"score":2576980},{"governor_id":291589543,"score":2574000},{"governor_id":292491041,"score":2573106},{"governor_id":289770642,"score":2565177},{"governor_id":292843050,"score":2564055},{"governor_id":290311860,"score":2561945},{"governor_id":290263049,"score":2561220},{"governor_id":290787189,"score":2558107},{"governor_id":293097337,"score":2557842},{"governor_id":290360826,"score":2540511},{"governor_id":292933215,"score":2536699},{"governor_id":290885111,"score":2525017},{"governor_id":290049352,"score":2524920},{"governor_id":291262158,"score":2516944},{"governor_id":291999123,"score":2515760},{"governor_id":291835656,"score":2486332},{"governor_id":291147142,"score":2479529},{"governor_id":291475294,"score":2479157},{"governor_id":293228375,"score":2478862},{"governor_id":290541248,"score":2472245},{"governor_id":292147115,"score":2469177},{"governor_id":289459648,"score":2464905}]},"hero_total":{"captured_at":1790987834.63639,"rows":[{"governor_id":296629741,"score":57517295},{"governor_id":292507568,"score":44055430},{"governor_id":295658824,"score":37359010},{"governor_id":290278912,"score":37282091},{"governor_id":292523380,"score":37064497},{"governor_id":291000043,"score":35535439},{"governor_id":289902368,"score":33692896},{"governor_id":293146142,"score":33276217},{"governor_id":292507073,"score":33084657},{"governor_id":291114666,"score":30850872},{"governor_id":291458880,"score":30772130},{"governor_id":290999671,"score":30278624},{"governor_id":292113894,"score":29963237},{"governor_id":290000502,"score":29904773},{"governor_id":292048346,"score":28984483},{"governor_id":290967219,"score":28755593},{"governor_id":289410298,"score":28740599},{"governor_id":291213216,"score":28431713},{"governor_id":303287890,"score":28250996},{"governor_id":290852283,"score":28127200},{"governor_id":291966169,"score":27610263},{"governor_id":292981956,"score":27504002},{"governor_id":296968258,"score":27457318},{"governor_id":292375862,"score":25763750},{"governor_id":291982749,"score":24978408},{"governor_id":291278110,"score":24858126},{"governor_id":291671266,"score":24834909},{"governor_id":291180291,"score":24678705},{"governor_id":290263049,"score":24525874},{"governor_id":291786491,"score":24215634},{"governor_id":289460113,"score":24211649},{"governor_id":291786437,"score":24084919},{"governor_id":293113378,"score":23873186},{"governor_id":290721531,"score":23761701},{"governor_id":291032600,"score":23645071},{"governor_id":292818589,"score":23245259},{"governor_id":292752947,"score":23007329},{"governor_id":293436823,"score":22939748},{"governor_id":296981537,"score":22750185},{"governor_id":293522600,"score":22748179},{"governor_id":294982088,"score":22736883},{"governor_id":290459120,"score":22700948},{"governor_id":292933045,"score":22362777},{"governor_id":289672835,"score":22278301},{"governor_id":289975492,"score":22274547},{"governor_id":289770642,"score":22267181},{"governor_id":290565604,"score":22243206},{"governor_id":290311860,"score":22234846},{"governor_id":292261889,"score":22182036},{"governor_id":292523405,"score":22073991},{"governor_id":297368137,"score":22002529},{"governor_id":289705629,"score":21996986},{"governor_id":292638065,"score":21917393},{"governor_id":291524555,"score":21856766},{"governor_id":290246557,"score":21782643},{"governor_id":291065669,"score":21728178},{"governor_id":290590324,"score":21658981},{"governor_id":292900521,"score":21654034},{"governor_id":289885756,"score":21600741},{"governor_id":291196322,"score":21599505},{"governor_id":291704225,"score":21586359},{"governor_id":292802237,"score":21535785},{"governor_id":289541781,"score":21457274},{"governor_id":291147168,"score":21451834},{"governor_id":290049990,"score":21441180},{"governor_id":293113438,"score":21371254},{"governor_id":289459648,"score":21197833},{"governor_id":291687601,"score":21175608},{"governor_id":289705715,"score":21174345},{"governor_id":289607288,"score":21163849},{"governor_id":291721064,"score":21130904},{"governor_id":317581917,"score":21086198},{"governor_id":290917728,"score":21050277},{"governor_id":306155210,"score":21018919},{"governor_id":292147115,"score":20994162},{"governor_id":289640390,"score":20987968},{"governor_id":302222645,"score":20924399},{"governor_id":291557050,"score":20916146},{"governor_id":291704467,"score":20904327},{"governor_id":290065861,"score":20879282},{"governor_id":293343010,"score":20754287},{"governor_id":291516036,"score":20701722},{"governor_id":291147142,"score":20681355},{"governor_id":291212907,"score":20644696},{"governor_id":293522780,"score":20628287},{"governor_id":290541053,"score":20623386},{"governor_id":291426158,"score":20536940},{"governor_id":290049352,"score":20438226},{"governor_id":290852397,"score":20406446},{"governor_id":293457223,"score":20270274},{"governor_id":291048873,"score":20259324},{"governor_id":291606462,"score":20218387},{"governor_id":292212535,"score":20215510},{"governor_id":290328114,"score":20194946},{"governor_id":289951217,"score":20191976},{"governor_id":292843050,"score":20134363},{"governor_id":290770338,"score":20105173},{"governor_id":292637937,"score":20084456},{"governor_id":289459825,"score":20080658},{"governor_id":290033026,"score":20052161}]},"hero_no_equip":{"captured_at":1790987834.63639,"rows":[{"governor_id":296629741,"score":20540880},{"governor_id":292507568,"score":19952832},{"governor_id":292523380,"score":19874257},{"governor_id":295658824,"score":19770984},{"governor_id":291000043,"score":19176088},{"governor_id":293146142,"score":19164417},{"governor_id":289902368,"score":18507042},{"governor_id":290278912,"score":18385136},{"governor_id":291458880,"score":18112886},{"governor_id":292113894,"score":17950104},{"governor_id":292507073,"score":17936989},{"governor_id":290967219,"score":17785642},{"governor_id":296968258,"score":17742475},{"governor_id":292048346,"score":17698019},{"governor_id":290000502,"score":17607374},{"governor_id":303287890,"score":17304884},{"governor_id":291114666,"score":17242453},{"governor_id":292375862,"score":17173327},{"governor_id":290999671,"score":17095496},{"governor_id":289410298,"score":17061979},{"governor_id":292981956,"score":16998568},{"governor_id":291671266,"score":16617202},{"governor_id":290263049,"score":16536764},{"governor_id":291278110,"score":16502982},{"governor_id":291982749,"score":16490954},{"governor_id":291213216,"score":16441098},{"governor_id":293113378,"score":15887094},{"governor_id":296981537,"score":15814277},{"governor_id":297368137,"score":15721069},{"governor_id":291032600,"score":15453262},{"governor_id":291180291,"score":15439816},{"governor_id":290311860,"score":15261935},{"governor_id":290721531,"score":15247770},{"governor_id":290852283,"score":15209596},{"governor_id":291966169,"score":15188137},{"governor_id":291786491,"score":15162284},{"governor_id":291786437,"score":15115866},{"governor_id":289975492,"score":15115238},{"governor_id":292752947,"score":15027848},{"governor_id":293436823,"score":14929710},{"governor_id":291524555,"score":14805186},{"governor_id":293343010,"score":14781388},{"governor_id":289885756,"score":14771847},{"governor_id":289672835,"score":14757142},{"governor_id":291065669,"score":14706558},{"governor_id":289460113,"score":14702970},{"governor_id":289640390,"score":14697067},{"governor_id":292147115,"score":14594898},{"governor_id":289607288,"score":14560974},{"governor_id":293522600,"score":14519792},{"governor_id":290885133,"score":14516810},{"governor_id":291147168,"score":14495862},{"governor_id":290049352,"score":14494492},{"governor_id":291704225,"score":14466248},{"governor_id":290590324,"score":14452408},{"governor_id":290565604,"score":14445185},{"governor_id":294982088,"score":14437959},{"governor_id":289459825,"score":14416904},{"governor_id":291147142,"score":14391556},{"governor_id":292261889,"score":14389663},{"governor_id":290065861,"score":14373404},{"governor_id":290770338,"score":14354913},{"governor_id":289770642,"score":14297260},{"governor_id":293113438,"score":14291612},{"governor_id":290246557,"score":14282222},{"governor_id":290459120,"score":14275990},{"governor_id":290917728,"score":14271910},{"governor_id":292818589,"score":14248324},{"governor_id":292638065,"score":14243756},{"governor_id":292900521,"score":14194428},{"governor_id":308339555,"score":14180654},{"governor_id":290328114,"score":14176184},{"governor_id":289705629,"score":14153646},{"governor_id":291557050,"score":14148502},{"governor_id":292843050,"score":14087654},{"governor_id":292278245,"score":14066242},{"governor_id":292638292,"score":14013004},{"governor_id":291048873,"score":13986276},{"governor_id":292933045,"score":13946322},{"governor_id":290852397,"score":13937900},{"governor_id":289459648,"score":13931018},{"governor_id":292523405,"score":13899154},{"governor_id":289705715,"score":13883694},{"governor_id":291606462,"score":13876570},{"governor_id":289541781,"score":13839158},{"governor_id":291687601,"score":13838808},{"governor_id":302222645,"score":13819816},{"governor_id":291016028,"score":13774188},{"governor_id":292016001,"score":13761944},{"governor_id":292802237,"score":13735766},{"governor_id":290049990,"score":13720748},{"governor_id":290033026,"score":13710750},{"governor_id":293457223,"score":13699674},{"governor_id":291196322,"score":13615908},{"governor_id":293359341,"score":13599634},{"governor_id":306155210,"score":13587574},{"governor_id":291753322,"score":13582192},{"governor_id":292851559,"score":13576704},{"governor_id":289968010,"score":13515476},{"governor_id":291146966,"score":13502274}]},"hero_equip":{"captured_at":1790987834.63639,"rows":[{"governor_id":296629741,"score":36976415},{"governor_id":292507568,"score":24102598},{"governor_id":290278912,"score":18896955},{"governor_id":295658824,"score":17588026},{"governor_id":292523380,"score":17190240},{"governor_id":291000043,"score":16359351},{"governor_id":289902368,"score":15185854},{"governor_id":292507073,"score":15147668},{"governor_id":293146142,"score":14111800},{"governor_id":291114666,"score":13608419},{"governor_id":290999671,"score":13183128},{"governor_id":290852283,"score":12917604},{"governor_id":291458880,"score":12659244},{"governor_id":291966169,"score":12422126},{"governor_id":290000502,"score":12297399},{"governor_id":292113894,"score":12013133},{"governor_id":291213216,"score":11990615},{"governor_id":289410298,"score":11678620},{"governor_id":292048346,"score":11286464},{"governor_id":290967219,"score":10969951},{"governor_id":303287890,"score":10946112},{"governor_id":292981956,"score":10505434},{"governor_id":296968258,"score":9714843},{"governor_id":289460113,"score":9508679},{"governor_id":291180291,"score":9238889},{"governor_id":291786491,"score":9053350},{"governor_id":292818589,"score":8996935},{"governor_id":291786437,"score":8969053},{"governor_id":292375862,"score":8590423},{"governor_id":290721531,"score":8513931},{"governor_id":291982749,"score":8487454},{"governor_id":290459120,"score":8424958},{"governor_id":292933045,"score":8416455},{"governor_id":291721064,"score":8396934},{"governor_id":291278110,"score":8355144},{"governor_id":291212907,"score":8331540},{"governor_id":294982088,"score":8298924},{"governor_id":293522600,"score":8228387},{"governor_id":291671266,"score":8217707},{"governor_id":291032600,"score":8191809},{"governor_id":292523405,"score":8174837},{"governor_id":293436823,"score":8010038},{"governor_id":290263049,"score":7989110},{"governor_id":293113378,"score":7986092},{"governor_id":291196322,"score":7983597},{"governor_id":292752947,"score":7979481},{"governor_id":289770642,"score":7969921},{"governor_id":309801946,"score":7912869},{"governor_id":291704467,"score":7884639},{"governor_id":293522780,"score":7877625},{"governor_id":289705629,"score":7843340},{"governor_id":292802237,"score":7800019},{"governor_id":290565604,"score":7798021},{"governor_id":292261889,"score":7792373},{"governor_id":290049990,"score":7720432},{"governor_id":317581917,"score":7713888},{"governor_id":292638065,"score":7673637},{"governor_id":289541781,"score":7618116},{"governor_id":289672835,"score":7521159},{"governor_id":290246557,"score":7500421},{"governor_id":292900521,"score":7459606},{"governor_id":306155210,"score":7431345},{"governor_id":291516036,"score":7385658},{"governor_id":289951217,"score":7339183},{"governor_id":291687601,"score":7336800},{"governor_id":289705715,"score":7290651},{"governor_id":289459648,"score":7266815},{"governor_id":290590324,"score":7206573},{"governor_id":289975492,"score":7159309},{"governor_id":290541053,"score":7144630},{"governor_id":291704225,"score":7120111},{"governor_id":302222645,"score":7104583},{"governor_id":293113438,"score":7079642},{"governor_id":292212535,"score":7064310},{"governor_id":291524555,"score":7051580},{"governor_id":291426158,"score":7035600},{"governor_id":292458087,"score":7024271},{"governor_id":291065669,"score":7021620},{"governor_id":290311860,"score":6972911},{"governor_id":289525183,"score":6971755},{"governor_id":291147168,"score":6955972},{"governor_id":296981537,"score":6935908},{"governor_id":292741021,"score":6860912},{"governor_id":292719987,"score":6853963},{"governor_id":289885756,"score":6828894},{"governor_id":293440804,"score":6812522},{"governor_id":293015423,"score":6806198},{"governor_id":290574352,"score":6800550},{"governor_id":292097191,"score":6784200},{"governor_id":290917728,"score":6778367},{"governor_id":291557050,"score":6767644},{"governor_id":292637937,"score":6712120},{"governor_id":291147455,"score":6706614},{"governor_id":292654514,"score":6694982},{"governor_id":293162515,"score":6644245},{"governor_id":292376561,"score":6641469},{"governor_id":293064510,"score":6630950},{"governor_id":289574312,"score":6618792},{"governor_id":292383969,"score":6603963},{"governor_id":289607288,"score":6602875}]},"gov_gear":{"captured_at":1790987834.63639,"rows":[{"governor_id":296629741,"score":14880000},{"governor_id":292507568,"score":14700000},{"governor_id":290278912,"score":12948480},{"governor_id":295658824,"score":12297120},{"governor_id":292113894,"score":11664720},{"governor_id":291000043,"score":11418000},{"governor_id":293146142,"score":11415360},{"governor_id":292523380,"score":10930320},{"governor_id":290852283,"score":10869120},{"governor_id":291966169,"score":10685520},{"governor_id":289902368,"score":9951120},{"governor_id":292981956,"score":9889920},{"governor_id":291458880,"score":9889920},{"governor_id":292507073,"score":9706320},{"governor_id":291213216,"score":9645120},{"governor_id":289460113,"score":9596160},{"governor_id":291180291,"score":9522720},{"governor_id":290967219,"score":9522720},{"governor_id":291278110,"score":9522720},{"governor_id":291687601,"score":9461520},{"governor_id":290999671,"score":9400320},{"governor_id":291212907,"score":9131040},{"governor_id":290000502,"score":9094320},{"governor_id":303287890,"score":9094320},{"governor_id":289951217,"score":8971920},{"governor_id":291671266,"score":8971920},{"governor_id":291114666,"score":8910720},{"governor_id":294982088,"score":8910720},{"governor_id":293522600,"score":8841360},{"governor_id":289410298,"score":8727120},{"governor_id":290721531,"score":8665920},{"governor_id":291786491,"score":8588400},{"governor_id":291032600,"score":8543520},{"governor_id":292261889,"score":8519040},{"governor_id":292933045,"score":8494560},{"governor_id":292048346,"score":8421120},{"governor_id":292523405,"score":8396640},{"governor_id":289770642,"score":8359920},{"governor_id":289640390,"score":8298720},{"governor_id":289459648,"score":8143680},{"governor_id":289975492,"score":8115120},{"governor_id":290263049,"score":7845840},{"governor_id":309801946,"score":7776480},{"governor_id":292752947,"score":7760160},{"governor_id":293436823,"score":7760160},{"governor_id":291786437,"score":7752000},{"governor_id":292375862,"score":7715280},{"governor_id":293113438,"score":7637760},{"governor_id":290541053,"score":7560240},{"governor_id":290565604,"score":7523520},{"governor_id":289705629,"score":7499040},{"governor_id":290852397,"score":7446000},{"governor_id":291721064,"score":7266480},{"governor_id":290787189,"score":7233840},{"governor_id":292802237,"score":7115520},{"governor_id":290311860,"score":7082880},{"governor_id":291982749,"score":7058400},{"governor_id":296968258,"score":7046160},{"governor_id":290360826,"score":6976800},{"governor_id":289459825,"score":6976800},{"governor_id":290246557,"score":6976800},{"governor_id":292900521,"score":6911520},{"governor_id":293113378,"score":6768720},{"governor_id":291196322,"score":6699360},{"governor_id":290770338,"score":6683040},{"governor_id":290098862,"score":6683040},{"governor_id":291524555,"score":6630000},{"governor_id":291704225,"score":6613680},{"governor_id":297368137,"score":6560640},{"governor_id":296981537,"score":6491280},{"governor_id":292278245,"score":6491280},{"governor_id":290541248,"score":6491280},{"governor_id":292692989,"score":6474960},{"governor_id":291754006,"score":6458640},{"governor_id":291147142,"score":6421920},{"governor_id":289968010,"score":6352560},{"governor_id":291065669,"score":6283200},{"governor_id":292638292,"score":6283200},{"governor_id":291294818,"score":6283200},{"governor_id":290590324,"score":6213840},{"governor_id":290917728,"score":6213840},{"governor_id":292147115,"score":6205680},{"governor_id":291376424,"score":6075120},{"governor_id":292818589,"score":6075120},{"governor_id":293359341,"score":6075120},{"governor_id":291426158,"score":6075120},{"governor_id":291146966,"score":6042480},{"governor_id":291999123,"score":6013920},{"governor_id":293015423,"score":6005760},{"governor_id":291409234,"score":6005760},{"governor_id":293309596,"score":6005760},{"governor_id":293424742,"score":6005760},{"governor_id":292846223,"score":5936400},{"governor_id":289705715,"score":5936400},{"governor_id":293195586,"score":5936400},{"governor_id":291048873,"score":5936400},{"governor_id":292843050,"score":5920080},{"governor_id":292376561,"score":5867040},{"governor_id":290721006,"score":5867040},{"governor_id":292688302,"score":5867040}]},"gov_charm":{"captured_at":1790987834.63639,"rows":[{"governor_id":296629741,"score":23760000},{"governor_id":292507568,"score":18304000},{"governor_id":291000043,"score":12064000},{"governor_id":290852283,"score":11856000},{"governor_id":290278912,"score":11608000},{"governor_id":295658824,"score":11236000},{"governor_id":292048346,"score":10988000},{"governor_id":293146142,"score":10740000},{"governor_id":291458880,"score":10492000},{"governor_id":290999671,"score":10492000},{"governor_id":292113894,"score":10120000},{"governor_id":292523380,"score":9872000},{"governor_id":291114666,"score":9750000},{"governor_id":289410298,"score":9748000},{"governor_id":292981956,"score":9624000},{"governor_id":291213216,"score":9624000},{"governor_id":291966169,"score":9500000},{"governor_id":289460113,"score":9380000},{"governor_id":290000502,"score":9128000},{"governor_id":290967219,"score":8880000},{"governor_id":292507073,"score":8804000},{"governor_id":293522600,"score":8636000},{"governor_id":296968258,"score":8508000},{"governor_id":291786491,"score":8344000},{"governor_id":291278110,"score":8260000},{"governor_id":290852397,"score":8220000},{"governor_id":290721531,"score":8144000},{"governor_id":289902368,"score":8136000},{"governor_id":303287890,"score":8018000},{"governor_id":291687601,"score":8016000},{"governor_id":294982088,"score":7978000},{"governor_id":293436823,"score":7894000},{"governor_id":292638292,"score":7892000},{"governor_id":291065669,"score":7808000},{"governor_id":291786437,"score":7808000},{"governor_id":290311860,"score":7768000},{"governor_id":291671266,"score":7768000},{"governor_id":291032600,"score":7730000},{"governor_id":290263049,"score":7726000},{"governor_id":289975492,"score":7726000},{"governor_id":291212907,"score":7688000},{"governor_id":290917728,"score":7648000},{"governor_id":291557050,"score":7644000},{"governor_id":290590324,"score":7644000},{"governor_id":290098862,"score":7644000},{"governor_id":289770642,"score":7644000},{"governor_id":289705629,"score":7644000},{"governor_id":292752947,"score":7608000},{"governor_id":292261889,"score":7562000},{"governor_id":292802237,"score":7562000},{"governor_id":290541053,"score":7562000},{"governor_id":291982749,"score":7524000},{"governor_id":292278245,"score":7522000},{"governor_id":291754006,"score":7522000},{"governor_id":291704225,"score":7480000},{"governor_id":290541248,"score":7480000},{"governor_id":290246557,"score":7480000},{"governor_id":292933045,"score":7480000},{"governor_id":297368137,"score":7440000},{"governor_id":291721064,"score":7402200},{"governor_id":293113438,"score":7400000},{"governor_id":290885111,"score":7398000},{"governor_id":296981537,"score":7398000},{"governor_id":292383969,"score":7318000},{"governor_id":292818589,"score":7316000},{"governor_id":290721112,"score":7316000},{"governor_id":291917460,"score":7316000},{"governor_id":291048873,"score":7316000},{"governor_id":291147168,"score":7316000},{"governor_id":292147115,"score":7276000},{"governor_id":291147142,"score":7234000},{"governor_id":290344435,"score":7234000},{"governor_id":290770338,"score":7234000},{"governor_id":292130799,"score":7234000},{"governor_id":291475294,"score":7234000},{"governor_id":293113378,"score":7234000},{"governor_id":290360826,"score":7152000},{"governor_id":293343010,"score":7152000},{"governor_id":289459825,"score":7152000},{"governor_id":292638065,"score":7152000},{"governor_id":296085398,"score":7152000},{"governor_id":289968010,"score":7112000},{"governor_id":291671457,"score":7070000},{"governor_id":292933215,"score":7070000},{"governor_id":289607288,"score":7070000},{"governor_id":293015423,"score":7070000},{"governor_id":292843050,"score":7070000},{"governor_id":290934516,"score":7070000},{"governor_id":290065861,"score":7070000},{"governor_id":291835656,"score":7070000},{"governor_id":292818733,"score":7070000},{"governor_id":293522780,"score":7070000},{"governor_id":291294818,"score":7070000},{"governor_id":292523405,"score":7032000},{"governor_id":309801946,"score":6988000},{"governor_id":292392088,"score":6988000},{"governor_id":290565604,"score":6988000},{"governor_id":291409234,"score":6988000},{"governor_id":289574312,"score":6988000},{"governor_id":291196322,"score":6988000}]},"pet_power":{"captured_at":1790987834.63639,"rows":[{"governor_id":292507568,"score":12664080},{"governor_id":296629741,"score":11796960},{"governor_id":292048346,"score":10025280},{"governor_id":291000043,"score":9370560},{"governor_id":292523380,"score":9044640},{"governor_id":293146142,"score":8894280},{"governor_id":290967219,"score":8665560},{"governor_id":290000502,"score":8472000},{"governor_id":290999671,"score":8292720},{"governor_id":291278110,"score":8272320},{"governor_id":291786437,"score":8088240},{"governor_id":289902368,"score":7986600},{"governor_id":290278912,"score":7973400},{"governor_id":295658824,"score":7938480},{"governor_id":289885756,"score":7876200},{"governor_id":289705629,"score":7858800},{"governor_id":291213216,"score":7843200},{"governor_id":292802237,"score":7817640},{"governor_id":291458880,"score":7734960},{"governor_id":289975492,"score":7714560},{"governor_id":290606453,"score":7704840},{"governor_id":291671266,"score":7676280},{"governor_id":292113894,"score":7600200},{"governor_id":317581917,"score":7572720},{"governor_id":291966169,"score":7569360},{"governor_id":290770338,"score":7563240},{"governor_id":296968258,"score":7546320},{"governor_id":291516036,"score":7543200},{"governor_id":291146966,"score":7532280},{"governor_id":290246557,"score":7532280},{"governor_id":289541781,"score":7529760},{"governor_id":289705715,"score":7521960},{"governor_id":293522780,"score":7506600},{"governor_id":290917728,"score":7505760},{"governor_id":290263049,"score":7499880},{"governor_id":303287890,"score":7492080},{"governor_id":293522600,"score":7486560},{"governor_id":292981956,"score":7469640},{"governor_id":291294710,"score":7469520},{"governor_id":289705423,"score":7449240},{"governor_id":292846223,"score":7439640},{"governor_id":290721006,"score":7432680},{"governor_id":291786491,"score":7432080},{"governor_id":296981537,"score":7409880},{"governor_id":292458087,"score":7400280},{"governor_id":291687601,"score":7397760},{"governor_id":292179501,"score":7396560},{"governor_id":292147115,"score":7389000},{"governor_id":291294818,"score":7370160},{"governor_id":289525183,"score":7348680},{"governor_id":296618821,"score":7341600},{"governor_id":291048873,"score":7336080},{"governor_id":293523025,"score":7332720},{"governor_id":292720329,"score":7314360},{"governor_id":291065669,"score":7309440},{"governor_id":290262368,"score":7309440},{"governor_id":291147168,"score":7281360},{"governor_id":291196322,"score":7278240},{"governor_id":291704738,"score":7266600},{"governor_id":291688094,"score":7265040},{"governor_id":293260873,"score":7259640},{"governor_id":290541053,"score":7258080},{"governor_id":291344283,"score":7256160},{"governor_id":291737376,"score":7255200},{"governor_id":289410298,"score":7250520},{"governor_id":293506912,"score":7221120},{"governor_id":292310684,"score":7221000},{"governor_id":291409234,"score":7216800},{"governor_id":289459825,"score":7195920},{"governor_id":290590619,"score":7195080},{"governor_id":292376561,"score":7190880},{"governor_id":291524579,"score":7188240},{"governor_id":291426158,"score":7188120},{"governor_id":289476352,"score":7182960},{"governor_id":292818589,"score":7182480},{"governor_id":291704225,"score":7181400},{"governor_id":290721558,"score":7180680},{"governor_id":291180055,"score":7176360},{"governor_id":293195586,"score":7169400},{"governor_id":309801946,"score":7162320},{"governor_id":293359470,"score":7149600},{"governor_id":290098862,"score":7144560},{"governor_id":291835656,"score":7127640},{"governor_id":289689406,"score":7127640},{"governor_id":293064510,"score":7124640},{"governor_id":289574312,"score":7121160},{"governor_id":291524555,"score":7119360},{"governor_id":292375862,"score":7119120},{"governor_id":292327067,"score":7116840},{"governor_id":293228013,"score":7103280},{"governor_id":289460113,"score":7103160},{"governor_id":289705314,"score":7100880},{"governor_id":289443717,"score":7098960},{"governor_id":289557757,"score":7097760},{"governor_id":289934913,"score":7097400},{"governor_id":292851559,"score":7095000},{"governor_id":289770642,"score":7076520},{"governor_id":293343010,"score":7076160},{"governor_id":289459748,"score":7071360},{"governor_id":290102105,"score":7069560}]},"research_power":{"captured_at":1790987834.63639,"rows":[{"governor_id":296629741,"score":6608043},{"governor_id":292507568,"score":6136340},{"governor_id":295658824,"score":5420952},{"governor_id":292048346,"score":5377442},{"governor_id":291000043,"score":5326906},{"governor_id":296968258,"score":5267015},{"governor_id":289902368,"score":5204508},{"governor_id":292523380,"score":5022672},{"governor_id":291213216,"score":4970447},{"governor_id":292981956,"score":4843800},{"governor_id":292147115,"score":4831870},{"governor_id":292113894,"score":4815020},{"governor_id":289975492,"score":4791740},{"governor_id":290999671,"score":4768632},{"governor_id":303287890,"score":4738607},{"governor_id":293146142,"score":4718834},{"governor_id":290967219,"score":4706398},{"governor_id":291114666,"score":4697512},{"governor_id":290000502,"score":4690720},{"governor_id":289460113,"score":4686080},{"governor_id":291146966,"score":4662402},{"governor_id":294982088,"score":4659500},{"governor_id":291458880,"score":4611417},{"governor_id":290541053,"score":4573032},{"governor_id":291278110,"score":4551656},{"governor_id":290917728,"score":4536400},{"governor_id":291147168,"score":4533007},{"governor_id":292843050,"score":4511284},{"governor_id":289541781,"score":4482970},{"governor_id":291180089,"score":4479145},{"governor_id":290950755,"score":4465898},{"governor_id":290311860,"score":4464935},{"governor_id":290246557,"score":4463562},{"governor_id":290278912,"score":4444722},{"governor_id":291786491,"score":4440962},{"governor_id":293522780,"score":4440187},{"governor_id":291671266,"score":4436385},{"governor_id":291516036,"score":4427450},{"governor_id":289968010,"score":4365808},{"governor_id":291048873,"score":4335200},{"governor_id":290770293,"score":4331937},{"governor_id":290639714,"score":4326596},{"governor_id":291704738,"score":4315157},{"governor_id":293522600,"score":4313412},{"governor_id":291606462,"score":4309672},{"governor_id":291687601,"score":4304000},{"governor_id":289459825,"score":4297492},{"governor_id":291786437,"score":4294520},{"governor_id":293113378,"score":4292822},{"governor_id":292752947,"score":4286232},{"governor_id":290263049,"score":4273907},{"governor_id":293015423,"score":4268930},{"governor_id":290590324,"score":4264170},{"governor_id":291278527,"score":4255747},{"governor_id":290541248,"score":4251117},{"governor_id":290884993,"score":4247092},{"governor_id":289705715,"score":4246210},{"governor_id":290885111,"score":4240672},{"governor_id":291458930,"score":4226230},{"governor_id":292261889,"score":4217725},{"governor_id":291409234,"score":4203333},{"governor_id":293436823,"score":4202660},{"governor_id":291426158,"score":4186887},{"governor_id":296618821,"score":4180310},{"governor_id":290934516,"score":4175002},{"governor_id":292458087,"score":4165207},{"governor_id":290344435,"score":4156015},{"governor_id":291392891,"score":4149115},{"governor_id":289787420,"score":4146208},{"governor_id":290787189,"score":4142655},{"governor_id":290721112,"score":4140817},{"governor_id":292113920,"score":4138002},{"governor_id":291557050,"score":4135572},{"governor_id":289705314,"score":4135029},{"governor_id":291376424,"score":4134607},{"governor_id":291065669,"score":4129588},{"governor_id":292720329,"score":4117002},{"governor_id":292802237,"score":4114392},{"governor_id":293424742,"score":4112567},{"governor_id":291441924,"score":4109220},{"governor_id":292212535,"score":4103107},{"governor_id":292654514,"score":4101289},{"governor_id":292719987,"score":4099585},{"governor_id":290721531,"score":4098142},{"governor_id":290770701,"score":4097585},{"governor_id":291704225,"score":4095942},{"governor_id":293375850,"score":4094967},{"governor_id":290049990,"score":4081975},{"governor_id":292375862,"score":4080495},{"governor_id":290065750,"score":4077794},{"governor_id":297368137,"score":4077390},{"governor_id":290656056,"score":4074107},{"governor_id":292637937,"score":4073190},{"governor_id":291753322,"score":4067397},{"governor_id":291081551,"score":4067180},{"governor_id":291245520,"score":4066087},{"governor_id":290672263,"score":4064304},{"governor_id":293343010,"score":4060732},{"governor_id":290442853,"score":4053252},{"governor_id":291147455,"score":4051057}]}}};
+const MEMBER_POWER_FIELDS = ["single_hero", "hero_total", "hero_no_equip", "hero_equip", "gov_gear", "gov_charm", "pet_power", "research_power"];
+const MEMBER_POWER_LABELS = { single_hero: "Single Hero", hero_total: "Hero Total", hero_no_equip: "Hero Base", hero_equip: "Hero Gear", gov_gear: "Gov Gear", gov_charm: "Gov Charm", pet_power: "Pet Power", research_power: "Research Power" };
+const formatMemberPower = value => value === null || value === undefined ? "—" : new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(Number(value));
+const fullMemberPower = value => value === null || value === undefined ? "Unavailable" : Number(value).toLocaleString("en-US");
+const RALLY_WEIGHTS = { gov_gear: 0.325, gov_charm: 0.325, single_hero: 0.15, research_power: 0.15, pet_power: 0.05 };
+const RALLY_SCORE_INFO = "Estimated equipment/research index, not damage or win probability. Gear 32.5%, charms 32.5%, single hero 15%, research 15%, pets 5%. Percentiles use fixed included Kingdom 1884 top-100 boards, not the entire kingdom. Research includes noncombat research; three-hero lineup, widgets, buffs and rally troops are not measured. Partial scores count available categories only, with unavailable categories contributing no score points. Actual missing power is unknown, not zero; partial scores can understate strength and are not directly comparable to complete scores.";
+function rallyScoreCoverage(member) {
+  return Object.keys(RALLY_WEIGHTS).filter(field => {
+    const raw = member[field];
+    return raw !== null && raw !== undefined && String(raw).trim() !== "" && Number.isFinite(Number(String(raw).replace(/,/g, "")));
+  }).length;
+}
+function rallyScore(member) {
+  if (!rallyScoreCoverage(member)) return null;
+  let score = 0;
+  for (const [field, weight] of Object.entries(RALLY_WEIGHTS)) {
+    const raw = member[field];
+    if (raw === null || raw === undefined || String(raw).trim() === "") continue;
+    const value = Number(String(raw).replace(/,/g, ""));
+    if (!Number.isFinite(value)) continue;
+    const values = MEMBER_POWER_SNAPSHOT.boards[field].rows.map(row => Number(row.score)).filter(Number.isFinite);
+    if (!values.length) continue;
+    const less = values.filter(v => v < value).length, equal = values.filter(v => v === value).length;
+    score += weight * 100 * (less + equal / 2) / values.length;
+  }
+  return Math.round(score * 10) / 10;
+}
+const RALLY_POWER_COLORS = { gov_gear: "#a78bfa", gov_charm: "#fbbf24", single_hero: "#60a5fa", research_power: "#34d399", pet_power: "#fb7185" };
+function RallyPowerBar({ m }) {
+  const [hover, setHover] = useState(null), [pinned, setPinned] = useState(null);
+  const barRef = useRef(null), tooltipRef = useRef(null);
+  useEffect(() => {
+    if (!pinned) return;
+    const close = event => {
+      if (!barRef.current?.contains(event.target) && !tooltipRef.current?.contains(event.target)) setPinned(null);
+    };
+    const escape = event => { if (event.key === "Escape") { setPinned(null); setHover(null); } };
+    const scroll = () => { setPinned(null); setHover(null); };
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", escape);
+    window.addEventListener("scroll", scroll, true);
+    window.addEventListener("resize", scroll);
+    return () => {
+      document.removeEventListener("pointerdown", close); document.removeEventListener("keydown", escape);
+      window.removeEventListener("scroll", scroll, true); window.removeEventListener("resize", scroll);
+    };
+  }, [pinned]);
+  const categories = Object.keys(RALLY_WEIGHTS).map(field => {
+    const raw = m[field];
+    const value = raw === null || raw === undefined || String(raw).trim() === "" ? null : Number(String(raw).replace(/,/g, ""));
+    return { field, value: Number.isFinite(value) && value >= 0 ? value : null };
+  });
+  const total = categories.reduce((sum, item) => sum + (item.value ?? 0), 0);
+  const position = (item, element) => {
+    const rect = element.getBoundingClientRect();
+    return { ...item, left: Math.max(8, Math.min(rect.left + rect.width / 2 - 110, window.innerWidth - 228)), top: rect.top >= 54 ? rect.top - 44 : rect.bottom + 8 };
+  };
+  const active = pinned || hover;
+  return <>
+    <span ref={barRef} aria-label="Power category breakdown" style={{ display: "inline-flex", width: 130, height: 12, flexShrink: 0, overflow: "hidden", borderRadius: 6, background: "#64748b66", border: "1px solid #ffffff20", verticalAlign: "middle" }}>
+      {total > 0 && categories.filter(item => item.value > 0).map(item => <button key={item.field} type="button" aria-label={`${MEMBER_POWER_LABELS[item.field]}: ${item.value.toLocaleString("en-US")}`} onMouseEnter={e => setHover(position(item, e.currentTarget))} onMouseLeave={() => setHover(null)} onFocus={e => setHover(position(item, e.currentTarget))} onBlur={() => setHover(null)} onClick={e => { e.stopPropagation(); const next = position(item, e.currentTarget); setPinned(current => current?.field === item.field ? null : next); setHover(null); }} style={{ width: `${item.value / total * 100}%`, height: "100%", background: RALLY_POWER_COLORS[item.field], border: 0, padding: 0, cursor: "pointer", flexShrink: 0 }} />)}
+    </span>
+    {active && ReactDOM.createPortal(<div ref={tooltipRef} role="tooltip" style={{ position: "fixed", left: active.left, top: active.top, width: 220, boxSizing: "border-box", zIndex: 10000, padding: "8px 10px", borderRadius: 7, background: "#19202e", border: `1px solid ${RALLY_POWER_COLORS[active.field]}`, color: C.text, fontSize: 12, fontFamily: "'Roboto Condensed',sans-serif", boxShadow: "0 4px 16px #0008", pointerEvents: pinned ? "auto" : "none" }}>{MEMBER_POWER_LABELS[active.field]}: <strong>{active.value.toLocaleString("en-US")}</strong></div>, document.body)}
+  </>;
+}
+function RallyScoreDetails({ m }) {
+  const score = rallyScore(m);
+  return <span style={{ display: "inline-grid", gridTemplateColumns: "85px 130px", alignItems: "center", gap: 10, verticalAlign: "middle" }}>
+    <span style={{ color: score === null ? C.textDim : C.gold, fontWeight: 700, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>{score === null ? "" : `${score.toFixed(1)} / 100`}</span>
+    <RallyPowerBar m={m} />
+  </span>;
+}
+const MEMBER_FILTER_COLUMNS = [["alliance", "Alliance"], ["tc", "TC Level"], ["available", "Availability"], ["role", "Role"], ["primaryTarget", "Primary Target"], ["kvkAlliance", "KvK Alliance"]];
+const memberFilterValue = value => String(value == null ? "" : value);
+function memberFilterColor(field, value) {
+  if (!value) return C.textDim;
+  if (field === "alliance") return allianceColor(value);
+  if (field === "kvkAlliance") return kvkAllianceColor(value);
+  if (field === "tc") return C.accent;
+  if (field === "role") return roleColor(value);
+  if (field === "available") return ({ Full: C.green, "1st Half": C.blue, "2nd Half": C.gold, "On/Off": C.red })[value] || C.textDim;
+  if (field === "primaryTarget") return ({ Castle: C.accent, "Turret (N)": "#20d0d0", "Turret (E)": "#c060ff", "Turret (S)": "#ff8040", "Turret (W)": "#40c080" })[value] || C.textDim;
+  return C.text;
+}
+function MemberColumnFilter({ field, label, members, selected, onChange, showLabel = false }) {
+  const [position, setPosition] = useState(null);
+  const button = useRef(null), menu = useRef(null);
+  const values = [...new Set(members.map(m => memberFilterValue(m[field])))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  useEffect(() => {
+    if (!position) return;
+    const close = e => { if (!menu.current?.contains(e.target) && !button.current?.contains(e.target)) setPosition(null); };
+    const escape = e => { if (e.key === "Escape") { setPosition(null); button.current?.focus(); } };
+    const reposition = () => setPosition(null);
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", escape);
+    window.addEventListener("resize", reposition);
+    return () => { document.removeEventListener("pointerdown", close); document.removeEventListener("keydown", escape); window.removeEventListener("resize", reposition); };
+  }, [position]);
+  function open(e) {
+    e.stopPropagation();
+    if (position) return setPosition(null);
+    const rect = button.current.getBoundingClientRect(), width = Math.min(260, window.innerWidth - 24);
+    const below = window.innerHeight - rect.bottom - 12;
+    const height = Math.min(350, Math.max(below, rect.top - 12));
+    setPosition({ left: Math.max(12, Math.min(rect.left, window.innerWidth - width - 12)), width, maxHeight: height,
+      ...(below >= Math.min(350, rect.top - 12) ? { top: rect.bottom + 6 } : { bottom: window.innerHeight - rect.top + 6 }) });
+  }
+  return <>
+    <button ref={button} type="button" title={`Filter ${label}`} aria-label={`Filter ${label}${selected ? ` (${selected.length} selected)` : ""}`} aria-expanded={Boolean(position)} onClick={open}
+      style={{ background: selected ? "rgba(96,165,250,0.2)" : "transparent", border: `1px solid ${selected ? C.blue : C.panelBorder}`, borderRadius: 5, color: selected ? C.blue : C.textDim, padding: showLabel ? "7px 9px" : "4px 6px", cursor: "pointer", marginLeft: showLabel ? 0 : 6, display: "inline-flex", alignItems: "center", gap: 7, whiteSpace: "nowrap", fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif", fontSize: 12, fontWeight: 700, width: showLabel ? "100%" : undefined }}>
+      {showLabel && <span style={{ flex: 1, textAlign: "left" }}>{label}</span>}
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 4h18l-7 8v7l-4 2v-9z" /></svg>{selected ? ` ${selected.length}` : ""}
+    </button>
+    {position && ReactDOM.createPortal(<div ref={menu} onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} role="dialog" aria-label={`${label} filter`} style={{ ...position, position: "fixed", zIndex: 10000, background: "#101d2c", color: C.text, border: `1px solid ${C.panelBorder}`, borderRadius: 10, boxShadow: "0 10px 35px #0009", display: "flex", flexDirection: "column", padding: 12, fontSize: 13, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif", letterSpacing: 0.2 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}><strong>{label}</strong><button type="button" aria-label="Close filter" onClick={() => setPosition(null)} style={{ ...btnSt, padding: "3px 7px" }}>✕</button></div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+        <button type="button" style={{ ...btnSt, padding: "5px 8px" }} onClick={() => onChange(null)}>Select all</button>
+        <button type="button" style={{ ...btnSt, padding: "5px 8px" }} onClick={() => onChange([])}>Clear all</button>
+      </div>
+      <div style={{ overflowY: "auto", minHeight: 0 }}>
+        {values.map(value => <label key={value} style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 2px", cursor: "pointer", overflowWrap: "anywhere", color: memberFilterColor(field, value), fontWeight: 700, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif", letterSpacing: 0.2 }}>
+          <input type="checkbox" style={{ accentColor: memberFilterColor(field, value), flexShrink: 0 }} checked={!selected || selected.includes(value)} onChange={e => {
+            const current = selected || values;
+            const next = e.target.checked ? [...current, value] : current.filter(v => v !== value);
+            onChange(next.length === values.length ? null : next);
+          }} />{value || "(Blank)"}
+        </label>)}
+      </div>
+    </div>, document.body)}
+  </>;
+}
+
 function MemberCard({ m, alliances, teams, kvkAlliances, onUpdate, onDelete }) {
   const [expanded, setExpanded] = useState(false);
   const f = (k, v) => onUpdate(m.id, k, v);
@@ -728,6 +856,7 @@ function MemberCard({ m, alliances, teams, kvkAlliances, onUpdate, onDelete }) {
       </div>
 
       {/* Expanded edit form */}
+      <div style={{ padding: "4px 10px 10px", fontSize: 12 }}><span style={{ color: C.textDim }}>Rally Score (est.) </span><RallyScoreDetails m={m} /></div>
       {expanded && (
         <div style={{ padding: "0 10px 10px", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
           <div style={{ paddingTop: 8, marginBottom: 8 }}>
@@ -760,13 +889,6 @@ function MemberCard({ m, alliances, teams, kvkAlliances, onUpdate, onDelete }) {
               <select className="cell-edit" style={{ color: kvkAllianceColor(m.kvkAlliance), fontWeight: 700 }} value={m.kvkAlliance || ""} onChange={e => f("kvkAlliance", e.target.value)}>
                 <option value="">—</option>
                 {kvkAlliances.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 2 }}>Team</div>
-              <select className="cell-edit" style={{ color: teamColor(m.team), fontWeight: 700 }} value={m.team || ""} onChange={e => f("team", e.target.value)}>
-                <option value="">—</option>
-                {teams.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
               </select>
             </div>
             <div style={{ gridColumn: "span 2" }}>
@@ -942,9 +1064,9 @@ function BattleGuide() {
         <div style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 9, fontWeight: 800, color: C.accent, letterSpacing: 1.5, fontFamily: "'Roboto Condensed',sans-serif", textTransform: "uppercase", marginBottom: 8 }}>Overall Strategy</div>
           {[
-            { badge: "MKP", color: C.gold,  label: "Assault Squad",         desc: "Launch 3–4 synchronized rallies to remove the enemy from the castle." },
-            { badge: "WFP", color: C.green, label: "Castle Garrison Squad",  desc: "Follow directly behind MKP, take control, and reinforce the castle." },
-            { badge: "MKP", color: "#ff8040", label: "Counter-Rally Squad", desc: "Prepare counter-rallies whenever the enemy launches against the castle." },
+            { badge: "KNG", color: C.gold,  label: "Assault Squad",         desc: "Launch 3–4 synchronized rallies to remove the enemy from the castle." },
+            { badge: "WHL", color: C.green, label: "Castle Garrison Squad",  desc: "Follow directly behind KNG, take control, and reinforce the castle." },
+            { badge: "KNG", color: "#ff8040", label: "Counter-Rally Squad", desc: "Prepare counter-rallies whenever the enemy launches against the castle." },
           ].map(r => (
             <div key={r.label} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 7 }}>
               <span style={{ fontSize: 9, fontWeight: 800, color: r.color, background: r.color + "22", border: `1px solid ${r.color}44`, borderRadius: 4, padding: "1px 6px", lineHeight: 1.5, flexShrink: 0, marginTop: 1 }}>{r.badge}</span>
@@ -1014,10 +1136,10 @@ function BattleGuide() {
         <div style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 9, fontWeight: 800, color: C.red, letterSpacing: 1.5, fontFamily: "'Roboto Condensed',sans-serif", textTransform: "uppercase", marginBottom: 8 }}>Trigger Events</div>
           {[
-            { color: C.red,     event: "Enemy controls castle",    action: "MKP begins synchronized assault rallies." },
-            { color: C.green,   event: "Castle is cleared",        action: "MKP sends the hold march immediately." },
-            { color: "#ff8040", event: "Enemy launches a rally",   action: "WAR prepares a counter-rally and MKP refills." },
-            { color: C.red,     event: "Castle is lost",           action: "Stop solo attacks, reset, and repeat the MKP assault → WFP hold sequence." },
+            { color: C.red,     event: "Enemy controls castle",    action: "KNG begins synchronized assault rallies." },
+            { color: C.green,   event: "Castle is cleared",        action: "KNG sends the hold march immediately." },
+            { color: "#ff8040", event: "Enemy launches a rally",   action: "WAR prepares a counter-rally and KNG refills." },
+            { color: C.red,     event: "Castle is lost",           action: "Stop solo attacks, reset, and repeat the KNG assault → WHL hold sequence." },
           ].map(t => (
             <div key={t.event} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 7 }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: t.color, flexShrink: 0, marginTop: 4, boxShadow: `0 0 4px ${t.color}` }} />
@@ -1031,8 +1153,8 @@ function BattleGuide() {
 
         {/* Footer */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 12, textAlign: "center" }}>
-          <span style={{ fontSize: 12, fontWeight: 800, color: C.gold, fontFamily: "'Roboto Condensed',sans-serif", letterSpacing: 0.5 }}>MKP clears and counters. </span>
-          <span style={{ fontSize: 12, fontWeight: 800, color: C.green, fontFamily: "'Roboto Condensed',sans-serif", letterSpacing: 0.5 }}>WFP captures and holds.</span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: C.gold, fontFamily: "'Roboto Condensed',sans-serif", letterSpacing: 0.5 }}>KNG clears and counters. </span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: C.green, fontFamily: "'Roboto Condensed',sans-serif", letterSpacing: 0.5 }}>WHL captures and holds.</span>
         </div>
       </div>
     </div>
@@ -1317,6 +1439,21 @@ function RosterProgress({ members, kvkAlliances, assignments, mapOnly }) {
   );
 }
 
+const SideSection = ({ title, children, accent }) => (
+    <div style={{
+      background: "rgba(255,255,255,0.05)",
+      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)",
+      border: "1px solid rgba(255,255,255,0.10)",
+      borderRadius: 14,
+      padding: "14px 16px",
+      boxShadow: "0 4px 24px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08)",
+    }}>
+      <div style={{ fontSize: 10, color: accent || C.accent, letterSpacing: 2, marginBottom: 10, fontFamily: "'Roboto Condensed', sans-serif", fontWeight: 700, textTransform: "uppercase" }}>{title}</div>
+      {children}
+    </div>
+  );
+
 function CastleMap({ members, assignments, setAssignments, isMobile, viewportWidth, kvkAlliances }) {
   const GAP = isMobile ? 1 : 3;
   const mobileMapWidth = Math.max(252, (viewportWidth || 375) - 44);
@@ -1325,7 +1462,10 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
   const [hover, setHover] = useState(null);
   const [filter, setFilter] = useState("all");
   const [dragOverTile, setDragOverTile] = useState(null);
-  const [unpFilter, setUnpFilter] = useState({ kvk: "all", avail: "all", role: "all", tc: "all", target: "all" });
+  const [unpFilter, setUnpFilter] = useState({});
+  const [activePlaceholder, setActivePlaceholder] = useState(null);
+  const placeholderMatches = ph => activePlaceholder && Boolean(activePlaceholder.isEnemy) === Boolean(ph.isEnemy) && activePlaceholder.kvkAlliance === ph.kvkAlliance && activePlaceholder.tc === ph.tc;
+  const togglePlaceholder = ph => setActivePlaceholder(previous => previous && Boolean(previous.isEnemy) === Boolean(ph.isEnemy) && previous.kvkAlliance === ph.kvkAlliance && previous.tc === ph.tc ? null : ph);
 
   const key = (r, c) => `${r},${c}`;
   const getA = (r, c) => assignments[key(r, c)];
@@ -1333,6 +1473,7 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
   function handleClick(r, c) {
     if (isCastle(r, c) && !isTurret(r, c)) return;
     if (isTurret(r, c)) return;
+    if (activePlaceholder) { assignPlaceholder(r, c, activePlaceholder); setHover(null); return; }
     if (isMobile) window.scrollTo({ top: 0, behavior: "smooth" });
     setModal({ r, c, existing: getA(r, c) });
   }
@@ -1398,20 +1539,7 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
   const availColorMap = { Full: C.green, "1st Half": C.blue, "2nd Half": C.gold, "On/Off": C.red };
   const targetColorMap = { Castle: C.accent, "Turret (N)": "#20d0d0", "Turret (E)": "#c060ff", "Turret (S)": "#ff8040", "Turret (W)": "#40c080" };
 
-  const SideSection = ({ title, children, accent }) => (
-    <div style={{
-      background: "rgba(255,255,255,0.05)",
-      backdropFilter: "blur(20px)",
-      WebkitBackdropFilter: "blur(20px)",
-      border: "1px solid rgba(255,255,255,0.10)",
-      borderRadius: 14,
-      padding: "14px 16px",
-      boxShadow: "0 4px 24px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08)",
-    }}>
-      <div style={{ fontSize: 10, color: accent || C.accent, letterSpacing: 2, marginBottom: 10, fontFamily: "'Roboto Condensed', sans-serif", fontWeight: 700, textTransform: "uppercase" }}>{title}</div>
-      {children}
-    </div>
-  );
+
 
   return (
     <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 16, alignItems: "flex-start" }}>
@@ -1691,6 +1819,9 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
                   const col = _kvkAllianceColorMap[a.name] || C.textDim;
                   return (
                     <div key={`${a.name}-${tc}`}
+                      role="button" tabIndex={0} aria-pressed={Boolean(placeholderMatches({ kvkAlliance: a.name, tc }))}
+                      onClick={() => togglePlaceholder({ kvkAlliance: a.name, tc })}
+                      onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); togglePlaceholder({ kvkAlliance: a.name, tc }); } }}
                       draggable
                       onDragStart={e => {
                         e.dataTransfer.setData("placeholder", JSON.stringify({ kvkAlliance: a.name, tc }));
@@ -1698,7 +1829,8 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
                       }}
                       onDragEnd={e => { e.currentTarget.style.opacity = "1"; }}
                       style={{
-                        background: col + "18", border: `1.5px dashed ${col}66`,
+                        background: col + (placeholderMatches({ kvkAlliance: a.name, tc }) ? "44" : "18"), border: placeholderMatches({ kvkAlliance: a.name, tc }) ? `2px solid ${col}` : `1.5px dashed ${col}66`,
+                        boxShadow: placeholderMatches({ kvkAlliance: a.name, tc }) ? `0 0 9px ${col}55` : "none",
                         borderRadius: 6, padding: "4px 8px",
                         fontSize: 10, fontWeight: 700, color: col,
                         cursor: "grab", userSelect: "none", lineHeight: 1.4,
@@ -1712,6 +1844,9 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
 
             <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 5 }}>Enemy</div>
             <div
+              role="button" tabIndex={0} aria-pressed={Boolean(activePlaceholder?.isEnemy)}
+              onClick={() => togglePlaceholder({ isEnemy: true })}
+              onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); togglePlaceholder({ isEnemy: true }); } }}
               draggable
               onDragStart={e => {
                 e.dataTransfer.setData("placeholder", JSON.stringify({ isEnemy: true }));
@@ -1719,12 +1854,16 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
               }}
               onDragEnd={e => { e.currentTarget.style.opacity = "1"; }}
               style={{
-                background: C.redDim, border: `1.5px dashed ${C.red}77`,
+                background: activePlaceholder?.isEnemy ? `${C.red}44` : C.redDim, border: activePlaceholder?.isEnemy ? `2px solid ${C.red}` : `1.5px dashed ${C.red}77`,
+                boxShadow: activePlaceholder?.isEnemy ? `0 0 9px ${C.red}55` : "none",
                 borderRadius: 6, padding: "4px 10px", display: "inline-block",
                 fontSize: 10, fontWeight: 700, color: C.red,
                 cursor: "grab", userSelect: "none",
               }}>
               Enemy
+            </div>
+            <div style={{ fontSize: 10, color: activePlaceholder ? C.accent : C.textDim, marginTop: 10, lineHeight: 1.5 }}>
+              {activePlaceholder ? `Selected: ${activePlaceholder.isEnemy ? "Enemy" : `${activePlaceholder.tc} ${activePlaceholder.kvkAlliance}`}. Click tiles to place. Click the placeholder again to unselect.` : "Select a placeholder, then click tiles to place it. You can also drag it onto a tile."}
             </div>
           </SideSection>
         )}
@@ -1739,35 +1878,21 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
                 {/* Filter bar */}
                 <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 8 }}>
                   {[
-                    { key: "kvk", label: "KvK", opts: ["all", ...kvkAlliances.map(a => a.name)] },
-                    { key: "avail", label: "Avail", opts: ["all", ...AVAILABILITY_OPTS] },
-                    { key: "role", label: "Role", opts: ["all", "Rally Leader", "Rally Joiner"] },
-                    { key: "tc", label: "TC", opts: ["all", ...TC_LEVELS.slice().reverse()] },
-                    { key: "target", label: "Target", opts: ["all", ...PRIMARY_TARGETS] },
-                  ].map(({ key, label, opts }) => (
-                    <select key={key} value={unpFilter[key]}
-                      onChange={e => setUnpFilter(f => ({ ...f, [key]: e.target.value }))}
-                      style={{ ...inputSt, fontSize: 9, padding: "3px 6px", flex: "1 1 60px", minWidth: 0,
-                        color: unpFilter[key] !== "all" ? C.accent : C.textDim,
-                        border: unpFilter[key] !== "all" ? `1px solid ${C.accent}55` : "1px solid rgba(255,255,255,0.1)",
-                      }}>
-                      <option value="all">{label}</option>
-                      {opts.filter(o => o !== "all").map(o => <option key={o} value={o}>{o === "Rally Leader" ? "Leader" : o === "Rally Joiner" ? "Joiner" : o}</option>)}
-                    </select>
+                    ["kvkAlliance", "KvK Alliance"], ["available", "Availability"], ["role", "Role"], ["tc", "TC Level"], ["primaryTarget", "Primary Target"],
+                  ].map(([field, label]) => (
+                    <div key={field} style={{ flex: "1 1 110px", minWidth: 0 }}>
+                      <MemberColumnFilter showLabel field={field} label={label} members={unassignedMembers} selected={unpFilter[field]} onChange={values => setUnpFilter(previous => ({ ...previous, [field]: values }))} />
+                    </div>
                   ))}
-                  {Object.values(unpFilter).some(v => v !== "all") && (
-                    <button onClick={() => setUnpFilter({ kvk: "all", avail: "all", role: "all", tc: "all", target: "all" })}
+                  {Object.values(unpFilter).some(values => values !== null) && (
+                    <button title="Reset filters" aria-label="Reset unpositioned filters" onClick={() => setUnpFilter({})}
                       style={{ ...btnSt, fontSize: 9, padding: "3px 8px", color: C.red, background: C.redDim, border: "none" }}>✕</button>
                   )}
                 </div>
                 <div style={{ fontSize: 9, color: C.textDim, marginBottom: 6, fontStyle: "italic" }}>Drag a player onto any tile to assign them</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   {unassignedMembers.filter(m =>
-                    (unpFilter.kvk === "all" || m.kvkAlliance === unpFilter.kvk) &&
-                    (unpFilter.avail === "all" || m.available === unpFilter.avail) &&
-                    (unpFilter.role === "all" || m.role === unpFilter.role) &&
-                    (unpFilter.tc === "all" || m.tc === unpFilter.tc) &&
-                    (unpFilter.target === "all" || m.primaryTarget === unpFilter.target)
+                    Object.entries(unpFilter).every(([field, values]) => values === null || values.includes(memberFilterValue(m[field])))
                   ).map(m => (
                     <div key={m.id}
                       draggable={true}
@@ -1996,11 +2121,12 @@ function App() {
   const [loadingAvatars, setLoadingAvatars] = useState(false);
   const [avatarMsg, setAvatarMsg]   = useState(null);
   const [tab, setTab]               = useState("map");
-  const [filterRole, setFilterRole] = useState("all");
-  const [filterAlliance, setFilterAlliance] = useState("");
-  const [filterAvail, setFilterAvail] = useState("all");
-  const [sortKey, setSortKey]       = useState("name");
-  const [sortDir, setSortDir]       = useState(1);
+  const [powerSyncing, setPowerSyncing] = useState(false);
+  const [powerSyncMsg, setPowerSyncMsg] = useState("");
+  const [memberFilters, setMemberFilters] = useState({});
+  const setMemberFilter = (field, values) => setMemberFilters(previous => ({ ...previous, [field]: values }));
+  const [sortKey, setSortKey]       = useState("rallyScore");
+  const [sortDir, setSortDir]       = useState(-1);
   const [search, setSearch]         = useState("");
   const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1024);
   const isMobile = windowWidth < 768;
@@ -2279,6 +2405,78 @@ function App() {
     setTimeout(() => setSyncMsg(null), 15000);
   }
 
+  async function loadPowerSnapshot() {
+    if (!requireEdit() || powerSyncing) return;
+    setPowerSyncing(true);
+    try {
+      const updates = {};
+      let matched = 0;
+      for (const field of MEMBER_POWER_FIELDS) {
+        const board = MEMBER_POWER_SNAPSHOT.boards[field];
+        const scores = new Map(board.rows.map(row => [String(row.governor_id), row.score]));
+        for (const m of members) {
+          const id = m.governorId || (/^\d{7,10}$/.test(String(m.id)) ? m.id : null);
+          if (!id) continue;
+          const score = scores.get(String(id));
+          updates[`members/${m.id}/${field}`] = score === undefined ? null : score;
+          updates[`members/${m.id}/powerSource`] = "Mightpulse snapshot";
+          updates[`members/${m.id}/powerUpdatedAt`] = MEMBER_POWER_SNAPSHOT.fetched_at;
+          if (score !== undefined) matched++;
+        }
+      }
+      if (Object.keys(updates).length) await db.ref().update(updates);
+      setPowerSyncMsg(`Loaded ${matched} values from Mightpulse snapshot fetched ${new Date(MEMBER_POWER_SNAPSHOT.fetched_at).toLocaleString()}. Source boards may be older; — means unavailable in the top 100.`);
+    } catch (e) { setPowerSyncMsg(`Snapshot could not be saved: ${e.message}`); }
+    finally { setPowerSyncing(false); }
+  }
+
+  async function refreshMemberPower() {
+    if (!requireEdit() || powerSyncing) return;
+    const apiKey = "kss_V3NLfiWb1737zdnmLecSHNBqEtwZ0mu_l-L0XimK2xc";
+    if (!apiKey?.trim()) return;
+    setPowerSyncing(true);
+    let received = 0, matched = 0;
+    const updates = {};
+    try {
+      for (const field of MEMBER_POWER_FIELDS) {
+        setPowerSyncMsg(`Mightpulse: loading ${field}… (${received}/${MEMBER_POWER_FIELDS.length})`);
+        const response = await fetch(`https://api.mightpulse.com/v1/kingdoms/1884/ranks?board=${field}&limit=100`, {
+          headers: { Authorization: `Bearer ${apiKey.trim()}` }, cache: "no-store"
+        });
+        if (!response.ok) throw new Error(`Mightpulse returned ${response.status}. ${received} boards loaded before refresh stopped.`);
+        const data = await response.json();
+        if (data.ok === false) throw new Error("Mightpulse could not return leaderboard data.");
+        const entries = [];
+        function collect(value) {
+          if (!value || typeof value !== "object") return;
+          if (!Array.isArray(value) && value.governor_id != null && value.score != null) { entries.push(value); return; }
+          for (const child of Object.values(value)) if (child && typeof child === "object") collect(child);
+        }
+        collect(data);
+        if (!entries.length) throw new Error(`No readable entries returned for ${field}; existing values were preserved.`);
+        const scores = new Map(entries.map(entry => [String(entry.governor_id), Number(entry.score)]).filter(([,score]) => Number.isFinite(score) && score >= 0));
+        for (const m of members) {
+          const governorId = m.governorId || (/^\d{7,10}$/.test(String(m.id)) ? m.id : null);
+          if (!governorId) continue;
+          const score = scores.get(String(governorId));
+          updates[`members/${m.id}/${field}`] = score === undefined ? null : score;
+          if (score !== undefined) matched++;
+        }
+        received++;
+      }
+      const fetchedAt = new Date().toISOString();
+      for (const m of members) {
+        if (Object.keys(updates).some(path => path.startsWith(`members/${m.id}/`))) {
+          updates[`members/${m.id}/powerUpdatedAt`] = fetchedAt;
+          updates[`members/${m.id}/powerSource`] = "Mightpulse";
+        }
+      }
+      if (Object.keys(updates).length) await db.ref().update(updates);
+      setPowerSyncMsg(`Mightpulse: refreshed all 7 boards, matched ${matched} power values. — means not available in the returned top 100. Source data may be cached.`);
+    } catch (e) { setPowerSyncMsg(`${e.message === "Failed to fetch" ? "Browser could not access Mightpulse. Use Load Power Snapshot for the included data." : e.message} No partial refresh was saved.`); }
+    finally { setPowerSyncing(false); }
+  }
+
   async function loadAvatars() {
     if (!requireEdit()) return;
     const missing = members.filter(m => !m.avatarUrl && m.id);
@@ -2344,14 +2542,32 @@ function App() {
   const availDist    = AVAILABILITY_OPTS.map(o => ({ label: o, value: members.filter(m => m.available === o).length }));
   const targetDist   = PRIMARY_TARGETS.map(t => ({ label: t, value: members.filter(m => m.primaryTarget === t).length }));
 
-  let filtered = members.filter(m => {
-    if (filterRole !== "all" && m.role !== filterRole) return false;
-    if (filterAlliance && !(m.alliance || "").toLowerCase().includes(filterAlliance.toLowerCase())) return false;
-    if (filterAvail !== "all" && m.available !== filterAvail) return false;
+  let filtered = members.map(m => ({ ...m, rallyScore: rallyScore(m) })).filter(m => {
+    if (MEMBER_FILTER_COLUMNS.some(([field]) => memberFilters[field] && !memberFilters[field].includes(memberFilterValue(m[field])))) return false;
     if (search && !m.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   }).sort((a, b) => {
     let av = a[sortKey], bv = b[sortKey];
+    if (sortKey === "tc") {
+      const level = value => {
+        const text = String(value ?? "").trim().toUpperCase();
+        const tg = text.match(/^TG\s*(\d+)$/);
+        if (tg) return 30 + Number(tg[1]);
+        const n = Number(text);
+        if (!text || !Number.isFinite(n)) return null;
+        return n >= 35 ? 30 + Math.floor((n - 30) / 5) : n;
+      };
+      av = level(av); bv = level(bv);
+      if (av === null || bv === null) return av === bv ? 0 : av === null ? 1 : -1;
+      return (av - bv) * sortDir;
+    }
+    if (MEMBER_POWER_FIELDS.includes(sortKey) || sortKey === "rallyScore") {
+      const numeric = value => value === null || value === undefined || String(value).trim() === "" ? null : Number(String(value).replace(/,/g, ""));
+      av = numeric(av); bv = numeric(bv);
+      const aMissing = av === null || !Number.isFinite(av), bMissing = bv === null || !Number.isFinite(bv);
+      if (aMissing || bMissing) return aMissing === bMissing ? 0 : aMissing ? 1 : -1;
+      return (av - bv) * sortDir;
+    }
     if (typeof av === "string") av = av.toLowerCase();
     if (typeof bv === "string") bv = bv.toLowerCase();
     return av < bv ? -sortDir : av > bv ? sortDir : 0;
@@ -2492,11 +2708,13 @@ function App() {
         {tab === "members" && (
           <div>
             <MemberSummary members={members} alliances={alliances} kvkAlliances={kvkAlliances} />
+            {editMode && (
             <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap" }}>
               <AddMemberButton onAdd={addMember} alliances={alliances} />
+              <button onClick={loadPowerSnapshot} disabled={powerSyncing} title={`Fetched ${MEMBER_POWER_SNAPSHOT.fetched_at}`} style={{ ...btnSt, padding: "7px 16px", color: C.green, fontWeight: 700 }}>Load Power Snapshot</button>
+              <button onClick={refreshMemberPower} disabled={powerSyncing} style={{ ...btnSt, padding: "7px 16px", color: C.blue, fontWeight: 700 }}>{powerSyncing ? "Refreshing Power…" : "↻ Refresh Power"}</button>
               <CsvUploadButton onImport={importMembers} />
               <AllianceManager alliances={alliances} onAdd={addAlliance} onRemove={removeAlliance} onColorChange={updateAllianceColor} />
-              <TeamManager teams={teams} onAdd={addTeam} onRemove={removeTeam} onColorChange={updateTeamColor} />
               <KvkAllianceManager kvkAlliances={kvkAlliances} onAdd={addKvkAlliance} onRemove={removeKvkAlliance} onColorChange={updateKvkAllianceColor} />
               <button onClick={clearAllMembers} style={{ ...btnSt, background: "rgba(248,113,113,0.15)", color: C.red, padding: "7px 20px", fontWeight: 700, fontSize: 13, fontFamily: "'Roboto Condensed','Arial Narrow',sans-serif", letterSpacing: 0.5, border: `1px solid ${C.red}33` }}>
                 🗑 Clear All
@@ -2508,41 +2726,25 @@ function App() {
                 {loadingAvatars ? "⟳ Loading…" : "🖼 Load Avatars"}
               </button>
             </div>
-            {syncMsg && (
+            )}
+            {editMode && powerSyncMsg && <div role="status" style={{ marginBottom: 10, fontSize: 12, color: C.textDim }}>{powerSyncMsg}</div>}
+            {editMode && syncMsg && (
               <div style={{ marginBottom: 10, padding: "8px 14px", borderRadius: 8, fontSize: 11, fontWeight: 600, background: syncMsg.ok ? `${C.green}18` : `${C.gold}18`, border: `1px solid ${syncMsg.ok ? C.green : C.gold}44`, color: syncMsg.ok ? C.green : C.gold }}>
                 {syncMsg.text}
               </div>
             )}
-            {avatarMsg && (
+            {editMode && avatarMsg && (
               <div style={{ marginBottom: 10, padding: "8px 14px", borderRadius: 8, fontSize: 11, fontWeight: 600, background: avatarMsg.ok ? `${C.accent}18` : `${C.gold}18`, border: `1px solid ${avatarMsg.ok ? C.accent : C.gold}44`, color: avatarMsg.ok ? C.accent : C.gold }}>
                 {avatarMsg.text}
               </div>
             )}
             <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
-              {!isMobile && <input style={{ ...inputSt, flex: "1 1 140px", minWidth: 0 }} placeholder="🔍 Search name…" value={search} onChange={e => setSearch(e.target.value)} />}
-              {!isMobile && <>
-                <select style={{ ...inputSt, width: 150 }} value={filterRole} onChange={e => setFilterRole(e.target.value)}>
-                  <option value="all">All Roles</option>{ROLES.filter(r => r !== "").map(r => <option key={r} value={r}>{r}</option>)}
-                </select>
-                <input style={{ ...inputSt, width: 150 }} placeholder="Filter alliance…" value={filterAlliance} onChange={e => setFilterAlliance(e.target.value)} />
-                <select style={{ ...inputSt, width: 160 }} value={filterAvail} onChange={e => setFilterAvail(e.target.value)}>
-                  <option value="all">All Availability</option>
-                  {AVAILABILITY_OPTS.filter(o => o !== "").map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
-              </>}
-              {isMobile && <>
-                <select style={{ ...inputSt, flex: "1 1 120px" }} value={filterAlliance ? filterAlliance : "all"}
-                  onChange={e => setFilterAlliance(e.target.value === "all" ? "" : e.target.value)}>
-                  <option value="all">All Alliances</option>
-                  {alliances.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
-                </select>
-                <select style={{ ...inputSt, flex: "1 1 120px" }} value={filterAvail} onChange={e => setFilterAvail(e.target.value)}>
-                  <option value="all">All Availability</option>
-                  {AVAILABILITY_OPTS.filter(o => o !== "").map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
-              </>}
+              <input style={{ ...inputSt, flex: "1 1 140px", minWidth: 0 }} placeholder="🔍 Search name…" value={search} onChange={e => setSearch(e.target.value)} />
               <span style={{ fontSize: 12, color: C.textDim, flexShrink: 0 }}>{filtered.length}/{members.length}</span>
             </div>
+            {isMobile && <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+              {MEMBER_FILTER_COLUMNS.map(([field, label]) => <div key={field}><MemberColumnFilter showLabel field={field} label={label} members={members} selected={memberFilters[field]} onChange={values => setMemberFilter(field, values)} /></div>)}
+            </div>}
             {isMobile ? (
               <div>
                 {filtered.length === 0 && <div style={{ textAlign: "center", color: C.textDim, padding: 40 }}>No members match filters</div>}
@@ -2555,8 +2757,8 @@ function App() {
               <table style={{ width: "100%", borderCollapse: "collapse", background: C.panel, borderRadius: 10 }}>
                 <thead>
                   <tr style={{ background: "#0a1820" }}>
-                    {[["name","Name"],["tc","TC"],["available","Avail."],["role","Role"],["alliance","Alliance"],["kvkAlliance","KvK Alliance"],["team","Team"],["primaryTarget","Primary Target"],["notes","Notes"],[null,"Actions"]].map(([k, label]) => (
-                      <th key={label} style={{ ...thSt, position: "sticky", top: 0, background: "#0a1820", zIndex: 10, boxShadow: "0 1px 0 rgba(255,255,255,0.08)" }} onClick={() => k && toggleSort(k)}>{label}{k && sortKey === k ? (sortDir === 1 ? " ↑" : " ↓") : ""}</th>
+                    {[["name","Name"],["alliance","Alliance"],["tc","TC Level"],["available","Availability"],["role","Role"],["primaryTarget","Primary Target"],["kvkAlliance","KvK Alliance"],["rallyScore","Rally Score (est.)"],[null,""]].map(([k, label]) => (
+                      <th key={label} style={{ ...thSt, position: "sticky", top: 0, background: "#0a1820", zIndex: k === "name" ? 12 : 10, left: k === "name" ? 0 : undefined, minWidth: k === "name" ? 210 : undefined, boxShadow: "0 1px 0 rgba(255,255,255,0.08)" }}><span style={{ display: "inline-flex", alignItems: "center", gap: 2 }}><span onClick={() => k && toggleSort(k)}>{label}{k && sortKey === k ? (sortDir === 1 ? " ↑" : " ↓") : ""}</span>{k && k !== "name" && k !== "rallyScore" && !MEMBER_POWER_FIELDS.includes(k) && <MemberColumnFilter field={k} label={label} members={members} selected={memberFilters[k]} onChange={values => setMemberFilter(k, values)} />}</span></th>
                     ))}
                   </tr>
                 </thead>
@@ -2564,7 +2766,7 @@ function App() {
                   {filtered.map(m => (
                     <MemberRow key={m.id} m={m} alliances={alliances} teams={teams} kvkAlliances={kvkAlliances} onUpdate={updateMember} onDelete={deleteMember} />
                   ))}
-                  {!filtered.length && <tr><td colSpan={10} style={{ padding: 40, textAlign: "center", color: C.textDim }}>No members match filters</td></tr>}
+                  {!filtered.length && <tr><td colSpan={9} style={{ padding: 40, textAlign: "center", color: C.textDim }}>No members match filters</td></tr>}
                 </tbody>
               </table>
             </div>
