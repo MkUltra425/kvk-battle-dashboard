@@ -957,8 +957,8 @@ function BattlePreparation() {
       "Save 1 garrison join formation with Gordon as first hero. Use 60/20/20 Infantry/Cavalry/Archers."
     ] },
     { title: "💪 Buffs", color: "#62d4c5", items: [
-      "All players: activate at least a +10% Troop Capacity buff. +20% is ideal.",
-      "Rally leaders: activate Attack, Lethality, and Health buffs. These only contribute to rally stats when the leader activates them; joiner buffs have no impact on the rally."
+      { heading: "All players:", details: ["Activate at least a +10% Troop Capacity buff."] },
+      { heading: "Rally leaders:", details: ["Activate all +20% buffs. Attack / Lethality and Defense / Health buffs only boost rally stats if the leader has them activated. Joiners’ combat buffs do not affect rally stats.", "Activate Pet Skills."] }
     ] }
   ];
   return <section aria-label="Battle Preparation" style={{marginBottom:20, fontFamily:"Arial, sans-serif"}}>
@@ -967,9 +967,9 @@ function BattlePreparation() {
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(min(240px, 100%), 1fr))",gap:12}}>
       {groups.map(group => <div key={group.title} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.10)",borderRadius:12,padding:14}}>
         <h3 style={{fontSize:15,fontWeight:700,color:group.color,margin:"0 0 10px"}}>{group.title}</h3>
-        <ul style={{listStyle:"none",margin:0,padding:0}}>{group.items.map(text => <li key={text} style={{display:"flex",gap:9,alignItems:"flex-start",fontSize:12,lineHeight:1.6,color:C.text,marginBottom:10}}>
+        <ul style={{listStyle:"none",margin:0,padding:0}}>{group.items.map(item => <li key={typeof item === "string" ? item : item.heading} style={{display:"flex",gap:9,alignItems:"flex-start",fontSize:12,lineHeight:1.6,color:C.text,marginBottom:10}}>
           <span aria-hidden="true" style={{display:"block",width:14,height:14,boxSizing:"border-box",border:`1.5px solid ${group.color}`,borderRadius:2,flexShrink:0,marginTop:3}} />
-          <span>{text}</span>
+          <div>{typeof item === "string" ? item : <><strong>{item.heading}</strong><ul style={{margin:"5px 0 0",paddingLeft:17}}>{item.details.map(detail => <li key={detail} style={{marginBottom:6}}>{detail}</li>)}</ul></>}</div>
         </li>)}</ul>
       </div>)}
     </div>
