@@ -969,13 +969,14 @@ function BattlePreparation({ formationContent }) {
         <h3 style={{fontSize:15,fontWeight:700,color:group.color,margin:"0 0 10px"}}>{group.title}</h3>
         <ul style={{listStyle:"none",margin:0,padding:0}}>{group.items.map(item => <li key={typeof item === "string" ? item : item.heading} style={{display:"flex",gap:9,alignItems:"flex-start",fontSize:12,lineHeight:1.6,color:C.text,marginBottom:10}}>
           <span aria-hidden="true" style={{display:"block",width:14,height:14,boxSizing:"border-box",border:`1.5px solid ${group.color}`,borderRadius:2,flexShrink:0,marginTop:3}} />
-          <div>{typeof item === "string" ? item : <><strong>{item.heading}</strong><ul style={{margin:"5px 0 0",paddingLeft:17}}>{item.details.map(detail => <li key={detail} style={{marginBottom:6}}>{detail}</li>)}</ul>
-        {group.title === "⚔️ Formations" && formationContent}</>}</div>
+          <div>{typeof item === "string" ? item : <><strong>{item.heading}</strong><ul style={{margin:"5px 0 0",paddingLeft:17}}>{item.details.map(detail => <li key={detail} style={{marginBottom:6}}>{detail}</li>)}</ul></>}</div>
         </li>)}</ul>
+        {group.title === "⚔️ Formations" && formationContent}
       </div>)}
     </div>
   </section>;
 }
+
 
 function BattleGuide() {
   const [guideImages, setGuideImages] = useState({ joinRally: [null,null,null], garrison: [null,null,null] });
