@@ -946,6 +946,36 @@ function HeroSlot({ image, color, name, onUpload, onRemove }) {
   );
 }
 
+function BattlePreparation() {
+  const groups = [
+    { title: "🛡️ Protection", color: "#f2b94b", items: [
+      "Activate your shield before 10:00 UTC.",
+      "Be ready when kingdom teleports become available. The opposing kingdom can potentially zero your troops and resources before battle."
+    ] },
+    { title: "⚔️ Formations", color: "#67b5ff", items: [
+      "Save 3 rally join formations: Chenko, Amane, and Yeonwoo as first hero, one formation for each. Use 50/20/30 Infantry/Cavalry/Archers.",
+      "Save 1 garrison join formation with Gordon as first hero. Use 60/20/20 Infantry/Cavalry/Archers."
+    ] },
+    { title: "💪 Buffs", color: "#62d4c5", items: [
+      "All players: activate at least a +10% Troop Capacity buff. +20% is ideal.",
+      "Rally leaders: activate Attack, Lethality, and Health buffs. These only contribute to rally stats when the leader activates them; joiner buffs have no impact on the rally."
+    ] }
+  ];
+  return <section aria-label="Battle Preparation" style={{marginBottom:20, fontFamily:"Arial, sans-serif"}}>
+    <h2 style={{fontSize:20, fontWeight:700, color:C.accent, margin:"0 0 6px"}}>Battle Preparation</h2>
+    <p style={{fontSize:12,color:C.textDim,margin:"0 0 12px"}}>Before battle, work through the checklist below.</p>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(min(240px, 100%), 1fr))",gap:12}}>
+      {groups.map(group => <div key={group.title} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.10)",borderRadius:12,padding:14}}>
+        <h3 style={{fontSize:15,fontWeight:700,color:group.color,margin:"0 0 10px"}}>{group.title}</h3>
+        {group.items.map(text => <label key={text} style={{display:"flex",gap:9,alignItems:"flex-start",fontSize:12,lineHeight:1.6,color:C.text,marginBottom:10,cursor:"pointer"}}>
+          <input type="checkbox" style={{width:17,height:17,flexShrink:0,margin:"2px 0 0",accentColor:group.color}} />
+          <span>{text}</span>
+        </label>)}
+      </div>)}
+    </div>
+  </section>;
+}
+
 function BattleGuide() {
   const [guideImages, setGuideImages] = useState({ joinRally: [null,null,null], garrison: [null,null,null] });
 
@@ -2785,6 +2815,8 @@ function App() {
               <div style={{ fontFamily: "'Bebas Neue'", fontSize: isMobile ? 20 : 24, color: C.accent, letterSpacing: 3, marginBottom: 4 }}>KVK BATTLE MAP</div>
               {!isMobile && <div style={{ fontSize: 12, color: C.textDim }}>Click any gray tile to assign a member or mark an enemy. Changes sync live to all users.</div>}
             </div>
+
+            <BattlePreparation />
 
             {/* Roster progress removed from map tab */}
 
