@@ -946,11 +946,11 @@ function HeroSlot({ image, color, name, onUpload, onRemove }) {
   );
 }
 
-function BattlePreparation() {
+function BattlePreparation({ formationContent }) {
   const groups = [
     { title: "🛡️ Protection", color: "#f2b94b", items: [
-      "Activate your shield before 10:00 UTC.",
-      "Be ready when kingdom teleports become available. The opposing kingdom can potentially zero your troops and resources before battle."
+      "Activate your shield before 10:00 UTC. The opposing kingdom can zero your troops and resources before battle.",
+      "Recall gathering troops from resource tiles."
     ] },
     { title: "⚔️ Formations", color: "#67b5ff", items: [
       "Save 3 rally join formations: Chenko, Amane, and Yeonwoo as first hero, one formation for each. Use 50/20/30 Infantry/Cavalry/Archers.",
@@ -969,7 +969,8 @@ function BattlePreparation() {
         <h3 style={{fontSize:15,fontWeight:700,color:group.color,margin:"0 0 10px"}}>{group.title}</h3>
         <ul style={{listStyle:"none",margin:0,padding:0}}>{group.items.map(item => <li key={typeof item === "string" ? item : item.heading} style={{display:"flex",gap:9,alignItems:"flex-start",fontSize:12,lineHeight:1.6,color:C.text,marginBottom:10}}>
           <span aria-hidden="true" style={{display:"block",width:14,height:14,boxSizing:"border-box",border:`1.5px solid ${group.color}`,borderRadius:2,flexShrink:0,marginTop:3}} />
-          <div>{typeof item === "string" ? item : <><strong>{item.heading}</strong><ul style={{margin:"5px 0 0",paddingLeft:17}}>{item.details.map(detail => <li key={detail} style={{marginBottom:6}}>{detail}</li>)}</ul></>}</div>
+          <div>{typeof item === "string" ? item : <><strong>{item.heading}</strong><ul style={{margin:"5px 0 0",paddingLeft:17}}>{item.details.map(detail => <li key={detail} style={{marginBottom:6}}>{detail}</li>)}</ul>
+        {group.title === "⚔️ Formations" && formationContent}</>}</div>
         </li>)}</ul>
       </div>)}
     </div>
@@ -1041,8 +1042,7 @@ function BattleGuide() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      {/* Hero cards — always side by side */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <BattlePreparation formationContent={<div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(240px, 100%), 1fr))", gap: 12 }}>
       {sections.map(s => {
         const sImgs = guideImages[s.key] || [null, null, null];
         return (
@@ -1076,7 +1076,7 @@ function BattleGuide() {
           </div>
         );
       })}
-      </div>{/* end hero grid */}
+      </div>} />
 
       {/* ── KvK Strategy Guide ── */}
       <div style={{
@@ -2811,12 +2811,11 @@ function App() {
         {/* ── Map ── */}
         {tab === "map" && (
           <div>
+            <div style={{ marginBottom: 16 }}><BattleGuide /></div>
             <div style={{ marginBottom: isMobile ? 10 : 16 }}>
               <div style={{ fontFamily: "'Bebas Neue'", fontSize: isMobile ? 20 : 24, color: C.accent, letterSpacing: 3, marginBottom: 4 }}>KVK BATTLE MAP</div>
               {!isMobile && <div style={{ fontSize: 12, color: C.textDim }}>Click any gray tile to assign a member or mark an enemy. Changes sync live to all users.</div>}
             </div>
-
-            <BattlePreparation />
 
             {/* Roster progress removed from map tab */}
 
@@ -2831,10 +2830,7 @@ function App() {
               <CastleMap members={members} assignments={assignments} setAssignments={fbSetAssignments} isMobile={isMobile} viewportWidth={windowWidth} kvkAlliances={kvkAlliances} />
             </div>
 
-            {/* Join Rally + Garrison Support side by side, then strategy guide */}
-            <div style={{ marginTop: 16 }}>
-              <BattleGuide />
-            </div>
+
           </div>
         )}
       </div>
