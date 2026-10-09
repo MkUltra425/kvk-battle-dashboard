@@ -522,9 +522,11 @@ function MemberRow({ m, alliances, teams, kvkAlliances, onUpdate, onDelete }) {
         <span style={{color:C.accent,fontWeight:700,padding:"4px 6px"}}>{m.tc || "—"}</span>
       </td>
       <td style={{ ...td, textAlign: "center" }}>
-        <select className="cell-edit" style={{ color: availColor, fontWeight: 700 }} value={m.available} onChange={e => f("available", e.target.value)}>
+        <span title={availabilityIsLocked(m) ? "Submitted on 1884kvk.com. Resubmit the form to change availability." : undefined}>
+        {availabilityIsLocked(m) ? <span style={{color:availColor,fontWeight:700,padding:"4px 6px"}}>{m.available || "—"} 🔒</span> : <select className="cell-edit" style={{ color: availColor, fontWeight: 700 }} value={m.available} onChange={e => f("available", e.target.value)}>
           {AVAILABILITY_OPTS.map(o => <option key={o} value={o}>{o === "" ? "—" : o}</option>)}
-        </select>
+        </select>}
+        </span>
       </td>
       <td style={td}>
         <select className="cell-edit" style={{ color: roleColor(m.role), fontWeight: 700 }} value={m.role} onChange={e => f("role", e.target.value)}>
@@ -773,6 +775,7 @@ function RallyScoreDetails({ m }) {
     <RallyPowerBar m={m} />
   </span>;
 }
+const availabilityIsLocked = m => !!m && (m.availabilityLocked === true || m.availabilitySource === "1884kvk.com");
 const MEMBER_FILTER_COLUMNS = [["alliance", "Alliance"], ["tc", "TC Level"], ["available", "Availability"], ["role", "Role"], ["primaryTarget", "Primary Target"], ["kvkAlliance", "KvK Alliance"]];
 const memberFilterValue = value => String(value == null ? "" : value);
 function memberFilterColor(field, value) {
@@ -868,7 +871,7 @@ function MemberCard({ m, alliances, teams, kvkAlliances, onUpdate, onDelete }) {
             ].map(({ label, key, opts, color }) => (
               <div key={key}>
                 <div style={{ fontSize: 9, color: C.textDim, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 2 }}>{label}</div>
-                {key === "tc" ? <span style={{color,fontWeight:700,padding:"4px 6px",display:"block"}}>{m.tc || "—"}</span> : <select className="cell-edit" style={{ color, fontWeight: 700 }} value={m[key]} onChange={e => f(key, e.target.value)}>
+                {key === "tc" || (key === "available" && availabilityIsLocked(m)) ? <span title={key === "available" ? "Submitted on 1884kvk.com. Resubmit the form to change availability." : undefined} style={{color,fontWeight:700,padding:"4px 6px",display:"block"}}>{m[key] || "—"}{key === "available" ? " 🔒" : ""}</span> : <select className="cell-edit" style={{ color, fontWeight: 700 }} value={m[key]} onChange={e => f(key, e.target.value)}>
                   {opts.map(o => <option key={o}>{o}</option>)}
                 </select>}
               </div>
@@ -2224,11 +2227,19 @@ function App() {
 
   function addMember(m) {
     if (!requireEdit()) return;
-    db.ref(`members/${m.id}`).set(m);
+    db.ref(`members/${m.id}`).transaction(current => current ? undefined : m);
   }
   function updateMember(id, field, value) {
     if (!requireEdit()) return;
     if (["name","tc","alliance"].includes(field) || MEMBER_POWER_FIELDS.includes(field)) return;
+    if (field === "available") {
+      db.ref(`members/${id}`).transaction(current => {
+        if (!current || availabilityIsLocked(current)) return;
+        return {...current, available:value};
+      }).catch(err => { console.error("Availability update failed",err); alert("Availability could not be saved. Please try again."); });
+      return;
+    }
+    if (["availabilityLocked","availabilitySource","availabilitySubmittedAt","availabilitySubmittedValue"].includes(field)) return;
     db.ref(`members/${id}`).update({ [field]: value });
     const affected = Object.keys(assignments).filter(
       k => assignments[k]?.type === "friendly" && assignments[k]?.member?.id === id
@@ -2251,9 +2262,18 @@ function App() {
   }
   function importMembers(newOnes) {
     if (!requireEdit()) return;
-    const updates = {};
-    newOnes.forEach(m => { updates[`members/${m.id}`] = m; });
-    db.ref().update(updates);
+    newOnes.forEach(m => {
+      db.ref(`members/${m.id}`).transaction(current => {
+        const next = {...current,...m};
+        if (availabilityIsLocked(current)) {
+          ["available","availabilityLocked","availabilitySource","availabilitySubmittedAt","availabilitySubmittedValue"].forEach(field => {
+            if (Object.prototype.hasOwnProperty.call(current,field)) next[field]=current[field];
+            else delete next[field];
+          });
+        }
+        return next;
+      }).catch(err => {console.error("Member import failed",err);alert("A member could not be imported. Please try again.");});
+    });
     const known = new Set(alliances.map(a => a.name));
     const additions = [];
     newOnes.forEach(m => {
