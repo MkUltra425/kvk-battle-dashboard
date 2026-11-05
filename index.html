@@ -1227,17 +1227,17 @@ const CR1 = 4, CR2 = 9, CC1 = 4, CC2 = 9;
 
 // Maps the turret corner label to its Primary Target name
 const TURRET_LABEL_TO_TARGET = {
-  "North": "Turret (N)",
-  "East":  "Turret (E)",
-  "South": "Turret (S)",
-  "West":  "Turret (W)",
+  "N": "Turret (N)",
+  "E":  "Turret (E)",
+  "S": "Turret (S)",
+  "W":  "Turret (W)",
 };
 
 const TURRETS = [
-  { r: CR1, c: CC1, label: "North" },
-  { r: CR1, c: CC2, label: "East" },
-  { r: CR2, c: CC1, label: "West" },
-  { r: CR2, c: CC2, label: "South" },
+  { r: CR1, c: CC1, label: "N" },
+  { r: CR1, c: CC2, label: "E" },
+  { r: CR2, c: CC1, label: "W" },
+  { r: CR2, c: CC2, label: "S" },
 ];
 
 function isCastle(r, c) { return r >= CR1 && r <= CR2 && c >= CC1 && c <= CC2; }
