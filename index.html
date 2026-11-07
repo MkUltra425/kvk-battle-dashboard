@@ -2154,8 +2154,8 @@ function App() {
   const [powerSyncMsg, setPowerSyncMsg] = useState("");
   const [memberFilters, setMemberFilters] = useState({});
   const setMemberFilter = (field, values) => setMemberFilters(previous => ({ ...previous, [field]: values }));
-  const [sortKey, setSortKey]       = useState("rallyScore");
-  const [sortDir, setSortDir]       = useState(-1);
+  const [sortKey, setSortKey]       = useState("name");
+  const [sortDir, setSortDir]       = useState(1);
   const [search, setSearch]         = useState("");
   const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1024);
   const isMobile = windowWidth < 768;
@@ -2740,7 +2740,7 @@ function App() {
         {/* ── Members ── */}
         {tab === "members" && (
           <div>
-            <MemberSummary members={members} alliances={alliances} kvkAlliances={kvkAlliances} />
+
             {editMode && (
             <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap" }}>
               <AddMemberButton onAdd={addMember} alliances={alliances} />
