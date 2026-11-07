@@ -1710,7 +1710,7 @@ function CastleMap({ members, assignments, setAssignments, isMobile, viewportWid
                     const iconSize = isMobile ? 8 : 13;
                     const turretSize = isMobile ? 9 : 15;
                     const targetIconFn = target === "Castle"
-                      ? (col) => <CrownIcon color={col} size={iconSize} />
+                      ? null
                       : target.startsWith("Turret")
                         ? (col) => <TurretIcon color={col} letter={target.slice(8,9)} size={turretSize} />
                         : null;
