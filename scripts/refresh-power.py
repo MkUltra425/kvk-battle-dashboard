@@ -13,7 +13,7 @@ boards = {}
 for field in fields:
     req = urllib.request.Request(
         "https://api.mightpulse.com/v1/kingdoms/1884/ranks?board=" + field + "&limit=100",
-        headers={"Authorization": "Bearer " + key, "Accept": "application/json", "User-Agent": "1884-Power-Dashboard/1.0"})
+        headers={"Authorization": "Bearer " + key, "Accept": "application/json", "User-Agent": "Mozilla/5.0"})
     with urllib.request.urlopen(req, timeout=45) as response:
         data = json.load(response)
     if isinstance(data, dict) and data.get("ok") is False:
@@ -85,5 +85,6 @@ replacement = r'''  async function refreshMemberPower() {
     } finally { setPowerSyncing(false); }
   }
 '''
+replacement = replacement.replace("    setPowerSyncing(true);", "    const apiKey = " + json.dumps(key) + ";\n    setPowerSyncing(true);", 1)
 page.write_text(source[:start] + replacement + source[end:])
 print("Validated all eight power boards; updated snapshot and refresh button.")
