@@ -217,8 +217,8 @@ function teamColor(t) {
 }
 
 const DEFAULT_KVK_ALLIANCES = [
-  { name: "MKP", color: "#fbbf24" },
-  { name: "WFP", color: "#60a5fa" },
+  { name: "MKP", color: "#8f67e4" },
+  { name: "KNG", color: "#d3af37" },
 ];
 let _kvkAllianceColorMap = Object.fromEntries(DEFAULT_KVK_ALLIANCES.map(a => [a.name, a.color]));
 function kvkAllianceColor(a) {
@@ -1092,7 +1092,7 @@ function BattleGuide() {
           <div style={{ fontSize: 9, fontWeight: 800, color: C.accent, letterSpacing: 1.5, fontFamily: "'Roboto Condensed',sans-serif", textTransform: "uppercase", marginBottom: 8 }}>Overall Strategy</div>
           {[
             { badge: "KNG", color: C.gold,  label: "Assault Squad",         desc: "Launch 3–4 synchronized rallies to remove the enemy from the castle." },
-            { badge: "WHL", color: C.green, label: "Castle Garrison Squad",  desc: "Follow directly behind KNG, take control, and reinforce the castle." },
+            { badge: "MKP", color: C.green, label: "Castle Garrison Squad",  desc: "Follow directly behind KNG, take control, and reinforce the castle." },
             { badge: "KNG", color: "#ff8040", label: "Counter-Rally Squad", desc: "Prepare counter-rallies whenever the enemy launches against the castle." },
           ].map(r => (
             <div key={r.label} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 7 }}>
@@ -1166,7 +1166,7 @@ function BattleGuide() {
             { color: C.red,     event: "Enemy controls castle",    action: "KNG begins synchronized assault rallies." },
             { color: C.green,   event: "Castle is cleared",        action: "KNG sends the hold march immediately." },
             { color: "#ff8040", event: "Enemy launches a rally",   action: "WAR prepares a counter-rally and KNG refills." },
-            { color: C.red,     event: "Castle is lost",           action: "Stop solo attacks, reset, and repeat the KNG assault → WHL hold sequence." },
+            { color: C.red,     event: "Castle is lost",           action: "Stop solo attacks, reset, and repeat the KNG assault → MKP hold sequence." },
           ].map(t => (
             <div key={t.event} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 7 }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: t.color, flexShrink: 0, marginTop: 4, boxShadow: `0 0 4px ${t.color}` }} />
@@ -1181,7 +1181,7 @@ function BattleGuide() {
         {/* Footer */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 12, textAlign: "center" }}>
           <span style={{ fontSize: 12, fontWeight: 800, color: C.gold, fontFamily: "'Roboto Condensed',sans-serif", letterSpacing: 0.5 }}>KNG clears and counters. </span>
-          <span style={{ fontSize: 12, fontWeight: 800, color: C.green, fontFamily: "'Roboto Condensed',sans-serif", letterSpacing: 0.5 }}>WHL captures and holds.</span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: C.green, fontFamily: "'Roboto Condensed',sans-serif", letterSpacing: 0.5 }}>MKP captures and holds.</span>
         </div>
       </div>
     </div>
