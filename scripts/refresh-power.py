@@ -8,6 +8,11 @@ fields = json.loads(re.search(r"const MEMBER_POWER_FIELDS = (\[[^\n;]+\]);", sou
 match = re.search(r'const apiKey = "([^"]+)"', source)
 key = os.environ.get("MIGHTPULSE_API_KEY") or (match[1] if match else "")
 if not key:
+    # Migrate the credential already configured in the previous public dashboard.
+    with urllib.request.urlopen("https://raw.githubusercontent.com/MkUltra425/kvk-battle-dashboard/e48e8c3a062e5a0f5111d72d08a20a416a573daf/index.html", timeout=30) as previous:
+        configured = re.search(r'const apiKey = "([^"]+)"', previous.read().decode())
+        key = configured[1] if configured else ""
+if not key:
     raise RuntimeError("Configure the MIGHTPULSE_API_KEY repository secret")
 boards = {}
 for field in fields:
