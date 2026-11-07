@@ -2468,6 +2468,7 @@ function App() {
 
   async function refreshMemberPower() {
     if (!requireEdit() || powerSyncing) return;
+    const apiKey = "kss_V3NLfiWb1737zdnmLecSHNBqEtwZ0mu_l-L0XimK2xc";
     setPowerSyncing(true);
     const updates = {};
     let matched = 0;
