@@ -2468,49 +2468,45 @@ function App() {
 
   async function refreshMemberPower() {
     if (!requireEdit() || powerSyncing) return;
-    const apiKey = "kss_V3NLfiWb1737zdnmLecSHNBqEtwZ0mu_l-L0XimK2xc";
-    if (!apiKey?.trim()) return;
     setPowerSyncing(true);
-    let received = 0, matched = 0;
     const updates = {};
+    let matched = 0;
     try {
+      setPowerSyncMsg("Loading latest server-fetched Mightpulse power data…");
+      const response = await fetch("https://raw.githubusercontent.com/MkUltra425/kvk-battle-dashboard/main/power-latest.json?t=" + Date.now(), {cache:"no-store"});
+      if (!response.ok) throw new Error("Power data is not available yet. Check the Power data refresh workflow in GitHub Actions.");
+      const data = await response.json();
+      const fetched = Date.parse(data.fetched_at);
+      if (!Number.isFinite(fetched) || Date.now() - fetched > 2 * 60 * 60 * 1000)
+        throw new Error("The server power data is over two hours old. Check GitHub Actions before retrying.");
       for (const field of MEMBER_POWER_FIELDS) {
-        setPowerSyncMsg(`Mightpulse: loading ${field}… (${received}/${MEMBER_POWER_FIELDS.length})`);
-        const response = await fetch(`https://api.mightpulse.com/v1/kingdoms/1884/ranks?board=${field}&limit=100`, {
-          headers: { Authorization: `Bearer ${apiKey.trim()}` }, cache: "no-store"
-        });
-        if (!response.ok) throw new Error(`Mightpulse returned ${response.status}. ${received} boards loaded before refresh stopped.`);
-        const data = await response.json();
-        if (data.ok === false) throw new Error("Mightpulse could not return leaderboard data.");
-        const entries = [];
-        function collect(value) {
-          if (!value || typeof value !== "object") return;
-          if (!Array.isArray(value) && value.governor_id != null && value.score != null) { entries.push(value); return; }
-          for (const child of Object.values(value)) if (child && typeof child === "object") collect(child);
+        const rows = data.boards?.[field]?.rows;
+        if (!Array.isArray(rows) || !rows.length) throw new Error("Incomplete power data: " + field);
+        const scores = new Map();
+        for (const row of rows) {
+          const score = Number(row.score);
+          if (!row.governor_id || !Number.isFinite(score) || score < 0) throw new Error("Invalid power data: " + field);
+          scores.set(String(row.governor_id), score);
         }
-        collect(data);
-        if (!entries.length) throw new Error(`No readable entries returned for ${field}; existing values were preserved.`);
-        const scores = new Map(entries.map(entry => [String(entry.governor_id), Number(entry.score)]).filter(([,score]) => Number.isFinite(score) && score >= 0));
         for (const m of members) {
-          const governorId = m.governorId || (/^\d{7,10}$/.test(String(m.id)) ? m.id : null);
-          if (!governorId) continue;
-          const score = scores.get(String(governorId));
-          updates[`members/${m.id}/${field}`] = score === undefined ? null : score;
+          const id = m.governorId || (/^\d{7,10}$/.test(String(m.id)) ? m.id : null);
+          if (!id) continue;
+          const score = scores.get(String(id));
+          updates["members/" + m.id + "/" + field] = score === undefined ? null : score;
           if (score !== undefined) matched++;
         }
-        received++;
       }
-      const fetchedAt = new Date().toISOString();
       for (const m of members) {
-        if (Object.keys(updates).some(path => path.startsWith(`members/${m.id}/`))) {
-          updates[`members/${m.id}/powerUpdatedAt`] = fetchedAt;
-          updates[`members/${m.id}/powerSource`] = "Mightpulse";
+        if (Object.keys(updates).some(path => path.startsWith("members/" + m.id + "/"))) {
+          updates["members/" + m.id + "/powerUpdatedAt"] = data.fetched_at;
+          updates["members/" + m.id + "/powerSource"] = "Mightpulse";
         }
       }
       if (Object.keys(updates).length) await db.ref().update(updates);
-      setPowerSyncMsg(`Mightpulse: refreshed all ${MEMBER_POWER_FIELDS.length} boards, matched ${matched} power values. — means not available in the returned top 100. Source data may be cached.`);
-    } catch (e) { setPowerSyncMsg(`${e.message === "Failed to fetch" ? "Mightpulse did not allow this browser request. Use Load Power Snapshot (fetched 2026-10-09T19:47:31.497241+00:00) to load the included data." : e.message} No partial refresh was saved.`); }
-    finally { setPowerSyncing(false); }
+      setPowerSyncMsg("Updated " + matched + " power values. Server fetched: " + new Date(fetched).toUTCString() + ". Fetch runs every 30 minutes; source boards may be cached. — means outside the returned Top 100.");
+    } catch (e) {
+      setPowerSyncMsg((e.message === "Failed to fetch" ? "Could not download the server power data. Check your connection and retry." : e.message) + " No partial refresh was saved.");
+    } finally { setPowerSyncing(false); }
   }
 
   async function loadAvatars() {
